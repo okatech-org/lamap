@@ -4,12 +4,12 @@ import { useColors } from "@/hooks/useColors";
 import { getButtonShadow, getButtonShadowHover } from "@/utils/shadows";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
-  Text,
-  TextStyle,
-  TouchableOpacity,
-  View,
-  ViewStyle,
+    ActivityIndicator,
+    Text,
+    TextStyle,
+    TouchableOpacity,
+    View,
+    ViewStyle,
 } from "react-native";
 
 interface ButtonProps {
@@ -34,21 +34,21 @@ interface ButtonProps {
 
 const BUTTON_SIZES = {
   sm: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    minHeight: 32,
-    fontSize: 12,
-  },
-  default: {
     paddingVertical: 12,
-    paddingHorizontal: 24,
-    minHeight: 36,
+    paddingHorizontal: 20,
+    minHeight: 40,
     fontSize: 14,
   },
-  lg: {
+  default: {
     paddingVertical: 14,
-    paddingHorizontal: 32,
-    minHeight: 44,
+    paddingHorizontal: 24,
+    minHeight: 48,
+    fontSize: 16,
+  },
+  lg: {
+    paddingVertical: 16,  // Reference: Welcome screen buttons
+    paddingHorizontal: 24,
+    minHeight: 56,        // Reference: 56px height
     fontSize: 16,
   },
 };
@@ -75,25 +75,25 @@ export function Button({
     const baseStyle: ViewStyle = {
       paddingVertical: BUTTON_SIZES[size].paddingVertical,
       paddingHorizontal: BUTTON_SIZES[size].paddingHorizontal,
-      borderRadius: Spacing.radius.full,
+      borderRadius: Spacing.radius.pill,  // Pill-shaped (999)
       alignItems: "center",
       justifyContent: "center",
       minHeight: BUTTON_SIZES[size].minHeight,
-      ...Typography.gameBase,
+      ...Typography.button,  // Use button typography
       ...(shouldHaveShadow ? getButtonShadow() : {}),
     };
 
     const variantStyles: Record<string, ViewStyle> = {
       primary: {
-        backgroundColor: colors.primary,
+        backgroundColor: '#E86C5D',  // Red coral (reference: Facebook button)
       },
       secondary: {
-        backgroundColor: colors.secondary,
+        backgroundColor: '#FFFFFF',  // White (reference: Google button)
       },
       outline: {
         backgroundColor: "transparent",
-        borderWidth: 1,
-        borderColor: colors.border,
+        borderWidth: 2,              // Thicker border
+        borderColor: '#E86C5D',      // Red coral border
       },
       ghost: {
         backgroundColor: "transparent",
@@ -116,18 +116,18 @@ export function Button({
 
   const getTextStyles = (): TextStyle[] => {
     const baseStyle: TextStyle = {
-      ...Typography.gameBase,
+      ...Typography.button,  // Use button typography
     };
 
     const variantTextStyles: Record<string, TextStyle> = {
       primary: {
-        color: colors.primaryForeground,
+        color: '#FFFFFF',  // White text on red button
       },
       secondary: {
-        color: colors.secondaryForeground,
+        color: '#1C2A3A',  // Dark text on white button
       },
       outline: {
-        color: colors.foreground,
+        color: '#E86C5D',  // Red text for outline button
       },
       ghost: {
         color: colors.foreground,

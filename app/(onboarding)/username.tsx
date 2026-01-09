@@ -1,5 +1,7 @@
 import { UsernameInput } from "@/components/onboarding/UsernameInput";
 import { Button } from "@/components/ui/Button";
+import { Spacing } from "@/constants/spacing";
+import { Typography } from "@/constants/typography";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useColors } from "@/hooks/useColors";
@@ -70,35 +72,38 @@ export default function UsernameScreen() {
     },
     content: {
       flex: 1,
-      padding: 24,
+      padding: Spacing.container.horizontal,  // 24px
       justifyContent: "center",
     },
     header: {
-      marginBottom: 48,
+      marginBottom: Spacing.xxl,  // 48px
     },
     step: {
-      fontSize: 14,
+      fontSize: Typography.caption.fontSize,  // 14px
       color: colors.mutedForeground,
-      fontWeight: "600",
-      marginBottom: 8,
+      fontWeight: Typography.captionBold.fontWeight,  // 600
+      marginBottom: Spacing.sm,  // 8px
+      textTransform: "uppercase",
+      letterSpacing: 1,
     },
     title: {
-      fontSize: 32,
-      fontWeight: "700",
+      fontSize: Typography.display.fontSize,  // 48px - wow factor!
+      fontWeight: Typography.display.fontWeight,  // 900
       color: colors.foreground,
-      marginBottom: 12,
+      marginBottom: Spacing.md,  // 16px
+      lineHeight: Typography.display.lineHeight,
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: Typography.body.fontSize,  // 16px
       color: colors.mutedForeground,
-      lineHeight: 24,
+      lineHeight: Typography.body.lineHeight,
     },
     inputSection: {
-      marginBottom: 32,
+      marginBottom: Spacing.xl,  // 32px
     },
     footer: {
-      padding: 24,
-      paddingBottom: 32,
+      padding: Spacing.container.horizontal,  // 24px
+      paddingBottom: Spacing.xl,  // 32px
     },
   });
   

@@ -20,25 +20,25 @@ export function Badge({
   const colors = useColors();
   const getBadgeStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
-      paddingVertical: 2,
-      paddingHorizontal: 8,
-      borderRadius: Spacing.radius.full,
+      paddingVertical: 4,     // Slightly larger for better readability
+      paddingHorizontal: 12,  // Wider padding
+      borderRadius: Spacing.radius.pill,  // Pill-shaped
       alignItems: "center",
       justifyContent: "center",
     };
 
     const variantStyles: Record<string, ViewStyle> = {
       kora: {
-        backgroundColor: colors.secondary,
+        backgroundColor: '#F6AD55',  // Orange/gold (reference: Kora color)
       },
       default: {
-        backgroundColor: colors.muted,
+        backgroundColor: '#374151',  // Muted dark gray
       },
       success: {
-        backgroundColor: colors.primary,
+        backgroundColor: '#48BB78',  // Green
       },
       warning: {
-        backgroundColor: colors.destructive,
+        backgroundColor: '#E86C5D',  // Red coral
       },
     };
 
@@ -47,21 +47,22 @@ export function Badge({
 
   const getTextStyle = (): TextStyle => {
     const baseStyle: TextStyle = {
-      ...Typography.gameXS,
+      ...Typography.small,   // Use new typography
+      fontWeight: '600',     // Semibold for better visibility
     };
 
     const variantTextStyles: Record<string, TextStyle> = {
       kora: {
-        color: colors.secondaryForeground,
+        color: '#1C2A3A',  // Dark text on orange background
       },
       default: {
-        color: colors.mutedForeground,
+        color: '#FFFFFF',  // White text on dark background
       },
       success: {
-        color: colors.primaryForeground,
+        color: '#FFFFFF',  // White text on green
       },
       warning: {
-        color: colors.destructiveForeground,
+        color: '#FFFFFF',  // White text on red
       },
     };
 

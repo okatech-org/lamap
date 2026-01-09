@@ -1,6 +1,8 @@
 import { RankBadge } from "@/components/ranking/RankBadge";
 import { Button } from "@/components/ui/Button";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { Spacing } from "@/constants/spacing";
+import { Typography } from "@/constants/typography";
 import { api } from "@/convex/_generated/api";
 import { getRankFromPR, INITIAL_PR } from "@/convex/ranking";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,9 +29,9 @@ export default function SelectModeScreen() {
   const styles = StyleSheet.create({
     activeMatchCard: {
       backgroundColor: colors.accent,
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 20,
+      borderRadius: Spacing.radius.lg,  // 16px
+      padding: Spacing.card.horizontal,  // 20px
+      marginBottom: Spacing.lg,  // 24px
       borderWidth: 2,
       borderColor: colors.secondary,
     },
@@ -37,27 +39,27 @@ export default function SelectModeScreen() {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      gap: 16,
+      gap: Spacing.md,  // 16px
     },
     activeMatchLabel: {
-      fontSize: 14,
+      fontSize: Typography.caption.fontSize,  // 14px
       color: colors.secondary,
-      fontWeight: "700",
-      marginBottom: 4,
+      fontWeight: Typography.captionBold.fontWeight,  // 600
+      marginBottom: Spacing.xs,  // 4px
     },
     activeMatchInfo: {
-      fontSize: 16,
+      fontSize: Typography.body.fontSize,  // 16px
       color: colors.text,
-      fontWeight: "600",
+      fontWeight: Typography.bodyBold.fontWeight,  // 600
     },
     rejoinButton: {
       minHeight: 40,
-      paddingHorizontal: 16,
+      paddingHorizontal: Spacing.md,
       backgroundColor: colors.secondary,
     },
     rejoinButtonText: {
       color: colors.secondaryForeground,
-      fontSize: 14,
+      fontSize: Typography.caption.fontSize,
     },
     container: {
       flex: 1,
@@ -67,86 +69,87 @@ export default function SelectModeScreen() {
       flex: 1,
     },
     content: {
-      padding: 24,
-      paddingTop: 40,
+      padding: Spacing.container.horizontal,  // 24px
+      paddingTop: Spacing.xl,  // 32px
     },
     header: {
-      marginBottom: 40,
+      marginBottom: Spacing.xl,  // 32px
     },
     title: {
-      fontSize: 32,
-      fontWeight: "700",
+      fontSize: Typography.h1.fontSize,  // 32px
+      fontWeight: Typography.h1.fontWeight,  // 700
       color: colors.text,
       textAlign: "center",
-      marginBottom: 8,
+      marginBottom: Spacing.sm,  // 8px
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: Typography.body.fontSize,  // 16px
       color: colors.mutedForeground,
       textAlign: "center",
     },
     modesContainer: {
-      gap: 16,
-      marginBottom: 32,
+      gap: Spacing.md,  // 16px
+      marginBottom: Spacing.xl,  // 32px
     },
     modeCard: {
       backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 20,
+      borderRadius: Spacing.radius.lg,  // 16px
+      padding: Spacing.card.horizontal,  // 20px
       borderWidth: 1,
       borderColor: colors.border,
+      minHeight: 180,  // Larger cards for better impact
     },
     modeHeader: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 12,
+      marginBottom: Spacing.md,  // 16px
     },
     modeIconContainer: {
-      width: 48,
-      height: 48,
-      borderRadius: 12,
+      width: 56,  // Larger icons (reference: 48px → 56px)
+      height: 56,
+      borderRadius: Spacing.radius.md,  // 12px
       backgroundColor: colors.secondary,
       justifyContent: "center",
       alignItems: "center",
-      marginRight: 16,
+      marginRight: Spacing.md,  // 16px
     },
     modeInfo: {
       flex: 1,
     },
     modeTitle: {
-      fontSize: 20,
-      fontWeight: "700",
+      fontSize: Typography.h3.fontSize,  // 20px
+      fontWeight: Typography.h3.fontWeight,  // 600
       color: colors.text,
-      marginBottom: 4,
+      marginBottom: Spacing.xs,  // 4px
     },
     modeDescription: {
-      fontSize: 14,
+      fontSize: Typography.caption.fontSize,  // 14px
       color: colors.mutedForeground,
     },
     modeFeatures: {
-      fontSize: 13,
-      lineHeight: 20,
-      marginTop: 12,
-      marginBottom: 4,
+      fontSize: Typography.small.fontSize,  // 12px
+      lineHeight: Typography.small.lineHeight,  // 18px
+      marginTop: Spacing.sm,  // 8px
+      marginBottom: Spacing.xs,  // 4px
     },
     modeButton: {
       minHeight: 48,
-      marginTop: 12,
+      marginTop: Spacing.md,  // 16px
     },
     friendlySection: {
-      marginTop: 24,
-      paddingTop: 24,
+      marginTop: Spacing.lg,  // 24px
+      paddingTop: Spacing.lg,
       borderTopWidth: 1,
       borderTopColor: colors.border,
     },
     sectionTitle: {
-      fontSize: 18,
-      fontWeight: "600",
+      fontSize: Typography.h4.fontSize,  // 18px
+      fontWeight: Typography.h3.fontWeight,  // 600
       color: colors.text,
-      marginBottom: 16,
+      marginBottom: Spacing.md,  // 16px
     },
     friendlyOptions: {
-      gap: 12,
+      gap: Spacing.md,  // 16px
     },
     friendlyButton: {
       minHeight: 56,

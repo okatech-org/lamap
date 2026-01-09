@@ -14,7 +14,6 @@ export default function LobbyLayout() {
       }}
     >
       <Stack.Screen name="select-mode" />
-      <Stack.Screen name="select-bet" />
       <Stack.Screen name="select-difficulty" />
       <Stack.Screen name="matchmaking" />
       <Stack.Screen

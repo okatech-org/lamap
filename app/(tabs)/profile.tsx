@@ -18,21 +18,21 @@ import { fr } from "date-fns/locale";
 import { useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    FlatList,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  FlatList,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import {
-    SafeAreaView,
-    useSafeAreaInsets,
+  SafeAreaView,
+  useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { SceneMap, TabBar, TabView } from "react-native-tab-view";
 
@@ -598,21 +598,6 @@ export default function ProfileScreen() {
                 </Text>
               </View>
             </View>
-          </View>
-
-          <View style={styles.actions}>
-            <Button
-              title="Paramètres"
-              onPress={() => router.push("/settings")}
-              variant="secondary"
-              icon={
-                <IconSymbol
-                  name="gearshape.fill"
-                  size={20}
-                  color={colors.secondaryForeground}
-                />
-              }
-            />
           </View>
         </View>
       </ScrollView>
