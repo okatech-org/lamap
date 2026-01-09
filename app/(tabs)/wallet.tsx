@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,15 +6,15 @@ import { useEconomy } from "@/hooks/useEconomy";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { type ErrorBoundaryProps, useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
-  Alert,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -113,7 +112,7 @@ export default function WalletScreen() {
       await redeemCode(rechargeCode.trim());
       Alert.alert(
         "Recharge réussie",
-        `Votre compte a été crédité de ${codeInfo.amount.toLocaleString()} ${codeInfo.currency}`
+        `Votre compte a été crédité de ${codeInfo.amount.toLocaleString()} Kora`
       );
       setRechargeModalVisible(false);
       setRechargeCode("");
@@ -320,9 +319,8 @@ export default function WalletScreen() {
       <ScrollView style={styles.scrollView}>
         <View style={styles.content}>
           <View style={styles.balanceCard}>
-            <Text style={styles.balanceLabel}>Solde</Text>
-            <Text style={styles.balanceAmount}>{balance.toLocaleString()}</Text>
-            <Badge label={currency} variant="default" style={styles.badge} />
+            <Text style={styles.balanceLabel}>Vos Kora</Text>
+            <Text style={styles.balanceAmount}>{balance.toLocaleString()} Kora</Text>
             <Button
               title="Recharger"
               onPress={() => setRechargeModalVisible(true)}
@@ -371,7 +369,7 @@ export default function WalletScreen() {
                       ]}
                     >
                       {tx.amount > 0 ? "+" : ""}
-                      {tx.amount.toLocaleString()} {currency}
+                      {tx.amount.toLocaleString()} Kora
                     </Text>
                   </View>
                 ))}
@@ -437,7 +435,7 @@ export default function WalletScreen() {
               <View style={styles.codeInfo}>
                 <Text style={styles.codeInfoText}>Montant à recharger :</Text>
                 <Text style={styles.codeInfoAmount}>
-                  {codeInfo.amount.toLocaleString()} {codeInfo.currency}
+                  {codeInfo.amount.toLocaleString()} Kora
                 </Text>
               </View>
             )}
@@ -446,7 +444,7 @@ export default function WalletScreen() {
               {codeInfo && codeInfo.isValid ?
                 <>
                   <Button
-                    title={`Recharger ${codeInfo.amount.toLocaleString()} ${codeInfo.currency}`}
+                    title={`Recharger ${codeInfo.amount.toLocaleString()} Kora`}
                     onPress={handleRedeemCode}
                     variant="primary"
                     loading={redeeming}

@@ -4,15 +4,14 @@ import { Currency } from "@/convex/currencies";
 import { useAuth } from "@/hooks/useAuth";
 import { useColors } from "@/hooks/useColors";
 import { useMutation } from "convex/react";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
-  Alert,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View
 } from "react-native";
 
 interface ChallengeModalProps {
@@ -34,9 +33,7 @@ export function ChallengeModal({
 }: ChallengeModalProps) {
   const colors = useColors();
   const { convexUser } = useAuth();
-  const [mode, setMode] = useState<"RANKED" | "CASH">("RANKED");
-  const [betAmount, setBetAmount] = useState("");
-  const [isCompetitive, setIsCompetitive] = useState(true);
+  const mode = "RANKED"; // Free-to-play: only RANKED challenges allowed
   const [loading, setLoading] = useState(false);
 
   const sendChallenge = useMutation(api.challenges.sendChallenge);
@@ -47,26 +44,18 @@ export function ChallengeModal({
       return;
     }
 
-    if (mode === "CASH" && (!betAmount || parseFloat(betAmount) <= 0)) {
-      Alert.alert("Erreur", "Veuillez entrer un montant de mise valide.");
-      return;
-    }
-
     setLoading(true);
     try {
       const result = await sendChallenge({
         challengerId: convexUser._id,
         challengedId: challengedUserId as any,
-        mode,
-        betAmount: mode === "CASH" ? parseFloat(betAmount) : undefined,
-        currency: mode === "CASH" ? currency : undefined,
-        competitive: mode === "CASH" ? isCompetitive : undefined,
+        mode: "RANKED",
+        betAmount: undefined,
+        currency: undefined,
+        competitive: undefined,
       });
 
       onClose();
-      setMode("RANKED");
-      setBetAmount("");
-      setIsCompetitive(true);
 
       if (onSuccess && result?.challengeId) {
         onSuccess(result.challengeId);
@@ -178,50 +167,17 @@ export function ChallengeModal({
           <ScrollView showsVerticalScrollIndicator={false}>
             <Text style={styles.modalTitle}>Défier {challengedUsername}</Text>
             <Text style={styles.modalSubtitle}>
-              Choisissez le type de partie que vous souhaitez jouer
+              Défi en mode Classé (gratuit)
             </Text>
 
-            <View style={styles.modeSelector}>
-              <Button
-                title="Classé"
-                onPress={() => setMode("RANKED")}
-                variant={mode === "RANKED" ? "primary" : "outline"}
-                style={styles.modeButton}
-              />
-              <Button
-                title="Cash"
-                onPress={() => setMode("CASH")}
-                variant={mode === "CASH" ? "primary" : "outline"}
-                style={styles.modeButton}
-              />
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Partie Classée</Text>
+              <Text
+                style={{ color: colors.mutedForeground, marginBottom: 12 }}
+              >
+                • Pas de mise{"\n"}• Affecte votre classement PR
+              </Text>
             </View>
-
-            {mode === "RANKED" && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Partie Classée</Text>
-                <Text
-                  style={{ color: colors.mutedForeground, marginBottom: 12 }}
-                >
-                  • Pas de mise{"\n"}• Affecte votre classement PR{"\n"}
-                </Text>
-              </View>
-            )}
-
-            {mode === "CASH" && (
-              <>
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Montant de la mise</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={`Entrez le montant en ${currency}`}
-                    placeholderTextColor={colors.mutedForeground}
-                    keyboardType="numeric"
-                    value={betAmount}
-                    onChangeText={setBetAmount}
-                  />
-                </View>
-              </>
-            )}
 
             <View style={styles.actions}>
               <Button

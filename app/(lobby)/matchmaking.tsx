@@ -8,10 +8,9 @@ import { useColors } from "@/hooks/useColors";
 import { useMatchmaking } from "@/hooks/useMatchmaking";
 import { useSettings } from "@/hooks/useSettings";
 import { useSound } from "@/hooks/useSound";
-import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -38,12 +37,13 @@ export default function MatchmakingScreen() {
   const currency = (user?.currency || "XAF") as "EUR" | "XAF" | "USD";
 
   useEffect(() => {
-    if (bet > 0 && status === "idle" && user) {
+    if (status === "idle" && user) {
+      // Always use RANKED mode (free-to-play) with betAmount = 0
       joinQueue(
-        bet,
+        0,
         currency,
-        "CASH",
-        isCompetitive,
+        "RANKED",
+        true, // Always competitive for ranked
         timerEnabled,
         timerDuration
       )
@@ -59,13 +59,11 @@ export default function MatchmakingScreen() {
         });
     }
   }, [
-    bet,
     status,
     joinQueue,
     playSound,
     user,
     currency,
-    isCompetitive,
     timerEnabled,
     timerDuration,
   ]);
@@ -168,18 +166,6 @@ export default function MatchmakingScreen() {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            {bet > 0 && (
-              <View style={styles.betBadge}>
-                <Ionicons
-                  name="trophy"
-                  size={12}
-                  color={colors.secondaryForeground}
-                />
-                <Text style={styles.betText}>
-                  {bet} {currency}
-                </Text>
-              </View>
-            )}
             {status === "searching" && (
               <Text style={styles.timeText}>
                 Temps: {formatTime(timeInQueue)}

@@ -1,23 +1,24 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { useColors } from "@/hooks/useColors";
-import { Button } from "@/components/ui/Button";
 import { UsernameInput } from "@/components/onboarding/UsernameInput";
+import { Button } from "@/components/ui/Button";
+import { api } from "@/convex/_generated/api";
 import { useAuth } from "@/hooks/useAuth";
+import { useColors } from "@/hooks/useColors";
+import { getAutoDetectedCountry } from "@/utils/localization";
+import { useMutation } from "convex/react";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import {
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 import Animated, {
-  FadeInDown,
-  FadeInUp,
+    FadeInDown,
+    FadeInUp,
 } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function UsernameScreen() {
   const colors = useColors();
@@ -28,19 +29,35 @@ export default function UsernameScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const setUsernameMutation = useMutation(api.onboarding.setUsername);
+  const setCountryMutation = useMutation(api.onboarding.setCountry);
+  const completeOnboardingMutation = useMutation(api.onboarding.completeOnboarding);
   
   const handleContinue = async () => {
     if (!convexUser?._id || !isValid) return;
     
     try {
       setIsSubmitting(true);
+      
+      // Set username
       await setUsernameMutation({
         userId: convexUser._id,
         username: username.toLowerCase().trim(),
       });
-      router.push("/(onboarding)/country");
+      
+      // Auto-detect and set country
+      const detectedCountry = getAutoDetectedCountry();
+      await setCountryMutation({
+        userId: convexUser._id,
+        countryCode: detectedCountry,
+      });
+      
+      // Complete onboarding
+      await completeOnboardingMutation({ userId: convexUser._id });
+      
+      // Go to tutorial or main app
+      router.replace("/(tabs)");
     } catch (error) {
-      console.error("Erreur lors de la sauvegarde du username:", error);
+      console.error("Erreur lors de l'onboarding:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -96,7 +113,7 @@ export default function UsernameScreen() {
             entering={FadeInUp.duration(600).delay(100)}
             style={styles.header}
           >
-            <Text style={styles.step}>ÉTAPE 1/2</Text>
+            <Text style={styles.step}>Configuration</Text>
             <Text style={styles.title}>Choisissez votre nom</Text>
             <Text style={styles.subtitle}>
               Ce sera votre identité dans le jeu. Choisissez quelque chose de mémorable !

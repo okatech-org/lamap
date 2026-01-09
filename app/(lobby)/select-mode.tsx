@@ -8,7 +8,6 @@ import { useColors } from "@/hooks/useColors";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
-import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -166,8 +165,9 @@ export default function SelectModeScreen() {
                   <Text style={styles.activeMatchInfo}>
                     {activeGame.mode === "AI" ?
                       "Contre l'IA"
-                    : "Contre un joueur"}{" "}
-                    • {activeGame.bet.amount} {activeGame.bet.currency}
+                    : activeGame.mode === "RANKED" ?
+                      "Partie Classée"
+                    : "Partie Amicale"}
                   </Text>
                 </View>
                 <Button
@@ -188,38 +188,6 @@ export default function SelectModeScreen() {
           </View>
 
           <View style={styles.modesContainer}>
-            {/* Mode Cash */}
-            <View style={styles.modeCard}>
-              <View style={styles.modeHeader}>
-                <View
-                  style={[
-                    styles.modeIconContainer,
-                    { backgroundColor: "#7A9D54" },
-                  ]}
-                >
-                  <Ionicons name="cash" size={28} color="#FFF" />
-                </View>
-                <View style={styles.modeInfo}>
-                  <Text style={styles.modeTitle}>Mode Cash</Text>
-                  <Text style={styles.modeDescription}>
-                    Avec mise • Option compétitif
-                  </Text>
-                </View>
-              </View>
-              <Text
-                style={[styles.modeFeatures, { color: colors.mutedForeground }]}
-              >
-                ✓ Mise d&apos;argent {"\n"}✓ Choix compétitif/non-compétitif
-                {"\n"}✓ Gains
-              </Text>
-              <Button
-                title="Jouer en Cash"
-                onPress={() => router.push("/(lobby)/select-bet?mode=cash")}
-                variant="primary"
-                style={[styles.modeButton, { backgroundColor: "#7A9D54" }]}
-              />
-            </View>
-
             {/* Mode Classé */}
             <View
               style={[

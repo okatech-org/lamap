@@ -25,18 +25,18 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQuery } from "convex/react";
 import {
-  useLocalSearchParams,
-  useRouter,
-  type ErrorBoundaryProps,
+    useLocalSearchParams,
+    useRouter,
+    type ErrorBoundaryProps,
 } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -561,20 +561,7 @@ export default function MatchScreen() {
       <SafeAreaView style={styles.container} edges={["top"]}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
-            <View style={styles.headerLeft}>
-              {game.bet.amount > 0 && (
-                <View style={styles.betBadge}>
-                  <Ionicons
-                    name="trophy"
-                    size={12}
-                    color={colors.secondaryForeground}
-                  />
-                  <Text style={styles.betText}>
-                    {game.bet.amount} {game.bet.currency}
-                  </Text>
-                </View>
-              )}
-            </View>
+            <View style={styles.headerLeft} />
           </View>
         </View>
 
@@ -693,18 +680,6 @@ export default function MatchScreen() {
                 roundsWonByPlayer={roundsWonByPlayer}
                 roundsWonByOpponent={roundsWonByOpponent}
               />
-              {game.bet.amount > 0 && (
-                <View style={styles.betBadge}>
-                  <Ionicons
-                    name="trophy"
-                    size={12}
-                    color={colors.secondaryForeground}
-                  />
-                  <Text style={styles.betText}>
-                    {game.bet.amount} {game.bet.currency}
-                  </Text>
-                </View>
-              )}
             </View>
             <View style={styles.headerRight}>
               {isTimerActive && game.status === "PLAYING" && (
@@ -812,7 +787,6 @@ export default function MatchScreen() {
 
                 const isAIMatch = game.aiDifficulty !== null;
                 const isRankedMatch = game.mode === "RANKED";
-                const isCashMatch = game.mode === "CASH";
 
                 if (isAIMatch) {
                   try {
@@ -821,9 +795,9 @@ export default function MatchScreen() {
                       | "medium"
                       | "hard";
                     const newGameId = await createMatchVsAI(
-                      game.bet.amount,
+                      0, // Free AI games
                       difficulty,
-                      game.bet.currency as "EUR" | "XAF"
+                      "XAF" // Currency doesn't matter for free games
                     );
                     setResultPanelVisible(false);
                     router.replace(`/(game)/match/${newGameId}`);
@@ -835,7 +809,7 @@ export default function MatchScreen() {
                       : "Impossible de créer la revanche"
                     );
                   }
-                } else if (isRankedMatch || isCashMatch) {
+                } else if (isRankedMatch) {
                   try {
                     await sendRevengeRequest({
                       originalGameId: matchId,
@@ -857,18 +831,11 @@ export default function MatchScreen() {
 
                 const isAIMatch = game.aiDifficulty !== null;
                 const isRankedMatch = game.mode === "RANKED";
-                const isCashMatch = game.mode === "CASH";
 
                 if (isAIMatch) {
-                  router.push(
-                    `/(lobby)/select-difficulty?betAmount=${game.bet.amount}`
-                  );
+                  router.push(`/(lobby)/select-difficulty`);
                 } else if (isRankedMatch) {
                   router.replace("/(lobby)/ranked-matchmaking");
-                } else if (isCashMatch) {
-                  router.replace(
-                    `/(lobby)/matchmaking?betAmount=${game.bet.amount}&competitive=${game.competitive ?? true}`
-                  );
                 } else {
                   router.replace("/(lobby)/select-mode");
                 }

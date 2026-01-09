@@ -3,7 +3,6 @@ import { RankSelector } from "@/components/leaderboard/RankSelector";
 import { RankBadge } from "@/components/ranking/RankBadge";
 import { RankProgress } from "@/components/ranking/RankProgress";
 import { Avatar } from "@/components/ui/Avatar";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
@@ -19,21 +18,21 @@ import { fr } from "date-fns/locale";
 import { useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  FlatList,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    FlatList,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import {
-  SafeAreaView,
-  useSafeAreaInsets,
+    SafeAreaView,
+    useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { SceneMap, TabBar, TabView } from "react-native-tab-view";
 
@@ -495,37 +494,20 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.balanceSection}>
-            <Text style={styles.balanceLabel}>Solde</Text>
-            <View style={styles.balanceRow}>
-              <IconSymbol
-                name="dollarsign.circle.fill"
-                size={24}
-                color={colors.text}
-              />
-              <Text style={styles.balanceAmount}>
-                {user?.balance?.toLocaleString() || 0} {user?.currency || "XAF"}
-              </Text>
-            </View>
+            <Text style={styles.balanceLabel}>Vos Kora</Text>
             <View style={styles.koraRow}>
               <IconSymbol
                 name="circle.fill"
-                size={20}
+                size={24}
                 color={Colors.gameUI.orSable}
               />
               <Text style={styles.koraAmount}>
-                {user?.kora?.toLocaleString() || 0} Kora
+                {user?.balance?.toLocaleString() || 0} Kora
               </Text>
             </View>
             <View style={styles.balanceActions}>
               <Button
-                title="Déposer"
-                onPress={() => router.push("/(tabs)/wallet")}
-                variant="outline"
-                size="sm"
-                style={{ flex: 1 }}
-              />
-              <Button
-                title="Retirer"
+                title="Obtenir des Kora"
                 onPress={() => router.push("/(tabs)/wallet")}
                 variant="outline"
                 size="sm"
@@ -713,18 +695,7 @@ export default function ProfileScreen() {
                     </Text>
                   </View>
                 </View>
-                <View style={styles.gameDetails}>
-                  <View style={styles.betInfo}>
-                    <Badge
-                      label={
-                        item.bet.amount > 0 ?
-                          `${item.bet.amount} ${item.bet.currency}`
-                        : "Gratuit"
-                      }
-                      variant={item.bet.amount > 0 ? "default" : "warning"}
-                    />
-                  </View>
-                </View>
+                <View style={styles.gameDetails} />
               </View>
             )}
           />

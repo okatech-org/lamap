@@ -1,6 +1,5 @@
 import { BlurView } from "expo-blur";
 import { Tabs } from "expo-router";
-import React from "react";
 import { View } from "react-native";
 
 import { HapticTab } from "@/components/haptic-tab";
@@ -54,16 +53,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Mon profil",
-          header: () => <TopBar title="Mon profil" />,
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="person.fill" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="messages"
         options={{
           title: "Messages",
@@ -83,6 +72,16 @@ export default function TabLayout() {
           header: () => <TopBar title="Portefeuille" />,
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="wallet.pass.fill" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Mon profil",
+          header: () => <TopBar title="Mon profil" />,
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="person.fill" color={color} />
           ),
         }}
       />

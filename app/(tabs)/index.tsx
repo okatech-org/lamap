@@ -1,5 +1,4 @@
 import { RankProgress } from "@/components/ranking/RankProgress";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/convex/_generated/api";
 import { INITIAL_PR } from "@/convex/ranking";
@@ -8,13 +7,12 @@ import { useColors } from "@/hooks/useColors";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { type ErrorBoundaryProps, useRouter } from "expo-router";
-import React from "react";
 import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -416,8 +414,9 @@ export default function HomeScreen() {
                   <Text style={styles.activeMatchInfo}>
                     {activeGame.mode === "AI" ?
                       "Contre l'IA"
-                    : "Contre un joueur"}{" "}
-                    • {activeGame.bet.amount} {activeGame.bet.currency}
+                    : activeGame.mode === "RANKED" ?
+                      "Partie Classée"
+                    : "Partie Amicale"}
                   </Text>
                 </View>
                 <Button
@@ -433,15 +432,10 @@ export default function HomeScreen() {
           )}
 
           <View style={styles.balanceCard}>
-            <Text style={styles.balanceLabel}>Votre solde</Text>
+            <Text style={styles.balanceLabel}>Vos Kora</Text>
             <Text style={styles.balanceAmount}>
-              {user.balance?.toLocaleString() || 0}
+              {user.balance?.toLocaleString() || 0} Kora
             </Text>
-            <Badge
-              label={user.currency || "XAF"}
-              variant="default"
-              style={styles.badge}
-            />
           </View>
 
           <Button
@@ -475,7 +469,7 @@ export default function HomeScreen() {
                       vs {game.opponentName}
                     </Text>
                     <Text style={styles.gameDate}>
-                      {formatDate(game.endedAt)} • {game.betAmount} XAF
+                      {formatDate(game.endedAt)}
                     </Text>
                   </View>
                   <View

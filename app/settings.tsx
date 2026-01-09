@@ -1,14 +1,13 @@
 import { BattleLayoutPreview } from "@/components/settings/BattleLayoutPreview";
 import { CardLayoutPreview } from "@/components/settings/CardLayoutPreview";
 import { Button } from "@/components/ui/Button";
-import { CURRENCY_NAMES, CURRENCY_SYMBOLS } from "@/convex/currencies";
 import { useAuth } from "@/hooks/useAuth";
 import { useColors } from "@/hooks/useColors";
 import { useSettings } from "@/hooks/useSettings";
 import { useClerk } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -153,12 +152,7 @@ export default function SettingsScreen() {
     );
   }
 
-  const getCurrencyDisplay = (currency?: string) => {
-    if (!currency) return "Non définie";
-    const symbol = CURRENCY_SYMBOLS[currency as keyof typeof CURRENCY_SYMBOLS];
-    const name = CURRENCY_NAMES[currency as keyof typeof CURRENCY_NAMES];
-    return `${name} (${symbol})`;
-  };
+
 
   return (
     <SafeAreaView style={styles.container} edges={[]}>
@@ -199,14 +193,6 @@ export default function SettingsScreen() {
 
             <View style={{ height: 12 }} />
 
-            <View style={styles.settingRow}>
-              <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>Devise</Text>
-                <Text style={styles.settingDescription}>
-                  {getCurrencyDisplay(convexUser?.currency)}
-                </Text>
-              </View>
-            </View>
           </View>
 
           <View style={styles.section}>
