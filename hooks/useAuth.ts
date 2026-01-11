@@ -1,5 +1,5 @@
-import { api } from "@/convex/_generated/api";
 import { useAuth as useClerkAuth, useUser } from "@clerk/clerk-expo";
+import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 
 export function useAuth() {

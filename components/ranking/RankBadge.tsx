@@ -1,4 +1,4 @@
-import { RankInfo } from "@/convex/ranking";
+import { RankInfo } from "@convex/ranking";
 import React from "react";
 import { StyleSheet, Text, View, ViewStyle } from "react-native";
 

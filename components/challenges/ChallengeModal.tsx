@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/Button";
-import { api } from "@/convex/_generated/api";
-import { Currency } from "@/convex/currencies";
+import { api } from "@convex/_generated/api";
+import { Currency } from "@convex/currencies";
 import { useAuth } from "@/hooks/useAuth";
 import { useColors } from "@/hooks/useColors";
 import { useMutation } from "convex/react";

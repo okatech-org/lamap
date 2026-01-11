@@ -1,4 +1,4 @@
-import { VictoryType } from "@/convex/validators";
+import { VictoryType } from "@convex/validators";
 import React, { useEffect, useMemo } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 import Animated, {

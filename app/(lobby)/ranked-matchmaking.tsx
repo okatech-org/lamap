@@ -1,8 +1,8 @@
 import { RankProgress } from "@/components/ranking/RankProgress";
 import { Button } from "@/components/ui/Button";
-import { api } from "@/convex/_generated/api";
-import type { Currency } from "@/convex/currencies";
-import { INITIAL_PR } from "@/convex/ranking";
+import { api } from "@convex/_generated/api";
+import type { Currency } from "@convex/currencies";
+import { INITIAL_PR } from "@convex/ranking";
 import { useAuth } from "@/hooks/useAuth";
 import { useColors } from "@/hooks/useColors";
 import { useSettings } from "@/hooks/useSettings";

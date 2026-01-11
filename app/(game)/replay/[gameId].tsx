@@ -3,7 +3,7 @@ import { CardHand } from "@/components/game/CardHand";
 import { OpponentZone } from "@/components/game/OpponentZone";
 import { TurnPips } from "@/components/game/TurnPips";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { api } from "@/convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useColors } from "@/hooks/useColors";
 import { Card } from "@/hooks/useGame";

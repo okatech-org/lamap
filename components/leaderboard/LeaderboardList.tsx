@@ -1,4 +1,4 @@
-import { RankInfo } from "@/convex/ranking";
+import { RankInfo } from "@convex/ranking";
 import { useColors } from "@/hooks/useColors";
 import { useRouter } from "expo-router";
 import React from "react";

@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  TextInput,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-} from "react-native";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { Colors } from "@/constants/theme";
 import { useColors } from "@/hooks/useColors";
-import { Id } from "@/convex/_generated/dataModel";
+import { api } from "@convex/_generated/api";
+import { Id } from "@convex/_generated/dataModel";
+import { useQuery } from "convex/react";
+import React, { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
+} from "react-native";
 
 interface UsernameInputProps {
   value: string;

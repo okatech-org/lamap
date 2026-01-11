@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/Button";
-import { api } from "@/convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useColors } from "@/hooks/useColors";
 import { useMatchmaking } from "@/hooks/useMatchmaking";

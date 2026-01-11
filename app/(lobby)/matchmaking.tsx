@@ -2,7 +2,7 @@ import { BattleZone } from "@/components/game/BattleZone";
 import { OpponentZone } from "@/components/game/OpponentZone";
 import { PlaceholderCardHand } from "@/components/game/PlaceholderCardHand";
 import { Button } from "@/components/ui/Button";
-import { api } from "@/convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useColors } from "@/hooks/useColors";
 import { useMatchmaking } from "@/hooks/useMatchmaking";

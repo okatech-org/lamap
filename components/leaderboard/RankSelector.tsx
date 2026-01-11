@@ -1,5 +1,5 @@
 import { RankBadge } from "@/components/ranking/RankBadge";
-import { RANK_TIERS, type RankTier } from "@/convex/ranking";
+import { RANK_TIERS, type RankTier } from "@convex/ranking";
 import { useColors } from "@/hooks/useColors";
 import React from "react";
 import {

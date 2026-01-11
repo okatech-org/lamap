@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/Button";
-import { RankInfo } from "@/convex/ranking";
+import { RankInfo } from "@convex/ranking";
 import { useColors } from "@/hooks/useColors";
 import React, { useEffect } from "react";
 import { Modal, StyleSheet, Text, View } from "react-native";

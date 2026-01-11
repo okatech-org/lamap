@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/theme";
-import { getRankFromPR, INITIAL_PR } from "@/convex/ranking";
+import { getRankFromPR, INITIAL_PR } from "@convex/ranking";
 import { useColors } from "@/hooks/useColors";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";

@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/Button";
 import type { IconSymbolName } from "@/components/ui/icon-symbol";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { api } from "@/convex/_generated/api";
-import { getCurrencyFromCountry } from "@/convex/currencies";
+import { api } from "@convex/_generated/api";
+import { getCurrencyFromCountry } from "@convex/currencies";
 import { useAuth } from "@/hooks/useAuth";
 import { useColors } from "@/hooks/useColors";
 import { useMutation } from "convex/react";

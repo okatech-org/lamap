@@ -1,5 +1,5 @@
 import { Avatar } from "@/components/ui/Avatar";
-import { api } from "@/convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useColors } from "@/hooks/useColors";
 import { useQuery } from "convex/react";

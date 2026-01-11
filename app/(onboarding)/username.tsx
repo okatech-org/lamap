@@ -2,7 +2,7 @@ import { UsernameInput } from "@/components/onboarding/UsernameInput";
 import { Button } from "@/components/ui/Button";
 import { Spacing } from "@/constants/spacing";
 import { Typography } from "@/constants/typography";
-import { api } from "@/convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useColors } from "@/hooks/useColors";
 import { getAutoDetectedCountry } from "@/utils/localization";

@@ -8,7 +8,7 @@ import {
   TextInput,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
-import { COUNTRY_TO_CURRENCY } from "@/convex/currencies";
+import { COUNTRY_TO_CURRENCY } from "@convex/currencies";
 
 interface Country {
   code: string;

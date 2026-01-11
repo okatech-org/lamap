@@ -1,6 +1,6 @@
 import { RankBadge } from "@/components/ranking/RankBadge";
 import { Avatar } from "@/components/ui/Avatar";
-import { RankInfo } from "@/convex/ranking";
+import { RankInfo } from "@convex/ranking";
 import { useColors } from "@/hooks/useColors";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
