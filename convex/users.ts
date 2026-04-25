@@ -104,6 +104,9 @@ const getUserQuery = {
       pr: v.optional(v.number()),
       kora: v.optional(v.number()),
       rankHistory: v.optional(v.array(v.string())),
+      ownedCardBacks: v.optional(v.array(v.string())),
+      activeCardBack: v.optional(v.string()),
+      cosmeticsGrantedDefaults: v.optional(v.boolean()),
     }),
     v.null()
   ),

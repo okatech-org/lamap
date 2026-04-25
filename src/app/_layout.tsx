@@ -99,6 +99,7 @@ function RootLayoutNav() {
             }}
           />
           <Stack.Screen name="user" options={{ headerShown: false }} />
+          <Stack.Screen name="leaderboard/ranks" options={{ headerShown: false }} />
         </Stack.Protected>
       </Stack>
       <StatusBar style="light" />

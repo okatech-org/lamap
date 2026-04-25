@@ -1,288 +1,416 @@
-import { Button } from "@/components/ui/button";
-import type { IconSymbolName } from "@/components/ui/icon-symbol";
-import { IconSymbol } from "@/components/ui/icon-symbol";
+import {
+  DeepBg,
+  LamapButton,
+  LamapSectionLabel,
+  OnboardingProgressDots,
+} from "@/components/lamap";
+import { CardBack } from "@/components/game/card-back";
+import { COLORS, FONT_WEIGHTS } from "@/design";
+import { useAuth } from "@/hooks/use-auth";
 import { api } from "@convex/_generated/api";
 import { getCurrencyFromCountry } from "@convex/currencies";
-import { useAuth } from "@/hooks/use-auth";
-import { useColors } from "@/hooks/use-colors";
 import { useMutation } from "convex/react";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface TutorialStep {
-  id: number;
+  eyebrow: string;
   title: string;
-  content: string;
-  icon: IconSymbolName;
+  body: string;
+  visual: "deck" | "follow" | "kora" | "game";
 }
 
 const TUTORIAL_STEPS: TutorialStep[] = [
   {
-    id: 1,
-    title: "Bienvenue sur LaMap241 !",
-    content:
-      "Vous allez apprendre les bases du jeu de cartes compétitif. L'objectif est simple : remporter le 5ème et dernier tour pour gagner la partie.",
-    icon: "gamecontroller.fill",
+    eyebrow: "RÈGLE 1 / 4",
+    title: "Le duel — 5 manches.",
+    body: "Deux joueurs, cinq cartes chacun, cinq manches. Seule la dernière manche compte pour gagner la partie.",
+    visual: "deck",
   },
   {
-    id: 2,
-    title: "Les règles de base",
-    content:
-      "Chaque joueur reçoit 5 cartes. Vous jouez avec les cartes de 3 à 10 (sauf le 10 de pique). Il y a 4 couleurs : ♠️ Pique, ♣️ Trèfle, ♦️ Carreau, ♥️ Cœur.",
-    icon: "suit.spade.fill",
+    eyebrow: "RÈGLE 2 / 4",
+    title: "Suis la couleur.",
+    body: "Quand l'adversaire ouvre, tu dois jouer la même couleur si tu en possèdes. Sinon, tu défausses et tu perds la main.",
+    visual: "follow",
   },
   {
-    id: 3,
-    title: "La mécanique principale",
-    content:
-      "Le joueur qui a la 'main' choisit la couleur à jouer. L'adversaire DOIT répondre avec la même couleur s'il en a une. La carte la plus haute remporte la main pour le tour suivant.",
-    icon: "hand.raised.fill",
+    eyebrow: "RÈGLE 3 / 4",
+    title: "Le 3 vaut peu —\nsauf à la fin.",
+    body: "Remporter la 5ème manche avec un 3 déclenche un Kora (×2). Doublé en 4+5 (×4). Triplé en 3+4+5 (×8).",
+    visual: "kora",
   },
   {
-    id: 4,
-    title: "Types de victoire",
-    content:
-      "• Victoire normale : Gagner le tour 5\n• Kora : Gagner le tour 5 avec un 3 (×2)\n• 33 Export : Gagner les tours 4 et 5 avec des 3 (×4)\n• 333 Export : Gagner les tours 3, 4 et 5 avec des 3 (×8)",
-    icon: "trophy.fill",
-  },
-  {
-    id: 5,
-    title: "Victoires automatiques",
-    content:
-      "Vous gagnez automatiquement si :\n• Votre main fait moins de 21 points (main faible)\n• Vous avez 3 cartes de valeur 7 (triple 7)\n• La somme de vos cartes fait 31 ou plus",
-    icon: "bolt.fill",
-  },
-  {
-    id: 6,
-    title: "Partie guidée",
-    content:
-      "Maintenant, vous allez jouer une partie d'entraînement contre l'IA. Je vais vous guider à chaque étape pour vous familiariser avec le jeu.",
-    icon: "star.fill",
-  },
-  {
-    id: 7,
-    title: "C'est parti !",
-    content:
-      "Vous êtes prêt à jouer ! Complétez le tutoriel pour recevoir 500 Kora de récompense, puis lancez-vous dans votre première partie.",
-    icon: "trophy.fill",
+    eyebrow: "RÈGLE 4 / 4",
+    title: "Le jeton Kora.",
+    body: "Tu mises en Kora. Le gagnant reçoit 90% de la mise totale. La plateforme prélève 10%. Ton classement évolue à chaque match.",
+    visual: "game",
   },
 ];
 
 export default function TutorialScreen() {
-  const colors = useColors();
   const router = useRouter();
   const { convexUser } = useAuth();
   const params = useLocalSearchParams<{ step?: string }>();
   const initialStep = params.step ? parseInt(params.step, 10) - 1 : 0;
-  const [currentStep, setCurrentStep] = useState(initialStep);
+  const [currentStep, setCurrentStep] = useState(
+    Math.max(0, Math.min(TUTORIAL_STEPS.length - 1, initialStep)),
+  );
   const [isCompleting, setIsCompleting] = useState(false);
 
-  const completeTutorialMutation = useMutation(api.onboarding.completeTutorial);
-  const completeOnboardingMutation = useMutation(
-    api.onboarding.completeOnboarding
-  );
-  const createAIGameMutation = useMutation(api.matchmaking.createMatchVsAI);
+  const completeTutorial = useMutation(api.onboarding.completeTutorial);
+  const completeOnboarding = useMutation(api.onboarding.completeOnboarding);
+  const createAIGame = useMutation(api.matchmaking.createMatchVsAI);
 
   const handleNext = async () => {
-    if (currentStep === 5) {
-      // Étape "Partie guidée" - créer une partie AI et lancer le jeu
-      if (!convexUser?._id) return;
-      try {
-        const currency =
-          convexUser.country ?
-            getCurrencyFromCountry(convexUser.country)
-          : "XAF";
-        const gameId = await createAIGameMutation({
-          playerId: convexUser._id,
-          difficulty: "easy",
-          betAmount: 0,
-          currency: currency as "XAF" | "EUR" | "USD",
-        });
-        router.push(`/(game)/match/${gameId}?tutorial=true`);
-      } catch (error) {
-        console.error("Erreur lors de la création de la partie:", error);
-        setCurrentStep(currentStep + 1);
-      }
-    } else if (currentStep < TUTORIAL_STEPS.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      handleComplete();
+    if (currentStep < TUTORIAL_STEPS.length - 1) {
+      setCurrentStep((s) => s + 1);
+      return;
     }
-  };
-
-  const handlePrevious = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const handleSkip = async () => {
-    if (!convexUser?._id) return;
-    try {
-      await completeOnboardingMutation({ userId: convexUser._id });
-      router.replace("/(tabs)");
-    } catch (error) {
-      console.error("Erreur lors du saut du tutoriel:", error);
-      router.replace("/(tabs)");
-    }
-  };
-
-  const handleComplete = async () => {
     if (!convexUser?._id || isCompleting) return;
-
+    setIsCompleting(true);
     try {
-      setIsCompleting(true);
-      await completeTutorialMutation({ userId: convexUser._id });
-      router.replace("/(tabs)");
-    } catch (error) {
-      console.error("Erreur lors de la complétion du tutoriel:", error);
+      await completeTutorial({ userId: convexUser._id });
+      // Launch a guided AI game after completing the rules.
+      const currency = convexUser.country
+        ? getCurrencyFromCountry(convexUser.country)
+        : "XAF";
+      const gameId = await createAIGame({
+        playerId: convexUser._id,
+        difficulty: "easy",
+        betAmount: 0,
+        currency: currency as "XAF" | "EUR" | "USD",
+      });
+      router.replace(`/(game)/match/${gameId}?tutorial=true`);
+    } catch (e) {
+      console.error("Tutorial completion failed:", e);
     } finally {
       setIsCompleting(false);
     }
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    content: {
-      flex: 1,
-      padding: 24,
-    },
-    stepIndicator: {
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-      marginBottom: 32,
-      gap: 8,
-    },
-    stepDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: colors.border,
-    },
-    stepDotActive: {
-      backgroundColor: colors.primary,
-      width: 24,
-    },
-    stepContent: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    iconContainer: {
-      width: 120,
-      height: 120,
-      borderRadius: 60,
-      backgroundColor: colors.accent,
-      justifyContent: "center",
-      alignItems: "center",
-      marginBottom: 32,
-    },
-    title: {
-      fontSize: 28,
-      fontWeight: "700",
-      color: colors.text,
-      textAlign: "center",
-      marginBottom: 16,
-    },
-    contentText: {
-      fontSize: 16,
-      color: colors.text,
-      lineHeight: 24,
-      textAlign: "center",
-      marginBottom: 32,
-    },
-    footer: {
-      padding: 24,
-      paddingBottom: 32,
-      gap: 12,
-    },
-    buttonRow: {
-      flexDirection: "row",
-      gap: 12,
-    },
-    progressText: {
-      fontSize: 14,
-      color: colors.mutedForeground,
-      textAlign: "center",
-      marginBottom: 8,
-    },
-  });
+  const handleSkip = async () => {
+    if (!convexUser?._id) {
+      router.replace("/(tabs)");
+      return;
+    }
+    try {
+      await completeOnboarding({ userId: convexUser._id });
+    } catch (e) {
+      console.error("Skip onboarding failed:", e);
+    }
+    router.replace("/(tabs)");
+  };
 
-  const currentStepData = TUTORIAL_STEPS[currentStep];
-  const isLastStep = currentStep === TUTORIAL_STEPS.length - 1;
+  const step = TUTORIAL_STEPS[currentStep];
+  const isLast = currentStep === TUTORIAL_STEPS.length - 1;
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <View style={styles.content}>
-        <View style={styles.stepIndicator}>
-          {TUTORIAL_STEPS.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.stepDot,
-                index === currentStep && styles.stepDotActive,
-              ]}
-            />
-          ))}
+    <View style={styles.root}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <DeepBg dustCount={8} dustOpacity={0.3} />
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+        <View style={styles.topBar}>
+          <Pressable onPress={handleSkip} hitSlop={8}>
+            <Text style={styles.skip}>Passer</Text>
+          </Pressable>
+          <OnboardingProgressDots
+            current={currentStep}
+            total={TUTORIAL_STEPS.length}
+          />
         </View>
 
         <Animated.View
-          entering={FadeInUp.duration(400)}
-          style={styles.stepContent}
+          key={currentStep}
+          entering={FadeIn.duration(280)}
+          style={styles.content}
         >
-          <View style={styles.iconContainer}>
-            <IconSymbol
-              name={currentStepData.icon}
-              size={64}
-              color={colors.primary}
-            />
+          <View style={styles.heading}>
+            <LamapSectionLabel>{step.eyebrow}</LamapSectionLabel>
+            <Text style={styles.title}>{step.title}</Text>
+            <Text style={styles.body}>{step.body}</Text>
           </View>
-          <Text style={styles.title}>{currentStepData.title}</Text>
-          <Text style={styles.contentText}>{currentStepData.content}</Text>
-        </Animated.View>
-      </View>
 
-      <Animated.View entering={FadeInDown.duration(400)} style={styles.footer}>
-        <Text style={styles.progressText}>
-          Étape {currentStep + 1} / {TUTORIAL_STEPS.length}
-        </Text>
-        <View style={styles.buttonRow}>
-          {currentStep > 0 && (
-            <Button
-              title="Précédent"
-              onPress={handlePrevious}
-              variant="outline"
-              style={{ flex: 1 }}
-            />
-          )}
-          <Button
+          <View style={styles.visual}>
+            {step.visual === "deck" ? <DeckVisual /> : null}
+            {step.visual === "follow" ? <FollowVisual /> : null}
+            {step.visual === "kora" ? <KoraVisual /> : null}
+            {step.visual === "game" ? <GameVisual /> : null}
+          </View>
+        </Animated.View>
+
+        <View style={styles.footer}>
+          <LamapButton
             title={
-              isLastStep ? "Terminer"
-              : currentStep === 5 ?
-                "Commencer la partie"
-              : "Suivant"
+              isLast
+                ? isCompleting
+                  ? "Lancement…"
+                  : "Lancer la partie guidée →"
+                : "Suivant →"
             }
-            onPress={handleNext}
             variant="primary"
-            style={{ flex: 1 }}
-            loading={isCompleting && isLastStep}
+            onPress={handleNext}
+            disabled={isCompleting}
           />
         </View>
-        {!isLastStep && (
-          <Button
-            title="Passer le tutoriel"
-            onPress={handleSkip}
-            variant="secondary"
-          />
-        )}
-      </Animated.View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
+
+// ─── Visuals ──────────────────────────────────────────────
+
+function DeckVisual() {
+  return (
+    <View style={styles.cardRow}>
+      {[0, 1, 2, 3, 4].map((i) => (
+        <View
+          key={i}
+          style={{
+            transform: [
+              { translateX: -i * 24 },
+              { rotate: `${(i - 2) * 4}deg` },
+            ],
+          }}
+        >
+          <CardBack size="medium" />
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function FollowVisual() {
+  return (
+    <View style={styles.followRow}>
+      <View style={styles.suitTile}>
+        <Text style={styles.suitGlyphRed}>♥</Text>
+        <Text style={styles.suitLabel}>OUVRE</Text>
+      </View>
+      <Text style={styles.arrow}>→</Text>
+      <View style={styles.suitTile}>
+        <Text style={styles.suitGlyphRed}>♥</Text>
+        <Text style={styles.suitLabel}>SUIS</Text>
+      </View>
+    </View>
+  );
+}
+
+function KoraVisual() {
+  const items = [
+    { manche: 1, kora: false },
+    { manche: 2, kora: false },
+    { manche: 3, kora: false },
+    { manche: 4, kora: true, mult: "×4" },
+    { manche: 5, kora: true, mult: "×8" },
+  ];
+  return (
+    <View style={styles.koraRow}>
+      {items.map((it) => (
+        <View key={it.manche} style={styles.mancheCol}>
+          <View style={styles.koraCardWrap}>
+            <CardBack size="small" theme={it.kora ? "gold" : "red"} />
+            {it.kora ? (
+              <View style={styles.koraChip}>
+                <Text style={styles.koraChipText}>{it.mult}</Text>
+              </View>
+            ) : null}
+          </View>
+          <Text style={styles.mancheLabel}>M{it.manche}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function GameVisual() {
+  return (
+    <View style={styles.gameRow}>
+      <View style={styles.koraDisc}>
+        <Text style={styles.koraDiscText}>K</Text>
+      </View>
+      <View style={styles.gameStats}>
+        <Text style={styles.gameStatLabel}>GAGNANT</Text>
+        <Text style={styles.gameStatValue}>+90%</Text>
+      </View>
+      <View style={styles.gameStats}>
+        <Text style={styles.gameStatLabel}>PLATEFORME</Text>
+        <Text style={[styles.gameStatValue, { color: COLORS.terre2 }]}>
+          −10%
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: COLORS.bg },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 16,
+  },
+  skip: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 13,
+    color: "rgba(245, 242, 237, 0.5)",
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    justifyContent: "space-between",
+    paddingVertical: 24,
+  },
+  heading: {
+    gap: 12,
+    alignItems: "center",
+    paddingTop: 32,
+  },
+  title: {
+    fontFamily: FONT_WEIGHTS.display.extrabold,
+    fontSize: 38,
+    color: COLORS.cream,
+    letterSpacing: -1,
+    lineHeight: 40,
+    textAlign: "center",
+    marginTop: 6,
+  },
+  body: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 15,
+    color: "rgba(245, 242, 237, 0.7)",
+    textAlign: "center",
+    lineHeight: 22,
+    maxWidth: 320,
+    marginTop: 4,
+  },
+  visual: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 32,
+    minHeight: 180,
+  },
+  cardRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingLeft: 80,
+  },
+  followRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  suitTile: {
+    width: 90,
+    height: 120,
+    borderRadius: 12,
+    backgroundColor: "rgba(46, 61, 77, 0.5)",
+    borderWidth: 1.5,
+    borderColor: "rgba(201, 168, 118, 0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  suitGlyphRed: {
+    fontSize: 36,
+    color: COLORS.terre,
+  },
+  suitLabel: {
+    fontFamily: FONT_WEIGHTS.mono.semibold,
+    fontSize: 9,
+    letterSpacing: 1.6,
+    color: COLORS.or2,
+  },
+  arrow: {
+    fontFamily: FONT_WEIGHTS.display.bold,
+    fontSize: 28,
+    color: COLORS.or2,
+  },
+  koraRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "flex-end",
+  },
+  mancheCol: {
+    alignItems: "center",
+    gap: 8,
+  },
+  koraCardWrap: {
+    position: "relative",
+  },
+  koraChip: {
+    position: "absolute",
+    top: -8,
+    right: -10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 999,
+    backgroundColor: "#C9A876",
+    shadowColor: "#E8C879",
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 4,
+  },
+  koraChipText: {
+    fontFamily: FONT_WEIGHTS.mono.bold,
+    fontSize: 9,
+    color: "#1F1810",
+    letterSpacing: 0.6,
+  },
+  mancheLabel: {
+    fontFamily: FONT_WEIGHTS.mono.semibold,
+    fontSize: 9,
+    letterSpacing: 1.4,
+    color: "rgba(245, 242, 237, 0.5)",
+  },
+  gameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 18,
+  },
+  koraDisc: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#C9A876",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#E8C879",
+    shadowOpacity: 0.5,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 6,
+  },
+  koraDiscText: {
+    fontFamily: FONT_WEIGHTS.display.extrabold,
+    fontSize: 36,
+    color: "#1F1810",
+  },
+  gameStats: {
+    alignItems: "center",
+    gap: 4,
+  },
+  gameStatLabel: {
+    fontFamily: FONT_WEIGHTS.mono.semibold,
+    fontSize: 9,
+    letterSpacing: 1.6,
+    color: "rgba(245, 242, 237, 0.5)",
+  },
+  gameStatValue: {
+    fontFamily: FONT_WEIGHTS.display.bold,
+    fontSize: 22,
+    color: COLORS.or2,
+    letterSpacing: -0.4,
+  },
+  footer: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+});

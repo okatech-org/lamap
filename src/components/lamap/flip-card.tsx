@@ -1,5 +1,6 @@
 import { CardBack } from "@/components/game/card-back";
 import { PlayingCard } from "@/components/game/playing-card";
+import { useActiveCardBackTheme } from "@/hooks/use-active-card-back";
 import React, { useEffect } from "react";
 import { StyleSheet, View, ViewStyle } from "react-native";
 import Animated, {
@@ -39,6 +40,7 @@ export function FlipCard({
   style,
 }: FlipCardProps) {
   const progress = useSharedValue(flipped ? 1 : 0);
+  const theme = useActiveCardBackTheme();
 
   useEffect(() => {
     progress.value = withTiming(flipped ? 1 : 0, {
@@ -64,7 +66,7 @@ export function FlipCard({
   return (
     <View style={[styles.wrap, style]}>
       <Animated.View style={[styles.face, backStyle]}>
-        <CardBack size={size} />
+        <CardBack size={size} theme={theme} />
       </Animated.View>
       <Animated.View style={[styles.face, styles.front, faceStyle]}>
         <PlayingCard rank={rank} suit={suit} state="played" size={size} />

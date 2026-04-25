@@ -1,5 +1,6 @@
 import { CardBack } from "@/components/game/card-back";
 import { COLORS, FONT_WEIGHTS } from "@/design";
+import { useActiveCardBackTheme } from "@/hooks/use-active-card-back";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Avatar } from "./avatar";
@@ -31,6 +32,7 @@ export function LamapOpponentBar({
       .slice(0, 2);
 
   const cards = Math.max(0, Math.min(cardsRemaining, 5));
+  const theme = useActiveCardBackTheme();
 
   return (
     <View style={styles.row}>
@@ -60,7 +62,7 @@ export function LamapOpponentBar({
               },
             ]}
           >
-            <CardBack size="small" />
+            <CardBack size="small" theme={theme} />
           </View>
         ))}
       </View>

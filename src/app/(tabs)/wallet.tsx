@@ -1,473 +1,458 @@
-import { Button } from "@/components/ui/button";
-import { api } from "@convex/_generated/api";
+import {
+  DeepBg,
+  LamapButton,
+  LamapKoraCoin,
+  LamapSectionLabel,
+} from "@/components/lamap";
+import { COLORS, FONT_WEIGHTS, RADII } from "@/design";
 import { useAuth } from "@/hooks/use-auth";
-import { useColors } from "@/hooks/use-colors";
 import { useEconomy } from "@/hooks/use-economy";
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery } from "convex/react";
-import { type ErrorBoundaryProps, useRouter } from "expo-router";
-import { useState } from "react";
+import { Stack, type ErrorBoundaryProps, useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const KORA_TO_XAF = 10;
+
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
-  const colors = useColors();
   const router = useRouter();
-
-  const errorStyles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    content: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      padding: 20,
-      gap: 16,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: "700",
-      textAlign: "center",
-      color: colors.text,
-    },
-    message: {
-      fontSize: 16,
-      textAlign: "center",
-      lineHeight: 22,
-      maxWidth: 300,
-      color: colors.mutedForeground,
-    },
-    actions: {
-      flexDirection: "row",
-      gap: 12,
-      marginTop: 8,
-    },
-    button: {
-      minWidth: 120,
-    },
-  });
-
   return (
-    <SafeAreaView style={errorStyles.container}>
-      <View style={errorStyles.content}>
-        <Ionicons name="alert-circle" size={64} color={colors.destructive} />
-        <Text style={errorStyles.title}>Erreur de chargement</Text>
-        <Text style={errorStyles.message}>{error.message}</Text>
-        <View style={errorStyles.actions}>
-          <Button
-            title="Réessayer"
-            onPress={retry}
-            variant="primary"
-            style={errorStyles.button}
-          />
-          <Button
-            title="Retour"
-            onPress={() => router.back()}
-            variant="outline"
-            style={errorStyles.button}
-          />
+    <View style={styles.root}>
+      <DeepBg />
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+        <View style={styles.errorWrap}>
+          <Ionicons name="alert-circle" size={64} color={COLORS.terre2} />
+          <Text style={styles.errorTitle}>Erreur de chargement</Text>
+          <Text style={styles.errorMessage}>{error.message}</Text>
+          <View style={styles.errorActions}>
+            <LamapButton title="Réessayer" variant="primary" onPress={retry} />
+            <LamapButton
+              title="Retour"
+              variant="ghost"
+              onPress={() => router.back()}
+            />
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 export default function WalletScreen() {
-  const colors = useColors();
+  const router = useRouter();
   const { isSignedIn } = useAuth();
   const { balance, currency, transactions, redeemCode } = useEconomy();
   const [rechargeModalVisible, setRechargeModalVisible] = useState(false);
   const [rechargeCode, setRechargeCode] = useState("");
-  const [redeeming, setRedeeming] = useState(false);
-
-  const codeInfoQuery = useQuery(
-    api.recharge.getRechargeCode,
-    rechargeCode.trim().length >= 3 ? { code: rechargeCode.trim() } : "skip"
-  );
-
-  const codeInfo =
-    codeInfoQuery ?
-      {
-        amount: codeInfoQuery.amount,
-        currency: codeInfoQuery.currency,
-        isValid: codeInfoQuery.isValid,
-      }
-    : null;
-
-  const handleRedeemCode = async () => {
-    if (!codeInfo || !rechargeCode.trim()) return;
-
-    setRedeeming(true);
-    try {
-      await redeemCode(rechargeCode.trim());
-      Alert.alert(
-        "Recharge réussie",
-        `Votre compte a été crédité de ${codeInfo.amount.toLocaleString()} Kora`
-      );
-      setRechargeModalVisible(false);
-      setRechargeCode("");
-    } catch (error: any) {
-      Alert.alert("Erreur", error.message || "Impossible d'utiliser ce code");
-    } finally {
-      setRedeeming(false);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setRechargeModalVisible(false);
-    setRechargeCode("");
-  };
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    scrollView: {
-      flex: 1,
-    },
-    content: {
-      padding: 24,
-      paddingBottom: 100,
-    },
-    balanceCard: {
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 24,
-      alignItems: "center",
-      marginBottom: 24,
-      borderWidth: 2,
-      borderColor: colors.secondary,
-    },
-    balanceLabel: {
-      fontSize: 16,
-      color: colors.mutedForeground,
-      marginBottom: 8,
-    },
-    balanceAmount: {
-      fontSize: 48,
-      fontWeight: "700",
-      color: colors.secondary,
-      marginBottom: 12,
-    },
-    badge: {
-      marginTop: 8,
-    },
-    statsContainer: {
-      flexDirection: "row",
-      gap: 16,
-      marginBottom: 24,
-    },
-    statCard: {
-      flex: 1,
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      padding: 16,
-      alignItems: "center",
-    },
-    statLabel: {
-      fontSize: 14,
-      color: colors.mutedForeground,
-      marginBottom: 8,
-    },
-    statValue: {
-      fontSize: 24,
-      fontWeight: "600",
-      color: colors.text,
-    },
-    section: {
-      marginTop: 8,
-    },
-    sectionTitle: {
-      fontSize: 20,
-      fontWeight: "600",
-      color: colors.text,
-      marginBottom: 16,
-    },
-    emptyState: {
-      padding: 32,
-      alignItems: "center",
-    },
-    emptyText: {
-      color: colors.mutedForeground,
-      fontSize: 14,
-    },
-    transactionsList: {
-      gap: 12,
-    },
-    transactionItem: {
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      padding: 16,
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    transactionWin: {
-      borderLeftWidth: 4,
-      borderLeftColor: colors.secondary,
-    },
-    transactionLoss: {
-      borderLeftWidth: 4,
-      borderLeftColor: colors.primary,
-    },
-    transactionContent: {
-      flex: 1,
-    },
-    transactionDescription: {
-      fontSize: 14,
-      fontWeight: "600",
-      color: colors.text,
-      marginBottom: 4,
-    },
-    transactionDate: {
-      fontSize: 12,
-      color: colors.mutedForeground,
-    },
-    transactionAmount: {
-      fontSize: 16,
-      fontWeight: "700",
-    },
-    amountWin: {
-      color: colors.secondary,
-    },
-    amountLoss: {
-      color: colors.primary,
-    },
-    text: {
-      color: colors.text,
-    },
-    rechargeButton: {
-      marginTop: 16,
-    },
-    modalBackdrop: {
-      flex: 1,
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
-      justifyContent: "center",
-      alignItems: "center",
-      padding: 24,
-    },
-    modalContent: {
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 24,
-      width: "100%",
-      maxWidth: 400,
-    },
-    modalTitle: {
-      fontSize: 24,
-      fontWeight: "700",
-      color: colors.text,
-      marginBottom: 8,
-    },
-    modalSubtitle: {
-      fontSize: 14,
-      color: colors.mutedForeground,
-      marginBottom: 24,
-    },
-    codeInput: {
-      backgroundColor: colors.background,
-      borderRadius: 12,
-      padding: 16,
-      fontSize: 16,
-      color: colors.text,
-      marginBottom: 16,
-      textTransform: "uppercase",
-      letterSpacing: 2,
-    },
-    codeInfo: {
-      backgroundColor: colors.muted,
-      borderRadius: 12,
-      padding: 16,
-      marginBottom: 16,
-    },
-    codeInfoText: {
-      fontSize: 14,
-      color: colors.text,
-      marginBottom: 4,
-    },
-    codeInfoAmount: {
-      fontSize: 20,
-      fontWeight: "700",
-      color: colors.secondary,
-    },
-    modalActions: {
-      gap: 12,
-    },
-  });
+  const [submitting, setSubmitting] = useState(false);
 
   if (!isSignedIn) {
     return (
-      <SafeAreaView style={styles.container} edges={[]}>
-        <Text style={styles.text}>Veuillez vous connecter</Text>
-      </SafeAreaView>
+      <View style={styles.root}>
+        <DeepBg />
+        <View style={styles.center}>
+          <Text style={styles.body}>Veuillez vous connecter</Text>
+        </View>
+      </View>
     );
   }
 
+  const handleRedeem = async () => {
+    if (!rechargeCode.trim()) return;
+    setSubmitting(true);
+    try {
+      const result = await redeemCode(rechargeCode.trim());
+      Alert.alert(
+        "Recharge réussie",
+        `+${result.amount.toLocaleString("fr-FR")} ${result.currency}`,
+      );
+      setRechargeCode("");
+      setRechargeModalVisible(false);
+    } catch (e) {
+      Alert.alert(
+        "Erreur",
+        e instanceof Error ? e.message : "Code invalide",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const xafApprox = Math.round(balance * KORA_TO_XAF);
+
   return (
-    <SafeAreaView style={styles.container} edges={[]}>
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.content}>
-          <View style={styles.balanceCard}>
-            <Text style={styles.balanceLabel}>Vos Kora</Text>
-            <Text style={styles.balanceAmount}>{balance.toLocaleString()} Kora</Text>
-            <Button
-              title="Recharger"
-              onPress={() => setRechargeModalVisible(true)}
-              variant="primary"
-              style={styles.rechargeButton}
-            />
+    <View style={styles.root}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <DeepBg />
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+        <View style={styles.topBar}>
+          <Pressable
+            onPress={() => router.back()}
+            style={styles.iconBtn}
+            hitSlop={8}
+          >
+            <Ionicons name="chevron-back" size={22} color={COLORS.or2} />
+          </Pressable>
+          <Text style={styles.topTitle}>Wallet</Text>
+          <View style={{ width: 36 }} />
+        </View>
+
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.heroBg} pointerEvents="none" />
+
+          {/* Balance hero */}
+          <View style={styles.hero}>
+            <LamapSectionLabel>Solde Kora</LamapSectionLabel>
+            <View style={styles.balanceRow}>
+              <LamapKoraCoin size="lg" />
+              <Text style={styles.balanceText}>
+                {balance.toLocaleString("fr-FR")}
+              </Text>
+            </View>
+            <Text style={styles.balanceSub}>
+              ≈ {xafApprox.toLocaleString("fr-FR")} {currency} · 1 Kora ={" "}
+              {KORA_TO_XAF} {currency}
+            </Text>
           </View>
 
+          {/* Actions */}
+          <View style={styles.actionsRow}>
+            <View style={styles.actionFlex}>
+              <LamapButton
+                title="+ Recharger"
+                variant="primary"
+                onPress={() => setRechargeModalVisible(true)}
+              />
+            </View>
+            <View style={styles.actionFlex}>
+              <LamapButton title="Retirer" variant="ghost" onPress={() => {}} disabled />
+            </View>
+          </View>
+
+          {/* History */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Historique des transactions</Text>
-            {!transactions || transactions.length === 0 ?
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>
-                  Aucune transaction pour le moment
-                </Text>
-              </View>
-            : <View style={styles.transactionsList}>
-                {transactions.map((tx) => (
-                  <View
-                    key={tx._id}
-                    style={[
-                      styles.transactionItem,
-                      tx.amount > 0 && styles.transactionWin,
-                      tx.amount < 0 && styles.transactionLoss,
-                    ]}
-                  >
-                    <View style={styles.transactionContent}>
-                      <Text style={styles.transactionDescription}>
-                        {tx.description}
-                      </Text>
-                      <Text style={styles.transactionDate}>
-                        {new Date(tx.createdAt).toLocaleDateString("fr-FR", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+            <LamapSectionLabel>Historique</LamapSectionLabel>
+            <View style={styles.transactionList}>
+              {transactions.length === 0 ? (
+                <Text style={styles.empty}>Aucune transaction.</Text>
+              ) : (
+                transactions.slice(0, 30).map((tx, i) => {
+                  const positive = tx.amount >= 0;
+                  const isKora =
+                    typeof tx.description === "string" &&
+                    tx.description.toLowerCase().includes("kora");
+                  return (
+                    <View key={tx._id ?? i} style={styles.txRow}>
+                      <View style={{ flex: 1 }}>
+                        <View style={styles.txTitleRow}>
+                          <Text style={styles.txTitle} numberOfLines={1}>
+                            {tx.description || formatType(tx.type)}
+                          </Text>
+                          {isKora ? (
+                            <View style={styles.koraChip}>
+                              <Text style={styles.koraChipText}>KORA</Text>
+                            </View>
+                          ) : null}
+                        </View>
+                        <Text style={styles.txDate}>
+                          {formatDate(tx.createdAt)}
+                        </Text>
+                      </View>
+                      <Text
+                        style={[
+                          styles.txAmount,
+                          {
+                            color: positive ? COLORS.or2 : COLORS.terre2,
+                          },
+                        ]}
+                      >
+                        {positive ? "+" : "−"}
+                        {Math.abs(tx.amount).toLocaleString("fr-FR")} K
                       </Text>
                     </View>
-                    <Text
-                      style={[
-                        styles.transactionAmount,
-                        tx.amount > 0 && styles.amountWin,
-                        tx.amount < 0 && styles.amountLoss,
-                      ]}
-                    >
-                      {tx.amount > 0 ? "+" : ""}
-                      {tx.amount.toLocaleString()} Kora
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            }
+                  );
+                })
+              )}
+            </View>
           </View>
-        </View>
-      </ScrollView>
 
+          <View style={{ height: 60 }} />
+        </ScrollView>
+      </SafeAreaView>
+
+      {/* Recharge modal */}
       <Modal
         visible={rechargeModalVisible}
-        transparent
         animationType="fade"
-        onRequestClose={handleCloseModal}
+        transparent
+        onRequestClose={() => setRechargeModalVisible(false)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Recharger mon compte</Text>
-            <Text style={styles.modalSubtitle}>
-              Entrez votre code de recharge
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Recharge Kora</Text>
+            <Text style={styles.modalSub}>
+              Entrez votre code de recharge.
             </Text>
-
             <TextInput
-              style={styles.codeInput}
               value={rechargeCode}
-              onChangeText={(text) => {
-                setRechargeCode(text.toUpperCase().replace(/[^A-Z0-9]/g, ""));
-              }}
-              placeholder="ABC123XYZ"
-              placeholderTextColor={colors.mutedForeground}
+              onChangeText={setRechargeCode}
+              placeholder="Code"
+              placeholderTextColor="rgba(245, 242, 237, 0.4)"
               autoCapitalize="characters"
-              maxLength={20}
-              editable={!redeeming}
+              style={styles.modalInput}
             />
-
-            {codeInfoQuery === null && rechargeCode.trim().length >= 3 && (
-              <Text
-                style={[
-                  styles.modalSubtitle,
-                  { color: colors.primary, marginTop: -16, marginBottom: 16 },
-                ]}
-              >
-                Code invalide ou introuvable
-              </Text>
-            )}
-
-            {codeInfoQuery && !codeInfoQuery.isValid && (
-              <Text
-                style={[
-                  styles.modalSubtitle,
-                  { color: colors.primary, marginTop: -16, marginBottom: 16 },
-                ]}
-              >
-                {codeInfoQuery.hasUserUsed ?
-                  "Ce code a déjà été utilisé"
-                : codeInfoQuery.isExpired ?
-                  "Ce code a expiré"
-                : "Ce code n'est plus actif"}
-              </Text>
-            )}
-
-            {codeInfo && codeInfo.isValid && (
-              <View style={styles.codeInfo}>
-                <Text style={styles.codeInfoText}>Montant à recharger :</Text>
-                <Text style={styles.codeInfoAmount}>
-                  {codeInfo.amount.toLocaleString()} Kora
-                </Text>
-              </View>
-            )}
-
             <View style={styles.modalActions}>
-              {codeInfo && codeInfo.isValid ?
-                <>
-                  <Button
-                    title={`Recharger ${codeInfo.amount.toLocaleString()} Kora`}
-                    onPress={handleRedeemCode}
-                    variant="primary"
-                    loading={redeeming}
-                    disabled={redeeming}
-                  />
-                  <Button
-                    title="Annuler"
-                    onPress={handleCloseModal}
-                    variant="ghost"
-                    disabled={redeeming}
-                  />
-                </>
-              : <Button
+              <View style={styles.actionFlex}>
+                <LamapButton
                   title="Annuler"
-                  onPress={handleCloseModal}
                   variant="ghost"
-                  disabled={redeeming}
+                  onPress={() => setRechargeModalVisible(false)}
                 />
-              }
+              </View>
+              <View style={styles.actionFlex}>
+                <LamapButton
+                  title={submitting ? "…" : "Valider"}
+                  variant="primary"
+                  onPress={handleRedeem}
+                  disabled={submitting || !rechargeCode.trim()}
+                />
+              </View>
             </View>
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
+
+function formatType(type: string) {
+  switch (type) {
+    case "win":
+      return "Victoire";
+    case "loss":
+      return "Défaite";
+    case "shop_purchase":
+      return "Achat";
+    case "recharge":
+      return "Recharge";
+    default:
+      return type;
+  }
+}
+
+function formatDate(timestamp: number) {
+  const date = new Date(timestamp);
+  const diffMs = Date.now() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffMins < 60) return `il y a ${Math.max(1, diffMins)} min`;
+  if (diffHours < 24) return `il y a ${diffHours}h`;
+  if (diffDays < 7) return `il y a ${diffDays}j`;
+  return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: COLORS.bg },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  body: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 14,
+    color: COLORS.cream,
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.hairline,
+  },
+  iconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  topTitle: {
+    fontFamily: FONT_WEIGHTS.display.bold,
+    fontSize: 17,
+    color: COLORS.cream,
+    letterSpacing: -0.2,
+  },
+  scroll: { paddingHorizontal: 20, paddingTop: 24 },
+  heroBg: {
+    position: "absolute",
+    top: -40,
+    left: 0,
+    right: 0,
+    height: 280,
+    backgroundColor: "rgba(166, 130, 88, 0.12)",
+    borderRadius: 280,
+    transform: [{ scaleX: 1.6 }],
+  },
+  hero: {
+    alignItems: "center",
+    gap: 14,
+  },
+  balanceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginTop: 6,
+  },
+  balanceText: {
+    fontFamily: FONT_WEIGHTS.display.extrabold,
+    fontSize: 56,
+    color: COLORS.cream,
+    letterSpacing: -2.4,
+    lineHeight: 56,
+  },
+  balanceSub: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 13,
+    color: "rgba(245, 242, 237, 0.55)",
+  },
+  actionsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 24,
+  },
+  actionFlex: { flex: 1 },
+  section: { marginTop: 32 },
+  transactionList: { marginTop: 12 },
+  empty: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 13,
+    color: "rgba(245, 242, 237, 0.5)",
+    textAlign: "center",
+    paddingVertical: 16,
+  },
+  txRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(201, 168, 118, 0.1)",
+    gap: 10,
+  },
+  txTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  txTitle: {
+    fontFamily: FONT_WEIGHTS.body.semibold,
+    fontSize: 13,
+    color: COLORS.cream,
+    flexShrink: 1,
+  },
+  koraChip: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+    backgroundColor: "#C9A876",
+  },
+  koraChipText: {
+    fontFamily: FONT_WEIGHTS.mono.bold,
+    fontSize: 9,
+    color: "#1F1810",
+  },
+  txDate: {
+    fontFamily: FONT_WEIGHTS.mono.medium,
+    fontSize: 10,
+    color: "rgba(245, 242, 237, 0.45)",
+    marginTop: 2,
+  },
+  txAmount: {
+    fontFamily: FONT_WEIGHTS.display.bold,
+    fontSize: 14,
+    letterSpacing: -0.2,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(15, 22, 32, 0.7)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 380,
+    padding: 22,
+    borderRadius: RADII.xl,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.hairlineStrong,
+    gap: 12,
+  },
+  modalTitle: {
+    fontFamily: FONT_WEIGHTS.display.bold,
+    fontSize: 22,
+    color: COLORS.cream,
+    letterSpacing: -0.4,
+  },
+  modalSub: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 13,
+    color: "rgba(245, 242, 237, 0.65)",
+  },
+  modalInput: {
+    height: 52,
+    borderRadius: RADII.md,
+    backgroundColor: COLORS.bg2,
+    borderWidth: 1,
+    borderColor: COLORS.hairline,
+    paddingHorizontal: 14,
+    fontFamily: FONT_WEIGHTS.mono.medium,
+    fontSize: 16,
+    color: COLORS.cream,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 4,
+  },
+  errorWrap: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+    gap: 16,
+  },
+  errorTitle: {
+    fontFamily: FONT_WEIGHTS.display.bold,
+    fontSize: 24,
+    color: COLORS.cream,
+    textAlign: "center",
+  },
+  errorMessage: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 14,
+    color: "rgba(245, 242, 237, 0.7)",
+    textAlign: "center",
+    maxWidth: 300,
+    lineHeight: 20,
+  },
+  errorActions: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 8,
+  },
+});

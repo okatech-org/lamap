@@ -4,8 +4,12 @@ import React from "react";
 import { StyleSheet, Text, View, ViewStyle } from "react-native";
 import Svg, { Defs, Line, Pattern, Rect } from "react-native-svg";
 
+export type CardBackTheme = "red" | "blue" | "gold" | "dark";
+
 interface CardBackProps {
   size?: "small" | "medium" | "large" | "xl" | "xxl";
+  /** Optional cosmetic skin id. Defaults to the original red leather. */
+  theme?: CardBackTheme;
   style?: ViewStyle;
 }
 
@@ -35,7 +39,51 @@ const OUTER_RADIUS = {
   xxl: 14,
 };
 
-export function CardBack({ size = "medium", style }: CardBackProps) {
+interface ThemeSpec {
+  /** Background gradient (top-left → bottom-right). */
+  bg: readonly [string, string, string];
+  /** Lozenge pattern stroke + diamond border + monogram color. */
+  accent: string;
+  /** Diamond fill behind the LM monogram. */
+  diamondFill: string;
+  /** Monogram text color (overrides accent if set). */
+  monogram?: string;
+  /** Outer card border. */
+  border: string;
+}
+
+const THEMES: Record<CardBackTheme, ThemeSpec> = {
+  red: {
+    bg: ["#B4443E", "#8E2F2A", "#6E2520"],
+    accent: "rgba(201, 168, 118, 0.6)",
+    diamondFill: "rgba(201, 168, 118, 0.2)",
+    monogram: "#C9A876",
+    border: "rgba(0, 0, 0, 0.4)",
+  },
+  blue: {
+    bg: ["#5A7A96", "#465D74", "#1F2C3B"],
+    accent: "rgba(201, 168, 118, 0.55)",
+    diamondFill: "rgba(201, 168, 118, 0.18)",
+    monogram: "#C9A876",
+    border: "rgba(0, 0, 0, 0.45)",
+  },
+  gold: {
+    bg: ["#D9B780", "#A68258", "#6E5536"],
+    accent: "rgba(31, 24, 16, 0.55)",
+    diamondFill: "rgba(31, 24, 16, 0.25)",
+    monogram: "#1F1810",
+    border: "rgba(0, 0, 0, 0.5)",
+  },
+  dark: {
+    bg: ["#2A1F1A", "#150D0B", "#0A0807"],
+    accent: "rgba(157, 91, 210, 0.55)",
+    diamondFill: "rgba(157, 91, 210, 0.18)",
+    monogram: "#C898E5",
+    border: "rgba(0, 0, 0, 0.55)",
+  },
+};
+
+export function CardBack({ size = "medium", theme = "red", style }: CardBackProps) {
   const cardWidth = CARD_WIDTHS[size];
   const cardHeight = cardWidth / CARD_ASPECT_RATIO;
   const inset = INSET[size];
@@ -43,6 +91,8 @@ export function CardBack({ size = "medium", style }: CardBackProps) {
   const innerRadius = Math.max(2, outerRadius - 4);
   const monogramSize = Math.max(8, cardWidth * 0.22);
   const showMonogram = cardWidth >= 60;
+  const t = THEMES[theme];
+  const lozengeStroke = t.accent.replace(/0\.\d+\)/, "0.18)");
 
   return (
     <View
@@ -52,12 +102,13 @@ export function CardBack({ size = "medium", style }: CardBackProps) {
           width: cardWidth,
           height: cardHeight,
           borderRadius: outerRadius,
+          borderColor: t.border,
         },
         style,
       ]}
     >
       <LinearGradient
-        colors={["#B4443E", "#8E2F2A", "#6E2520"]}
+        colors={t.bg}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[StyleSheet.absoluteFill, { borderRadius: outerRadius }]}
@@ -72,6 +123,7 @@ export function CardBack({ size = "medium", style }: CardBackProps) {
             right: inset,
             bottom: inset,
             borderRadius: innerRadius,
+            borderColor: t.accent,
           },
         ]}
       >
@@ -82,7 +134,7 @@ export function CardBack({ size = "medium", style }: CardBackProps) {
         >
           <Defs>
             <Pattern
-              id={`lz-${size}`}
+              id={`lz-${size}-${theme}`}
               patternUnits="userSpaceOnUse"
               width={12}
               height={12}
@@ -92,7 +144,7 @@ export function CardBack({ size = "medium", style }: CardBackProps) {
                 y1={0}
                 x2={12}
                 y2={12}
-                stroke="rgba(201,168,118,0.18)"
+                stroke={lozengeStroke}
                 strokeWidth={1}
               />
               <Line
@@ -100,12 +152,18 @@ export function CardBack({ size = "medium", style }: CardBackProps) {
                 y1={0}
                 x2={0}
                 y2={12}
-                stroke="rgba(201,168,118,0.18)"
+                stroke={lozengeStroke}
                 strokeWidth={1}
               />
             </Pattern>
           </Defs>
-          <Rect x={0} y={0} width="100%" height="100%" fill={`url(#lz-${size})`} />
+          <Rect
+            x={0}
+            y={0}
+            width="100%"
+            height="100%"
+            fill={`url(#lz-${size}-${theme})`}
+          />
         </Svg>
 
         {showMonogram && (
@@ -116,15 +174,15 @@ export function CardBack({ size = "medium", style }: CardBackProps) {
                 {
                   transform: [{ rotate: "45deg" }],
                   borderWidth: 1,
-                  borderColor: "rgba(201,168,118,0.6)",
-                  backgroundColor: "rgba(201,168,118,0.2)",
+                  borderColor: t.accent,
+                  backgroundColor: t.diamondFill,
                 },
               ]}
             />
             <Text
               style={{
                 fontFamily: FONT_WEIGHTS.display.bold,
-                color: "#C9A876",
+                color: t.monogram ?? t.accent,
                 fontSize: monogramSize,
                 letterSpacing: -monogramSize * 0.04,
               }}
@@ -142,7 +200,6 @@ const styles = StyleSheet.create({
   card: {
     overflow: "hidden",
     borderWidth: 1.5,
-    borderColor: "rgba(0,0,0,0.4)",
     backgroundColor: "#8E2F2A",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -154,7 +211,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(201, 168, 118, 0.55)",
     alignItems: "center",
     justifyContent: "center",
   },

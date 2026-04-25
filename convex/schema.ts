@@ -30,6 +30,10 @@ const usersTable = defineTable({
   pr: v.optional(v.number()),
   kora: v.optional(v.number()),
   rankHistory: v.optional(v.array(v.string())),
+  // Cosmetics — purchased and equipped card-back skins.
+  ownedCardBacks: v.optional(v.array(v.string())),
+  activeCardBack: v.optional(v.string()),
+  cosmeticsGrantedDefaults: v.optional(v.boolean()),
 })
   .index("by_clerk_id", ["clerkUserId"])
   .index("by_username", ["username"])

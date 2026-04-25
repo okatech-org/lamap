@@ -14,6 +14,7 @@ import type * as ai_mcts from "../ai/mcts.js";
 import type * as ai_types from "../ai/types.js";
 import type * as challenges from "../challenges.js";
 import type * as chat from "../chat.js";
+import type * as cosmetics from "../cosmetics.js";
 import type * as currencies from "../currencies.js";
 import type * as economy from "../economy.js";
 import type * as friendlyMatches from "../friendlyMatches.js";
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   "ai/types": typeof ai_types;
   challenges: typeof challenges;
   chat: typeof chat;
+  cosmetics: typeof cosmetics;
   currencies: typeof currencies;
   economy: typeof economy;
   friendlyMatches: typeof friendlyMatches;

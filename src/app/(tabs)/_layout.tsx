@@ -54,20 +54,33 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="wallet"
+        name="shop"
         options={{
           title: "Boutique",
-          header: () => <TopBar title="Boutique" />,
+          header: () => <HomeTopBar />,
+          headerTransparent: true,
+          headerStyle: { backgroundColor: "transparent" },
+          headerShadowVisible: false,
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="bag.fill" color={color} />
           ),
         }}
       />
       <Tabs.Screen
+        name="wallet"
+        options={{
+          href: null,
+          header: () => <TopBar title="Wallet" />,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Profil",
-          header: () => <TopBar title="Mon profil" />,
+          header: () => <HomeTopBar />,
+          headerTransparent: true,
+          headerStyle: { backgroundColor: "transparent" },
+          headerShadowVisible: false,
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="person.fill" color={color} />
           ),
