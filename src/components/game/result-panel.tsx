@@ -1,21 +1,18 @@
-import { Button } from "@/components/ui/button";
-import { useColors } from "@/hooks/use-colors";
+import { Divider, LamapButton, LamapSectionLabel } from "@/components/lamap";
+import { COLORS, FONT_WEIGHTS } from "@/design";
 import { useSound } from "@/hooks/use-sound";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
-  withRepeat,
-  withSequence,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import { IconSymbol } from "../ui/icon-symbol";
 
-const PANEL_HEIGHT = 280;
+const PANEL_HEIGHT = 320;
 
 interface ResultPanelProps {
   visible: boolean;
@@ -50,25 +47,20 @@ export function ResultPanel({
   onRejectRevenge,
   prChange,
 }: ResultPanelProps) {
-  const colors = useColors();
   const { playSound } = useSound();
   const soundPlayedRef = useRef(false);
   const [countedGains, setCountedGains] = useState(0);
 
   const translateY = useSharedValue(PANEL_HEIGHT);
   const opacity = useSharedValue(0);
-  const starScale1 = useSharedValue(1);
-  const starScale2 = useSharedValue(1);
-  const starScale3 = useSharedValue(1);
 
   const isWinner = game.winnerId === myUserId;
   const totalBet = game.bet.amount * 2;
   const platformFee = totalBet * 0.02;
-
   const opponentBet = game.bet.amount;
+
   let winnings = 0;
   let multiplier = 1;
-
   if (isWinner) {
     if (game.victoryType === "triple_kora") {
       multiplier = 3;
@@ -87,69 +79,29 @@ export function ResultPanel({
   }
 
   const getVictoryTitle = () => {
-    if (game.victoryType === "triple_kora") return "Victoire par 333 EXPORT !";
-    if (game.victoryType === "double_kora") return "Victoire par 33 EXPORT !";
-    if (game.victoryType === "simple_kora") return "Victoire par KORA !";
-    if (game.victoryType === "auto_sum") return "Victoire par main faible !";
-    if (game.victoryType === "auto_sevens") return "Victoire par triple 7 !";
-    if (game.victoryType === "forfeit") return "Victoire par abandon !";
-    return "Victoire 🎉 !";
+    if (game.victoryType === "triple_kora") return "333 EXPORT !";
+    if (game.victoryType === "double_kora") return "33 EXPORT !";
+    if (game.victoryType === "simple_kora") return "KORA !";
+    if (game.victoryType === "auto_sum") return "MAIN FAIBLE !";
+    if (game.victoryType === "auto_sevens") return "TRIPLE 7 !";
+    if (game.victoryType === "forfeit") return "ABANDON !";
+    return "BANDI !";
   };
 
-  const isKoraWin =
-    game.victoryType === "simple_kora" ||
-    game.victoryType === "double_kora" ||
-    game.victoryType === "triple_kora";
-
-  const getStarCount = () => {
-    if (game.victoryType === "triple_kora") return 3;
-    if (game.victoryType === "double_kora") return 2;
-    if (game.victoryType === "simple_kora") return 1;
-    return 0;
-  };
+  const isFreeGame = game.bet.amount === 0;
+  const showMoneyRow = !isFreeGame;
+  const showPrRow = prChange != null;
 
   useEffect(() => {
     if (visible) {
-      translateY.value = withSpring(0, {
-        damping: 20,
-        stiffness: 90,
-      });
+      translateY.value = withSpring(0, { damping: 20, stiffness: 90 });
       opacity.value = withTiming(1, {
-        duration: 300,
+        duration: 240,
         easing: Easing.out(Easing.ease),
       });
 
-      if (isKoraWin) {
-        starScale1.value = withRepeat(
-          withSequence(
-            withTiming(1.2, { duration: 750 }),
-            withTiming(1, { duration: 750 })
-          ),
-          -1,
-          false
-        );
-        starScale2.value = withRepeat(
-          withSequence(
-            withTiming(1, { duration: 150 }),
-            withTiming(1.2, { duration: 750 }),
-            withTiming(1, { duration: 750 })
-          ),
-          -1,
-          false
-        );
-        starScale3.value = withRepeat(
-          withSequence(
-            withTiming(1, { duration: 300 }),
-            withTiming(1.2, { duration: 750 }),
-            withTiming(1, { duration: 750 })
-          ),
-          -1,
-          false
-        );
-      }
-
-      if (isWinner) {
-        const duration = 1200;
+      if (isWinner && winnings > 0) {
+        const duration = 1000;
         const steps = 30;
         const increment = winnings / steps;
         let current = 0;
@@ -166,42 +118,27 @@ export function ResultPanel({
       }
     } else {
       translateY.value = withTiming(PANEL_HEIGHT, {
-        duration: 250,
+        duration: 220,
         easing: Easing.in(Easing.ease),
       });
-      opacity.value = withTiming(0, { duration: 200 });
+      opacity.value = withTiming(0, { duration: 180 });
       soundPlayedRef.current = false;
       setCountedGains(0);
     }
-  }, [
-    visible,
-    translateY,
-    opacity,
-    isWinner,
-    winnings,
-    isKoraWin,
-    starScale1,
-    starScale2,
-    starScale3,
-  ]);
+  }, [visible, translateY, opacity, isWinner, winnings]);
 
   useEffect(() => {
     if (visible && game && !soundPlayedRef.current) {
       if (isWinner) {
-        if (game.victoryType === "triple_kora") {
-          playSound("koraTriple");
-        } else if (game.victoryType === "double_kora") {
-          playSound("koraDouble");
-        } else if (game.victoryType === "simple_kora") {
-          playSound("kora");
-        } else if (
+        if (game.victoryType === "triple_kora") playSound("koraTriple");
+        else if (game.victoryType === "double_kora") playSound("koraDouble");
+        else if (game.victoryType === "simple_kora") playSound("kora");
+        else if (
           game.victoryType === "auto_sum" ||
           game.victoryType === "auto_sevens"
-        ) {
+        )
           playSound("autoVictory");
-        } else {
-          playSound("victory");
-        }
+        else playSound("victory");
       } else {
         playSound("defeat");
       }
@@ -214,198 +151,154 @@ export function ResultPanel({
     opacity: opacity.value,
   }));
 
-  const star1Style = useAnimatedStyle(() => ({
-    transform: [{ scale: starScale1.value }],
-  }));
-
-  const star2Style = useAnimatedStyle(() => ({
-    transform: [{ scale: starScale2.value }],
-  }));
-
-  const star3Style = useAnimatedStyle(() => ({
-    transform: [{ scale: starScale3.value }],
-  }));
-
-  const gradientColors: readonly [string, string, string] = [
-    "#2E3D4D",
-    "#3A4D5F",
-    "#2E3D4D",
-  ];
-
   return (
-    <Animated.View style={[styles.container, panelStyle]}>
-      <LinearGradient
-        colors={gradientColors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.panel}
-      >
-        {/* Coins décoratifs vintage */}
-        <View style={styles.cornerTL} />
-        <View style={styles.cornerTR} />
-        <View style={styles.cornerBL} />
-        <View style={styles.cornerBR} />
+    <Animated.View style={[styles.container, panelStyle]} pointerEvents="box-none">
+      <View style={styles.panel}>
+        <LinearGradient
+          colors={[
+            "rgba(15,22,32,0)",
+            "rgba(15,22,32,0.85)",
+            "rgba(15,22,32,0.97)",
+          ]}
+          locations={[0, 0.18, 0.55]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+
+        {/* Gold corner ornaments */}
+        <View style={[styles.corner, styles.cornerTL]} />
+        <View style={[styles.corner, styles.cornerTR]} />
+        <View style={[styles.corner, styles.cornerBL]} />
+        <View style={[styles.corner, styles.cornerBR]} />
 
         <View style={styles.content}>
-          {/* Étoiles pour Kora */}
-          {isWinner && isKoraWin && (
-            <View style={styles.starsContainer}>
-              {getStarCount() >= 1 && (
-                <Animated.Text style={[styles.star, star1Style]}>
-                  ★
-                </Animated.Text>
-              )}
-              {getStarCount() >= 2 && (
-                <Animated.Text style={[styles.star, star2Style]}>
-                  ★
-                </Animated.Text>
-              )}
-              {getStarCount() >= 3 && (
-                <Animated.Text style={[styles.star, star3Style]}>
-                  ★
-                </Animated.Text>
-              )}
-            </View>
-          )}
-
-          {/* Titre */}
-          <Text
-            style={[
-              styles.title,
-              {
-                color: isWinner && isKoraWin ? colors.secondary : colors.text,
-                textShadowColor:
-                  isWinner && isKoraWin ?
-                    colors.secondary + "80"
-                  : "transparent",
-              },
-            ]}
-          >
-            {isWinner ? getVictoryTitle() : "Vous avez perdu 💀"}
-          </Text>
-
-          {/* Multiplicateur Kora */}
-          {isWinner && multiplier > 1 && (
-            <Text style={styles.multiplier}>×{multiplier}</Text>
-          )}
-
-          {/* Séparateur décoratif */}
-          <View style={styles.separator}>
-            <View style={styles.separatorLine} />
-            <Text style={styles.separatorDiamond}>◆</Text>
-            <View style={styles.separatorLine} />
-          </View>
-
-          {/* Gains */}
-          <View style={styles.gainsContainer}>
-            <Text
-              style={[styles.gainsLabel, { color: colors.accentForeground }]}
-            >
-              {isWinner ? "Gains" : "Perte"}
-            </Text>
+          <View style={styles.titleRow}>
             <Text
               style={[
-                styles.gainsValue,
-                { color: isWinner ? "#7CB342" : "#E63946" },
+                styles.title,
+                isWinner ? styles.titleWin : styles.titleLoss,
               ]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
             >
-              {isWinner ? "+" : "-"}
-              {isWinner ? countedGains.toLocaleString() : game.bet.amount}{" "}
-              {game.bet.currency}
+              {isWinner ? getVictoryTitle() : "Vous avez perdu"}
             </Text>
+            {!isWinner ? <Text style={styles.skull}>💀</Text> : null}
           </View>
 
-          {/* PR Change */}
-          {prChange && (
-            <View
-              style={[
-                styles.gainsContainer,
-                { backgroundColor: colors.muted, marginTop: 12 },
-              ]}
-            >
-              <Text
-                style={[styles.gainsLabel, { color: colors.mutedForeground }]}
-              >
-                Points de classement
+          {isWinner && multiplier > 1 ? (
+            <View style={styles.multiplierWrap}>
+              <LinearGradient
+                colors={["#C9A876", "#6E5536"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[StyleSheet.absoluteFill, { borderRadius: 999 }]}
+              />
+              <Text style={styles.multiplierText}>
+                ×{multiplier === 1.5 ? "1.5" : multiplier}
               </Text>
+            </View>
+          ) : null}
+
+          <View style={styles.dividerWrap}>
+            <Divider />
+          </View>
+
+          {showPrRow ? (
+            <View style={styles.statRow}>
+              <LamapSectionLabel tone="muted">
+                {prChange! >= 0 ? "Gain" : "Perte"}
+              </LamapSectionLabel>
               <Text
                 style={[
-                  styles.gainsValue,
-                  { color: prChange > 0 ? "#7CB342" : "#E63946" },
+                  styles.statValue,
+                  prChange! >= 0 ? styles.statGain : styles.statLoss,
                 ]}
               >
-                {prChange > 0 ? "+" : ""}
+                {prChange! >= 0 ? "+" : ""}
                 {prChange} PR
               </Text>
             </View>
+          ) : null}
+
+          {showMoneyRow ? (
+            <View style={styles.statRow}>
+              <LamapSectionLabel tone="muted">
+                {isWinner ? "Gains" : "Perte"}
+              </LamapSectionLabel>
+              <Text
+                style={[
+                  styles.statValue,
+                  isWinner ? styles.statGain : styles.statLoss,
+                ]}
+              >
+                {isWinner ? "+" : "−"}
+                {(isWinner
+                  ? countedGains
+                  : game.bet.amount
+                ).toLocaleString("fr-FR")}{" "}
+                {game.bet.currency}
+              </Text>
+            </View>
+          ) : null}
+
+          {/* Revenge received — invitation row above the buttons */}
+          {revengeStatus === "received" &&
+          onAcceptRevenge &&
+          onRejectRevenge ? (
+            <View style={styles.revengeInvite}>
+              <Text style={styles.revengeInviteText}>
+                Votre adversaire veut une revanche !
+              </Text>
+              <View style={styles.actionsRow}>
+                <View style={styles.actionFlex}>
+                  <LamapButton
+                    title="Refuser"
+                    variant="ghost"
+                    onPress={onRejectRevenge}
+                  />
+                </View>
+                <View style={styles.actionFlex}>
+                  <LamapButton
+                    title="Accepter"
+                    variant="primary"
+                    onPress={onAcceptRevenge}
+                  />
+                </View>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.actionsRow}>
+              <View style={styles.actionFlex}>
+                <LamapButton
+                  title="Nouvelle partie"
+                  variant="primary"
+                  onPress={onNewGame}
+                />
+              </View>
+              <View style={styles.actionFlex}>
+                <LamapButton
+                  title={revengeStatus === "sent" ? "Envoyée" : "Revanche"}
+                  variant="ghost"
+                  onPress={onRevenge}
+                  disabled={revengeStatus === "sent"}
+                />
+              </View>
+            </View>
           )}
 
-          <View style={styles.actionsContainer}>
-            <View style={styles.actions}>
-              <Button
-                title="Nouvelle partie"
-                onPress={onNewGame}
-                variant="primary"
-                style={styles.button}
-              />
-              <Button
-                title={revengeStatus === "sent" ? "Envoyée" : "Revanche"}
-                onPress={onRevenge}
-                variant="outline"
-                style={styles.button}
-                disabled={revengeStatus === "sent"}
-              />
-            </View>
-
-            {/* Boutons */}
-            {revengeStatus === "received" &&
-              onAcceptRevenge &&
-              onRejectRevenge && (
-                <View
-                  style={{
-                    gap: 12,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color: colors.text,
-                      textAlign: "center",
-                    }}
-                  >
-                    Votre adversaire veut une revanche !
-                  </Text>
-                  <View style={styles.actions}>
-                    <Button
-                      title="Refuser"
-                      onPress={onRejectRevenge}
-                      variant="secondary"
-                      style={styles.button}
-                      size="sm"
-                    />
-                    <Button
-                      title="Accepter"
-                      onPress={onAcceptRevenge}
-                      variant="primary"
-                      style={styles.button}
-                      size="sm"
-                    />
-                  </View>
-                </View>
-              )}
-          </View>
-          <Button
-            title="Retour à l'accueil"
+          <Pressable
             onPress={onGoHome}
-            variant="ghost"
-            style={styles.button}
-            icon={
-              <IconSymbol name="arrow.left" size={24} color={colors.text} />
-            }
-          />
+            style={styles.goHomeBtn}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Retour à l'accueil"
+          >
+            <Text style={styles.goHomeText}>← Retour à l&apos;accueil</Text>
+          </Pressable>
         </View>
-      </LinearGradient>
+      </View>
     </Animated.View>
   );
 }
@@ -416,160 +309,139 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    minHeight: PANEL_HEIGHT,
     zIndex: 1000,
   },
   panel: {
-    flex: 1,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    borderWidth: 2,
-    borderColor: "#A68258",
-    borderBottomWidth: 0,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 20,
+    position: "relative",
+    paddingTop: 28,
+    paddingHorizontal: 24,
+    paddingBottom: 32,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(201, 168, 118, 0.3)",
   },
-
-  cornerTL: {
+  corner: {
     position: "absolute",
-    top: 8,
-    left: 8,
-    width: 20,
-    height: 20,
-    borderTopWidth: 2,
-    borderLeftWidth: 2,
-    borderColor: "#A68258",
-    borderTopLeftRadius: 4,
+    width: 22,
+    height: 22,
+    borderColor: COLORS.or,
+    opacity: 0.7,
+  },
+  cornerTL: {
+    top: 14,
+    left: 14,
+    borderTopWidth: 1.5,
+    borderLeftWidth: 1.5,
   },
   cornerTR: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    width: 20,
-    height: 20,
-    borderTopWidth: 2,
-    borderRightWidth: 2,
-    borderColor: "#A68258",
-    borderTopRightRadius: 4,
+    top: 14,
+    right: 14,
+    borderTopWidth: 1.5,
+    borderRightWidth: 1.5,
   },
   cornerBL: {
-    position: "absolute",
-    bottom: 8,
-    left: 8,
-    width: 20,
-    height: 20,
-    borderBottomWidth: 2,
-    borderLeftWidth: 2,
-    borderColor: "#A68258",
-    borderBottomLeftRadius: 4,
+    bottom: 14,
+    left: 14,
+    borderBottomWidth: 1.5,
+    borderLeftWidth: 1.5,
   },
   cornerBR: {
-    position: "absolute",
-    bottom: 8,
-    right: 8,
-    width: 20,
-    height: 20,
-    borderBottomWidth: 2,
-    borderRightWidth: 2,
-    borderColor: "#A68258",
-    borderBottomRightRadius: 4,
+    bottom: 14,
+    right: 14,
+    borderBottomWidth: 1.5,
+    borderRightWidth: 1.5,
   },
   content: {
-    flex: 1,
-    padding: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
+    gap: 0,
   },
-  starsContainer: {
+  titleRow: {
     flexDirection: "row",
-    justifyContent: "center",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 8,
-  },
-  star: {
-    color: "#FFD700",
-    fontSize: 28,
-    textShadowColor: "rgba(255, 215, 0, 0.6)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    justifyContent: "center",
+    gap: 10,
   },
   title: {
-    fontSize: 26,
-    fontWeight: "700",
+    fontFamily: FONT_WEIGHTS.display.extrabold,
+    fontSize: 30,
+    letterSpacing: -0.6,
     textAlign: "center",
-    letterSpacing: 2,
-    marginBottom: 8,
+  },
+  titleWin: {
+    color: COLORS.or2,
+    textShadowColor: "rgba(232, 200, 121, 0.45)",
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 20,
+    textShadowRadius: 16,
   },
-  multiplier: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#FFD700",
-    textAlign: "center",
-    marginBottom: 16,
-    textShadowColor: "rgba(255, 215, 0, 0.4)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+  titleLoss: {
+    color: COLORS.cream,
   },
-  separator: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    marginVertical: 20,
+  skull: {
+    fontSize: 28,
   },
-  separatorLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#A68258",
-    opacity: 0.5,
+  multiplierWrap: {
+    alignSelf: "center",
+    marginTop: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    overflow: "hidden",
+    shadowColor: "#E8C879",
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 6,
   },
-  separatorDiamond: {
-    color: "#A68258",
-    fontSize: 12,
+  multiplierText: {
+    fontFamily: FONT_WEIGHTS.display.extrabold,
+    fontSize: 18,
+    color: "#1F1810",
+    letterSpacing: -0.4,
   },
-  gainsContainer: {
+  dividerWrap: {
+    marginTop: 18,
+    marginBottom: 18,
+  },
+  statRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 10,
-    marginBottom: 20,
-  },
-  gainsLabel: {
-    fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    fontWeight: "600",
-  },
-  gainsValue: {
-    fontSize: 24,
-    fontWeight: "700",
-  },
-  onTimeContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
     marginBottom: 16,
   },
-  onTimeLabel: {
-    fontSize: 14,
-    fontWeight: "600",
+  statValue: {
+    fontFamily: FONT_WEIGHTS.display.bold,
+    fontSize: 22,
+    letterSpacing: -0.4,
   },
-  actionsContainer: {
+  statGain: {
+    color: COLORS.or2,
+  },
+  statLoss: {
+    color: COLORS.terre2,
+  },
+  revengeInvite: {
     gap: 12,
+    marginBottom: 6,
   },
-  actions: {
+  revengeInviteText: {
+    fontFamily: FONT_WEIGHTS.body.semibold,
+    fontSize: 13,
+    color: COLORS.cream,
+    textAlign: "center",
+  },
+  actionsRow: {
     flexDirection: "row",
-    gap: 12,
-    marginBottom: 10,
+    gap: 10,
   },
-  button: {
+  actionFlex: {
     flex: 1,
+  },
+  goHomeBtn: {
+    marginTop: 16,
+    alignSelf: "center",
+    padding: 8,
+  },
+  goHomeText: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 13,
+    color: "rgba(245, 242, 237, 0.6)",
   },
 });

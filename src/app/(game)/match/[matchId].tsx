@@ -1,21 +1,24 @@
 import { BattleZone } from "@/components/game/battle-zone";
 import { CardHand, type Card } from "@/components/game/card-hand";
-import { ConcedeButton } from "@/components/game/concede-button";
 import { GameTimer } from "@/components/game/game-timer";
-import { OpponentZone } from "@/components/game/opponent-zone";
 import { PlaceholderCardHand } from "@/components/game/placeholder-card-hand";
 import { ResultAnimation } from "@/components/game/result-animation";
 import { ResultPanel } from "@/components/game/result-panel";
-import { TurnBadge } from "@/components/game/turn-badge";
 import { TurnHistory } from "@/components/game/turn-history";
-import { TurnPips } from "@/components/game/turn-pips";
+import {
+  LamapButton,
+  LamapGameTopBar,
+  LamapKoraOverlay,
+  LamapLeadSuitChip,
+  LamapOpponentBar,
+  LamapTurnBadge,
+  TableBg,
+} from "@/components/lamap";
 import { GameTutorial } from "@/components/tutorial/game-tutorial";
-import { BackgroundGradient } from "@/components/ui/background-gradient";
-import { Button } from "@/components/ui/button";
+import { COLORS, FONT_WEIGHTS } from "@/design";
 import { api } from "@convex/_generated/api";
 import { Rank, Suit } from "@convex/validators";
 import { useAuth } from "@/hooks/use-auth";
-import { useColors } from "@/hooks/use-colors";
 import { useGame } from "@/hooks/use-game";
 import { useGameTimer } from "@/hooks/use-game-timer";
 import { useMatchmaking } from "@/hooks/use-matchmaking";
@@ -41,71 +44,56 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
-  const colors = useColors();
   const router = useRouter();
-
-  const errorStyles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    content: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      padding: 20,
-      gap: 16,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: "700",
-      textAlign: "center",
-      color: colors.text,
-    },
-    message: {
-      fontSize: 16,
-      textAlign: "center",
-      lineHeight: 22,
-      maxWidth: 300,
-      color: colors.mutedForeground,
-    },
-    actions: {
-      flexDirection: "row",
-      gap: 12,
-      marginTop: 8,
-    },
-    button: {
-      minWidth: 120,
-    },
-  });
-
   return (
-    <SafeAreaView style={errorStyles.container}>
-      <View style={errorStyles.content}>
-        <Ionicons name="alert-circle" size={64} color={colors.destructive} />
-        <Text style={errorStyles.title}>Erreur de chargement</Text>
-        <Text style={errorStyles.message}>{error.message}</Text>
-        <View style={errorStyles.actions}>
-          <Button
-            title="Réessayer"
-            onPress={retry}
-            variant="primary"
-            style={errorStyles.button}
-          />
-          <Button
-            title="Retour"
-            onPress={() => router.back()}
-            variant="outline"
-            style={errorStyles.button}
-          />
+    <View style={errorStyles.root}>
+      <TableBg dust={false} />
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+        <View style={errorStyles.content}>
+          <Ionicons name="alert-circle" size={64} color={COLORS.terre2} />
+          <Text style={errorStyles.title}>Erreur de chargement</Text>
+          <Text style={errorStyles.message}>{error.message}</Text>
+          <View style={errorStyles.actions}>
+            <LamapButton title="Réessayer" variant="primary" onPress={retry} />
+            <LamapButton
+              title="Retour"
+              variant="ghost"
+              onPress={() => router.back()}
+            />
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
+const errorStyles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: COLORS.bg },
+  content: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    gap: 16,
+  },
+  title: {
+    fontFamily: FONT_WEIGHTS.display.bold,
+    fontSize: 24,
+    color: COLORS.cream,
+    textAlign: "center",
+  },
+  message: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 14,
+    color: "rgba(245, 242, 237, 0.7)",
+    textAlign: "center",
+    maxWidth: 300,
+    lineHeight: 20,
+  },
+  actions: { flexDirection: "row", gap: 12, marginTop: 8 },
+});
+
 export default function MatchScreen() {
-  const colors = useColors();
   const params = useLocalSearchParams<{ matchId: string; tutorial?: string }>();
   const { matchId } = params;
   const isTutorial = params.tutorial === "true";
@@ -378,176 +366,47 @@ export default function MatchScreen() {
     }
   }, [userId, matchId, concedeGameMutation, router]);
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    loadingText: {
-      color: colors.text,
-      marginTop: 16,
-      fontSize: 16,
-    },
-    header: {
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      backgroundColor: colors.card,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    headerTop: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    headerLeft: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 12,
-    },
-    betBadge: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-      backgroundColor: colors.secondary,
-      borderWidth: 1,
-      padding: 4,
-      paddingHorizontal: 8,
-      borderRadius: 12,
-    },
-    betText: {
-      fontSize: 12,
-      color: colors.secondaryForeground,
-      fontWeight: "600",
-    },
-    headerRight: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 14,
-    },
-    chatButton: {
-      padding: 4,
-      position: "relative",
-    },
-    chatBadge: {
-      position: "absolute",
-      top: -2,
-      right: -2,
-      minWidth: 18,
-      height: 18,
-      borderRadius: 9,
-      backgroundColor: colors.destructive,
-      justifyContent: "center",
-      alignItems: "center",
-      paddingHorizontal: 4,
-      borderWidth: 2,
-      borderColor: colors.background,
-    },
-    chatBadgeText: {
-      fontSize: 10,
-      fontWeight: "700",
-      color: colors.destructiveForeground,
-    },
-    playArea: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    handArea: {
-      backgroundColor: colors.card,
-      borderTopWidth: 2,
-      borderTopColor: colors.border,
-      paddingTop: 20,
-      height: 200,
-      position: "relative",
-      display: "flex",
-      flexDirection: "row",
-      justifyContent: "center",
-    },
-    turnBadgeContainer: {
-      alignItems: "center",
-      paddingVertical: 8,
-      position: "absolute",
-      width: "100%",
-      top: -80,
-      zIndex: 0,
-    },
-    confirmButtonContainer: {
-      position: "absolute",
-      bottom: 180,
-      left: 0,
-      right: 0,
-      alignItems: "center",
-      zIndex: 100,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: "700",
-      color: colors.text,
-      marginBottom: 16,
-    },
-    loadingOverlay: {
-      alignItems: "center",
-      gap: 12,
-    },
-    loadingLabel: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: colors.mutedForeground,
-    },
-    quitButtonContainer: {
-      position: "absolute",
-      bottom: 170,
-      minWidth: 150,
-      left: 0,
-      right: 0,
-      alignItems: "center",
-      zIndex: 100,
-    },
-  });
+  // Styles are static — defined at module bottom (`screenStyles`).
+  const styles = screenStyles;
 
   if (!matchId) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
-        <Text style={styles.loadingText}>Match ID manquant</Text>
-      </SafeAreaView>
+      <View style={styles.root}>
+        <TableBg dust={false} />
+        <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+          <Text style={styles.loadingText}>Match ID manquant</Text>
+        </SafeAreaView>
+      </View>
     );
   }
 
   if (!game) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <View style={styles.headerLeft} />
+      <View style={styles.root}>
+        <TableBg />
+        <LamapGameTopBar current={0} total={5} />
+        <SafeAreaView style={styles.contentArea} edges={["bottom"]}>
+          <LamapOpponentBar name="?" cardsRemaining={5} />
+          <View style={styles.playArea}>
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color={COLORS.or2} />
+              <Text style={styles.loadingLabel}>
+                Chargement de la partie…
+              </Text>
+            </View>
           </View>
-        </View>
-
-        <OpponentZone name="?" hasHand={false} cardsRemaining={5} />
-
-        <View style={styles.playArea}>
-          <BattleZone
-            opponentCards={[]}
-            playerCards={[]}
-            battleLayout={battleLayout}
-          />
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color={colors.secondary} />
-            <Text style={styles.loadingLabel}>Chargement de la partie...</Text>
+          <View style={styles.handArea}>
+            <PlaceholderCardHand cardCount={5} />
+            <View style={styles.quitButtonContainer}>
+              <LamapButton
+                title="Quitter"
+                variant="ghost"
+                onPress={() => router.back()}
+              />
+            </View>
           </View>
-        </View>
-
-        <View style={styles.handArea}>
-          <PlaceholderCardHand cardCount={5} />
-          <View style={styles.quitButtonContainer}>
-            <Button
-              title="Quitter"
-              onPress={() => router.back()}
-              variant="outline"
-              size="sm"
-            />
-          </View>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </View>
     );
   }
 
@@ -558,44 +417,34 @@ export default function MatchScreen() {
     });
 
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <View style={styles.headerLeft} />
-          </View>
-        </View>
-
-        <OpponentZone
-          name={opponent?.username || "?"}
-          hasHand={false}
-          cardsRemaining={5}
-        />
-
-        <View style={styles.playArea}>
-          <BattleZone
-            opponentCards={[]}
-            playerCards={[]}
-            battleLayout={battleLayout}
+      <View style={styles.root}>
+        <TableBg />
+        <LamapGameTopBar current={0} total={game.maxRounds || 5} />
+        <SafeAreaView style={styles.contentArea} edges={["bottom"]}>
+          <LamapOpponentBar
+            name={opponent?.username || "?"}
+            cardsRemaining={5}
           />
-
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color={colors.secondary} />
-            <Text style={styles.loadingLabel}>Préparation de la partie...</Text>
+          <View style={styles.playArea}>
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color={COLORS.or2} />
+              <Text style={styles.loadingLabel}>
+                Préparation de la partie…
+              </Text>
+            </View>
           </View>
-        </View>
-
-        <View style={styles.handArea}>
-          <PlaceholderCardHand cardCount={5} />
-          <View style={styles.quitButtonContainer}>
-            <Button
-              title="Quitter"
-              onPress={() => router.back()}
-              variant="outline"
-              size="sm"
-            />
+          <View style={styles.handArea}>
+            <PlaceholderCardHand cardCount={5} />
+            <View style={styles.quitButtonContainer}>
+              <LamapButton
+                title="Quitter"
+                variant="ghost"
+                onPress={() => router.back()}
+              />
+            </View>
           </View>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </View>
     );
   }
 
@@ -622,9 +471,7 @@ export default function MatchScreen() {
   const opponentTimeRemaining = opponentTimer?.timeRemaining || 0;
   const isOpponentTurn = opponentId === game?.currentTurnPlayerId;
 
-  const roundsWonByPlayer =
-    turnResults?.filter((r) => r.winnerId === myUserId).length || 0;
-  const roundsWonByOpponent = (turnResults?.length || 0) - roundsWonByPlayer;
+  // Visible header pip data is now derived from `wonRoundIndices` below.
 
   const opponentPlayedCard = currentPlays?.find(
     (pc) => pc.playerId !== myUserId
@@ -668,69 +515,181 @@ export default function MatchScreen() {
     ...(includeCurrentPlays && playerPlayedCard ? [playerPlayedCard] : []),
   ].filter(Boolean);
 
-  const gameScreen = (
-    <BackgroundGradient>
-      <SafeAreaView style={styles.container} edges={["top"]}>
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <View style={styles.headerLeft}>
-              <TurnPips
-                totalRounds={game.maxRounds}
-                currentRound={game.currentRound}
-                roundsWonByPlayer={roundsWonByPlayer}
-                roundsWonByOpponent={roundsWonByOpponent}
-              />
-            </View>
-            <View style={styles.headerRight}>
-              {isTimerActive && game.status === "PLAYING" && (
-                <GameTimer
-                  timeRemaining={timeRemaining}
-                  totalTime={totalTime}
-                  isMyTurn={isMyTurn}
-                  isActive={true}
-                  isOpponentTimer={false}
-                />
-              )}
-              {game.status === "PLAYING" && (
-                <ConcedeButton onConcede={handleConcede} disabled={isPlaying} />
-              )}
-              {game.mode !== "AI" && (
-                <TouchableOpacity
-                  onPress={handleChatPress}
-                  style={styles.chatButton}
-                >
-                  <Ionicons
-                    name="chatbubble"
-                    size={24}
-                    color={colors.secondary}
-                  />
-                  {unreadCount > 0 && (
-                    <View style={styles.chatBadge}>
-                      <Text style={styles.chatBadgeText}>
-                        {unreadCount > 99 ? "99+" : unreadCount}
-                      </Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        </View>
+  const wonRoundIndices: number[] = (turnResults || [])
+    .map((r, i) => (r.winnerId === myUserId ? i : -1))
+    .filter((i) => i >= 0);
 
+  const showKoraOverlay =
+    game.status === "ENDED" &&
+    !!game.victoryType &&
+    typeof game.victoryType === "string" &&
+    game.victoryType.toLowerCase().includes("kora") &&
+    game.winnerId === myUserId &&
+    resultPanelVisible;
+
+  const koraMultiplier: 2 | 3 | 4 | 8 = (() => {
+    const vt = (game.victoryType || "").toLowerCase();
+    if (vt.includes("triple")) return 8;
+    if (vt.includes("double")) return 4;
+    return 2;
+  })();
+
+  // ─── End-game handlers (shared between ResultPanel and the Kora overlay) ──
+  const handleRevenge = async () => {
+    if (!myUserId || !matchId) return;
+    const isAIMatch = game.aiDifficulty !== null;
+    const isRankedMatch = game.mode === "RANKED";
+
+    if (isAIMatch) {
+      try {
+        const difficulty = game.aiDifficulty as "easy" | "medium" | "hard";
+        const newGameId = await createMatchVsAI(0, difficulty, "XAF");
+        setResultPanelVisible(false);
+        router.replace(`/(game)/match/${newGameId}`);
+      } catch (error) {
+        Alert.alert(
+          "Erreur",
+          error instanceof Error
+            ? error.message
+            : "Impossible de créer la revanche",
+        );
+      }
+    } else if (isRankedMatch) {
+      try {
+        await sendRevengeRequest({
+          originalGameId: matchId,
+          senderId: myUserId,
+        });
+      } catch (error) {
+        console.error("Erreur sendRevengeRequest:", error);
+        Alert.alert(
+          "Erreur",
+          error instanceof Error
+            ? error.message
+            : "Impossible d'envoyer la proposition de revanche",
+        );
+      }
+    }
+  };
+
+  const handleNewGame = () => {
+    setResultPanelVisible(false);
+    const isAIMatch = game.aiDifficulty !== null;
+    const isRankedMatch = game.mode === "RANKED";
+    if (isAIMatch) router.push(`/(lobby)/select-difficulty`);
+    else if (isRankedMatch) router.replace("/(lobby)/ranked-matchmaking");
+    else router.replace("/(lobby)/select-mode");
+  };
+
+  const handleGoHome = () => {
+    setResultPanelVisible(false);
+    router.replace("/(tabs)");
+  };
+
+  const handleAcceptRevenge = async () => {
+    if (!myUserId || !revengeStatus?.challengeId) return;
+    try {
+      const result = await acceptRevengeRequest({
+        challengeId: revengeStatus.challengeId,
+        userId: myUserId,
+      });
+      setResultPanelVisible(false);
+      router.replace(`/(game)/match/${result.gameId}`);
+    } catch (error) {
+      Alert.alert(
+        "Erreur",
+        error instanceof Error
+          ? error.message
+          : "Impossible d'accepter la revanche",
+      );
+    }
+  };
+
+  const handleRejectRevenge = async () => {
+    if (!revengeStatus?.challengeId || !myUserId) return;
+    try {
+      await rejectChallenge({
+        challengeId: revengeStatus.challengeId,
+        userId: myUserId,
+      });
+    } catch (error) {
+      console.error("Error rejecting revenge:", error);
+    }
+  };
+
+  const normalizedRevengeStatus: "none" | "sent" | "received" | "accepted" =
+    revengeStatus?.status === "sent"
+      ? "sent"
+      : revengeStatus?.status === "accepted"
+        ? "sent"
+        : revengeStatus?.status === "received"
+          ? "received"
+          : "none";
+
+  const gameScreen = (
+    <View style={styles.root}>
+      <TableBg />
+      <LamapGameTopBar
+        current={Math.max(0, (game.currentRound || 1) - 1)}
+        total={game.maxRounds}
+        won={wonRoundIndices}
+        onConcede={game.status === "PLAYING" ? handleConcede : undefined}
+        rightSlot={
+          <View style={styles.headerExtras}>
+            {isTimerActive && game.status === "PLAYING" && (
+              <GameTimer
+                timeRemaining={timeRemaining}
+                totalTime={totalTime}
+                isMyTurn={isMyTurn}
+                isActive={true}
+                isOpponentTimer={false}
+              />
+            )}
+            {game.mode !== "AI" && (
+              <TouchableOpacity
+                onPress={handleChatPress}
+                style={styles.chatButton}
+                accessibilityRole="button"
+                accessibilityLabel="Chat de la partie"
+              >
+                <Ionicons name="chatbubble" size={22} color={COLORS.or2} />
+                {unreadCount > 0 && (
+                  <View style={styles.chatBadge}>
+                    <Text style={styles.chatBadgeText}>
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+        }
+      />
+
+      <SafeAreaView style={styles.contentArea} edges={["bottom"]}>
         {opponent && (
-          <OpponentZone
-            name={opponent.username}
-            hasHand={opponentHasHand}
+          <LamapOpponentBar
+            name={opponent.username || "?"}
+            hasHand={!!opponentHasHand}
             cardsRemaining={opponentCardsRemaining}
-            timerRemaining={
-              isTimerActive && game.status === "PLAYING" ?
-                opponentTimeRemaining
-              : undefined
-            }
-            totalTime={totalTime}
-            isOpponentTurn={isOpponentTurn}
           />
         )}
+
+        {leadSuit ? (
+          <View style={styles.leadSuitWrap}>
+            <LamapLeadSuitChip suit={leadSuit as any} />
+          </View>
+        ) : null}
+
+        {/* Subtle indicator while we wait for the opponent — replaces the
+            heavy isOpponentTurn pulse from the legacy OpponentZone. */}
+        {isOpponentTurn && game.status === "PLAYING" && opponentTimeRemaining > 0 ? (
+          <View style={styles.opponentTurnHint}>
+            <Text style={styles.opponentTurnText}>
+              Tour de {opponent?.username || "l'adversaire"}…
+            </Text>
+          </View>
+        ) : null}
 
         <View style={styles.playArea}>
           {playAreaMode === "battle" ?
@@ -743,7 +702,8 @@ export default function MatchScreen() {
                 suit: card?.suit as Suit,
                 rank: card?.rank as Rank,
               }))}
-              leadSuit={leadSuit}
+              // leadSuit chip is rendered above the play area via
+              // <LamapLeadSuitChip /> — don't double up here.
               battleLayout={battleLayout}
             />
           : <TurnHistory
@@ -758,7 +718,10 @@ export default function MatchScreen() {
 
         <View style={styles.handArea}>
           <View style={styles.turnBadgeContainer}>
-            <TurnBadge visible={isMyTurn} hasHand={iHaveHand} />
+            <LamapTurnBadge
+              visible={isMyTurn && game.status === "PLAYING"}
+              label={iHaveHand ? "À toi de mener" : "À toi de jouer"}
+            />
           </View>
           <CardHand
             cards={myHand}
@@ -770,7 +733,7 @@ export default function MatchScreen() {
           />
         </View>
 
-        {game.status === "ENDED" && game.victoryType && (
+        {game.status === "ENDED" && game.victoryType && !showKoraOverlay && (
           <>
             <ResultAnimation
               visible={resultPanelVisible}
@@ -782,112 +745,29 @@ export default function MatchScreen() {
               game={game}
               myUserId={myUserId ?? null}
               prChange={prChange?.change ?? null}
-              onRevenge={async () => {
-                if (!myUserId || !matchId) return;
-
-                const isAIMatch = game.aiDifficulty !== null;
-                const isRankedMatch = game.mode === "RANKED";
-
-                if (isAIMatch) {
-                  try {
-                    const difficulty = game.aiDifficulty as
-                      | "easy"
-                      | "medium"
-                      | "hard";
-                    const newGameId = await createMatchVsAI(
-                      0, // Free AI games
-                      difficulty,
-                      "XAF" // Currency doesn't matter for free games
-                    );
-                    setResultPanelVisible(false);
-                    router.replace(`/(game)/match/${newGameId}`);
-                  } catch (error) {
-                    Alert.alert(
-                      "Erreur",
-                      error instanceof Error ?
-                        error.message
-                      : "Impossible de créer la revanche"
-                    );
-                  }
-                } else if (isRankedMatch) {
-                  try {
-                    await sendRevengeRequest({
-                      originalGameId: matchId,
-                      senderId: myUserId,
-                    });
-                  } catch (error) {
-                    console.error("Erreur sendRevengeRequest:", error);
-                    Alert.alert(
-                      "Erreur",
-                      error instanceof Error ?
-                        error.message
-                      : "Impossible d'envoyer la proposition de revanche"
-                    );
-                  }
-                }
-              }}
-              onNewGame={() => {
-                setResultPanelVisible(false);
-
-                const isAIMatch = game.aiDifficulty !== null;
-                const isRankedMatch = game.mode === "RANKED";
-
-                if (isAIMatch) {
-                  router.push(`/(lobby)/select-difficulty`);
-                } else if (isRankedMatch) {
-                  router.replace("/(lobby)/ranked-matchmaking");
-                } else {
-                  router.replace("/(lobby)/select-mode");
-                }
-              }}
-              onGoHome={() => {
-                setResultPanelVisible(false);
-                router.replace("/(tabs)");
-              }}
-              revengeStatus={
-                revengeStatus?.status === "sent" ? "sent"
-                : revengeStatus?.status === "accepted" ?
-                  "sent"
-                : revengeStatus?.status === "received" ?
-                  "received"
-                : "none"
-              }
-              onAcceptRevenge={async () => {
-                if (!myUserId || !revengeStatus?.challengeId) return;
-
-                try {
-                  const result = await acceptRevengeRequest({
-                    challengeId: revengeStatus.challengeId,
-                    userId: myUserId,
-                  });
-                  setResultPanelVisible(false);
-                  router.replace(`/(game)/match/${result.gameId}`);
-                } catch (error) {
-                  Alert.alert(
-                    "Erreur",
-                    error instanceof Error ?
-                      error.message
-                    : "Impossible d'accepter la revanche"
-                  );
-                }
-              }}
-              onRejectRevenge={async () => {
-                if (!revengeStatus?.challengeId || !myUserId) return;
-
-                try {
-                  await rejectChallenge({
-                    challengeId: revengeStatus.challengeId,
-                    userId: myUserId,
-                  });
-                } catch (error) {
-                  console.error("Error rejecting revenge:", error);
-                }
-              }}
+              onRevenge={handleRevenge}
+              onNewGame={handleNewGame}
+              onGoHome={handleGoHome}
+              revengeStatus={normalizedRevengeStatus}
+              onAcceptRevenge={handleAcceptRevenge}
+              onRejectRevenge={handleRejectRevenge}
             />
           </>
         )}
       </SafeAreaView>
-    </BackgroundGradient>
+
+      <LamapKoraOverlay
+        visible={showKoraOverlay}
+        multiplier={koraMultiplier}
+        message={`Tu remportes la manche avec un Kora.\nTes gains sont multipliés ×${koraMultiplier}.`}
+        onNewGame={handleNewGame}
+        onRevenge={handleRevenge}
+        onGoHome={handleGoHome}
+        revengeStatus={normalizedRevengeStatus}
+        onAcceptRevenge={handleAcceptRevenge}
+        onRejectRevenge={handleRejectRevenge}
+      />
+    </View>
   );
 
   if (isTutorial) {
@@ -907,3 +787,106 @@ export default function MatchScreen() {
 
   return gameScreen;
 }
+
+const screenStyles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+  },
+  contentArea: {
+    flex: 1,
+  },
+  loadingText: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    color: COLORS.cream,
+    marginTop: 16,
+    fontSize: 14,
+    textAlign: "center",
+  },
+  headerExtras: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  chatButton: {
+    padding: 4,
+    position: "relative",
+  },
+  chatBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: COLORS.terre,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: COLORS.bg,
+  },
+  chatBadgeText: {
+    fontFamily: FONT_WEIGHTS.body.bold,
+    fontSize: 10,
+    color: COLORS.cream,
+  },
+  leadSuitWrap: {
+    alignItems: "center",
+    marginTop: 8,
+  },
+  opponentTurnHint: {
+    alignSelf: "center",
+    marginTop: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: "rgba(15, 22, 32, 0.7)",
+    borderWidth: 1,
+    borderColor: COLORS.hairline,
+  },
+  opponentTurnText: {
+    fontFamily: FONT_WEIGHTS.mono.medium,
+    fontSize: 10,
+    letterSpacing: 1.4,
+    color: "rgba(245, 242, 237, 0.7)",
+    textTransform: "uppercase",
+  },
+  playArea: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  handArea: {
+    paddingTop: 20,
+    height: 200,
+    position: "relative",
+    backgroundColor: "transparent",
+  },
+  turnBadgeContainer: {
+    alignItems: "center",
+    paddingVertical: 8,
+    position: "absolute",
+    width: "100%",
+    top: -60,
+    zIndex: 5,
+  },
+  loadingOverlay: {
+    alignItems: "center",
+    gap: 12,
+  },
+  loadingLabel: {
+    fontFamily: FONT_WEIGHTS.body.semibold,
+    fontSize: 14,
+    color: "rgba(245, 242, 237, 0.7)",
+  },
+  quitButtonContainer: {
+    position: "absolute",
+    bottom: 24,
+    minWidth: 150,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 100,
+  },
+});

@@ -1263,6 +1263,11 @@ export const playCardInternal = internalMutation({
             multiplier,
             winnerId,
           });
+          gameState.victoryType = koraType as
+            | "normal"
+            | "simple_kora"
+            | "double_kora"
+            | "triple_kora";
           gameState.version = gameState.version + 1;
           gameState.lastUpdatedAt = Date.now();
         }
