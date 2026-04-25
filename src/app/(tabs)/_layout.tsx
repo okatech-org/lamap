@@ -1,43 +1,31 @@
+import { COLORS, FONT_WEIGHTS } from "@/design";
 import { BlurView } from "expo-blur";
 import { Tabs } from "expo-router";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { HapticTab } from "@/components/haptic-tab";
+import { HomeTopBar } from "@/components/lamap";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { MessageBadge } from "@/components/ui/message-badge";
 import { TopBar } from "@/components/ui/top-bar";
-import { useColors } from "@/hooks/use-colors";
 
 export const unstable_settings = {
   initialRouteName: "index",
 };
 
 export default function TabLayout() {
-  const colors = useColors();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.tabIconDefault,
+        tabBarActiveTintColor: COLORS.terre2,
+        tabBarInactiveTintColor: "rgba(245, 242, 237, 0.55)",
         headerShown: true,
-        tabBarStyle: {
-          position: "absolute",
-          borderTopWidth: 0,
-          elevation: 0,
-        },
+        tabBarStyle: styles.tabBar,
+        tabBarLabelStyle: styles.tabLabel,
         tabBarBackground: () => (
-          <BlurView
-            intensity={100}
-            tint="dark"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-            }}
-          />
+          <View style={StyleSheet.absoluteFill} pointerEvents="none">
+            <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />
+            <View style={styles.tabBgTint} />
+          </View>
         ),
         tabBarButton: HapticTab,
       }}
@@ -46,45 +34,72 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Jouer",
-          header: () => <TopBar title="Accueil" />,
+          header: () => <HomeTopBar />,
+          headerTransparent: true,
+          headerStyle: { backgroundColor: "transparent" },
+          headerShadowVisible: false,
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="gamecontroller.fill" color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="messages"
+        name="leaderboard"
         options={{
-          title: "Messages",
-          header: () => <TopBar title="Messages" />,
+          title: "Classement",
+          header: () => <TopBar title="Classement" />,
           tabBarIcon: ({ color }) => (
-            <View style={{ position: "relative" }}>
-              <IconSymbol size={28} name="message.fill" color={color} />
-              <MessageBadge />
-            </View>
+            <IconSymbol size={28} name="chart.bar.fill" color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="wallet"
         options={{
-          title: "Portefeuille",
-          header: () => <TopBar title="Portefeuille" />,
+          title: "Boutique",
+          header: () => <TopBar title="Boutique" />,
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="wallet.pass.fill" color={color} />
+            <IconSymbol size={28} name="bag.fill" color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Mon profil",
+          title: "Profil",
           header: () => <TopBar title="Mon profil" />,
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="person.fill" color={color} />
           ),
         }}
       />
+      <Tabs.Screen
+        name="messages"
+        options={{
+          href: null,
+          header: () => <TopBar title="Messages" />,
+        }}
+      />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    position: "absolute",
+    borderTopWidth: 1,
+    borderTopColor: COLORS.hairline,
+    backgroundColor: "transparent",
+    elevation: 0,
+  },
+  tabLabel: {
+    fontFamily: FONT_WEIGHTS.body.medium,
+    fontSize: 10,
+    letterSpacing: -0.1,
+    marginTop: 2,
+  },
+  tabBgTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(15, 22, 32, 0.7)",
+  },
+});

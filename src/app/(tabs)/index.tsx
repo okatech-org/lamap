@@ -1,78 +1,69 @@
-import { RankProgress } from "@/components/ranking/rank-progress";
-import { Button } from "@/components/ui/button";
-import { api } from "@convex/_generated/api";
-import { INITIAL_PR } from "@convex/ranking";
+import {
+  DeepBg,
+  LamapButton,
+  LamapHeroCard,
+  LamapModeTile,
+  LamapSectionLabel,
+} from "@/components/lamap";
+import { COLORS, FONT_WEIGHTS, RADII } from "@/design";
 import { useAuth } from "@/hooks/use-auth";
-import { useColors } from "@/hooks/use-colors";
 import { Ionicons } from "@expo/vector-icons";
+import { useHeaderHeight } from "@react-navigation/elements";
+import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { type ErrorBoundaryProps, useRouter } from "expo-router";
+import React from "react";
 import {
-    ActivityIndicator,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+type GameMode = "AI" | "RANKED" | "ONLINE" | "CASH" | "LOCAL" | string;
+
+type QuickPlay = {
+  href: Parameters<ReturnType<typeof useRouter>["push"]>[0];
+  modeLabel: string;
+  subtitle: string;
+};
+
+function quickPlayTarget(lastMode: GameMode | undefined): QuickPlay {
+  switch (lastMode) {
+    case "AI":
+      return {
+        href: "/(lobby)/select-difficulty",
+        modeLabel: "IA",
+        subtitle: "Reprends ta dernière difficulté",
+      };
+    // RANKED, ONLINE, CASH and no-history all funnel to ranked matchmaking.
+    default:
+      return {
+        href: "/(lobby)/ranked-matchmaking",
+        modeLabel: "CLASSÉ",
+        subtitle: "Affronte un joueur de ton rang",
+      };
+  }
+}
+
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
-  const colors = useColors();
   const router = useRouter();
-
-  const errorStyles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    content: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      padding: 20,
-      gap: 16,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: "700",
-      textAlign: "center",
-      color: colors.text,
-    },
-    message: {
-      fontSize: 16,
-      textAlign: "center",
-      lineHeight: 22,
-      maxWidth: 300,
-      color: colors.mutedForeground,
-    },
-    actions: {
-      flexDirection: "row",
-      gap: 12,
-      marginTop: 8,
-    },
-    button: {
-      minWidth: 120,
-    },
-  });
-
   return (
-    <SafeAreaView style={errorStyles.container}>
-      <View style={errorStyles.content}>
-        <Ionicons name="alert-circle" size={64} color={colors.destructive} />
-        <Text style={errorStyles.title}>Erreur de chargement</Text>
-        <Text style={errorStyles.message}>{error.message}</Text>
-        <View style={errorStyles.actions}>
-          <Button
-            title="Réessayer"
-            onPress={retry}
-            variant="primary"
-            style={errorStyles.button}
-          />
-          <Button
+    <SafeAreaView style={styles.errorRoot}>
+      <DeepBg />
+      <View style={styles.errorContent}>
+        <Ionicons name="alert-circle" size={64} color={COLORS.terre2} />
+        <Text style={styles.errorTitle}>Erreur de chargement</Text>
+        <Text style={styles.errorMessage}>{error.message}</Text>
+        <View style={styles.errorActions}>
+          <LamapButton title="Réessayer" variant="primary" onPress={retry} />
+          <LamapButton
             title="Retour"
+            variant="ghost"
             onPress={() => router.back()}
-            variant="outline"
-            style={errorStyles.button}
           />
         </View>
       </View>
@@ -81,447 +72,386 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 }
 
 export default function HomeScreen() {
-  const colors = useColors();
   const router = useRouter();
+  const headerHeight = useHeaderHeight();
   const { userId, isSignedIn } = useAuth();
   const user = useQuery(
     api.users.getCurrentUser,
-    userId ? { clerkUserId: userId } : "skip"
+    userId ? { clerkUserId: userId } : "skip",
   );
   const activeGame = useQuery(
     api.games.getActiveMatch,
-    userId ? { clerkId: userId } : "skip"
-  );
-  const userStats = useQuery(
-    api.users.getUserStats,
-    userId ? { clerkUserId: userId } : "skip"
+    userId ? { clerkId: userId } : "skip",
   );
   const allRecentGames = useQuery(
     api.games.getRecentGames,
-    userId ? { clerkUserId: userId, limit: 10 } : "skip"
+    userId ? { clerkUserId: userId, limit: 10 } : "skip",
   );
 
-  const recentGames = allRecentGames
-    ?.filter((game) => game.mode !== "AI")
-    .slice(0, 3);
+  const lastMode = allRecentGames?.[0]?.mode as GameMode | undefined;
+  const quickPlay = quickPlayTarget(lastMode);
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    scrollView: {
-      flex: 1,
-    },
-    content: {
-      padding: 20,
-      paddingBottom: 100,
-    },
-    rankSection: {
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 16,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    header: {
-      marginBottom: 24,
-    },
-    greeting: {
-      fontSize: 28,
-      fontWeight: "700",
-      color: colors.text,
-      marginBottom: 4,
-    },
-    subtitle: {
-      fontSize: 14,
-      color: colors.mutedForeground,
-    },
-    activeMatchCard: {
-      backgroundColor: colors.accent,
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 20,
-      borderWidth: 2,
-      borderColor: colors.secondary,
-    },
-    activeMatchContent: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: 16,
-    },
-    activeMatchLabel: {
-      fontSize: 14,
-      color: colors.secondary,
-      fontWeight: "700",
-      marginBottom: 4,
-    },
-    activeMatchInfo: {
-      fontSize: 16,
-      color: colors.text,
-      fontWeight: "600",
-    },
-    rejoinButton: {
-      minHeight: 40,
-      paddingHorizontal: 16,
-      backgroundColor: colors.secondary,
-    },
-    rejoinButtonText: {
-      color: colors.secondaryForeground,
-      fontSize: 14,
-    },
-    balanceCard: {
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 20,
-      alignItems: "center",
-      marginBottom: 20,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    balanceLabel: {
-      fontSize: 14,
-      color: colors.mutedForeground,
-      marginBottom: 8,
-    },
-    balanceAmount: {
-      fontSize: 42,
-      fontWeight: "700",
-      color: colors.secondary,
-      marginBottom: 8,
-    },
-    badge: {
-      marginTop: 4,
-    },
-    playButton: {
-      minHeight: 56,
-      marginBottom: 20,
-    },
-    sectionTitle: {
-      fontSize: 20,
-      fontWeight: "600",
-      color: colors.text,
-      marginBottom: 16,
-    },
-    statsGrid: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 12,
-      marginBottom: 24,
-    },
-    statCard: {
-      flex: 1,
-      minWidth: "30%",
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      padding: 16,
-      alignItems: "center",
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    statValue: {
-      fontSize: 24,
-      fontWeight: "700",
-      color: colors.secondary,
-      marginBottom: 4,
-    },
-    statLabel: {
-      fontSize: 12,
-      color: colors.mutedForeground,
-      textAlign: "center",
-    },
-    recentGamesSection: {
-      marginBottom: 24,
-    },
-    recentGameCard: {
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      padding: 12,
-      marginBottom: 8,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    recentGameInfo: {
-      flex: 1,
-    },
-    opponentName: {
-      fontSize: 14,
-      fontWeight: "600",
-      color: colors.text,
-      marginBottom: 4,
-    },
-    gameDate: {
-      fontSize: 12,
-      color: colors.mutedForeground,
-    },
-    resultBadge: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 6,
-    },
-    winBadge: {
-      backgroundColor: colors.secondary,
-    },
-    lossBadge: {
-      backgroundColor: colors.destructive,
-    },
-    resultText: {
-      fontSize: 12,
-      fontWeight: "600",
-    },
-    winText: {
-      color: colors.secondaryForeground,
-    },
-    lossText: {
-      color: colors.destructiveForeground,
-    },
-    viewAllButton: {
-      minHeight: 40,
-    },
-    achievementsSection: {
-      marginBottom: 24,
-    },
-    achievementCard: {
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      padding: 16,
-      marginBottom: 8,
-      flexDirection: "row",
-      alignItems: "center",
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    achievementIcon: {
-      fontSize: 32,
-      marginRight: 12,
-    },
-    achievementInfo: {
-      flex: 1,
-    },
-    achievementTitle: {
-      fontSize: 14,
-      fontWeight: "600",
-      color: colors.text,
-      marginBottom: 2,
-    },
-    achievementDescription: {
-      fontSize: 12,
-      color: colors.mutedForeground,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    text: {
-      color: colors.text,
-    },
-  });
+  const recentGames =
+    allRecentGames?.filter((game) => game.mode !== "AI").slice(0, 4) ?? [];
 
   if (!isSignedIn) {
     return (
-      <SafeAreaView style={styles.container} edges={[]}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.text}>Veuillez vous connecter</Text>
+      <SafeAreaView style={styles.root}>
+        <DeepBg />
+        <View style={styles.center}>
+          <Text style={styles.body}>Veuillez vous connecter</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  if (!user || !userStats || !recentGames) {
+  if (!user || !allRecentGames) {
     return (
-      <SafeAreaView style={styles.container} edges={[]}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.tint} />
+      <SafeAreaView style={styles.root}>
+        <DeepBg />
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={COLORS.or2} />
         </View>
       </SafeAreaView>
     );
   }
-
-  const formatDate = (timestamp: number | null | undefined) => {
-    if (!timestamp) return "Date inconnue";
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 60) {
-      return `Il y a ${diffMins} min`;
-    } else if (diffHours < 24) {
-      return `Il y a ${diffHours}h`;
-    } else if (diffDays < 7) {
-      return `Il y a ${diffDays}j`;
-    } else {
-      return date.toLocaleDateString("fr-FR", {
-        day: "numeric",
-        month: "short",
-      });
-    }
-  };
-
-  const achievements = [
-    {
-      id: "first_win",
-      title: "Première victoire",
-      description: "Remporter votre première partie",
-      icon: "🏆",
-      unlocked: userStats.wins >= 1,
-    },
-    {
-      id: "ten_wins",
-      title: "Champion",
-      description: "Remporter 10 parties",
-      icon: "🎖️",
-      unlocked: userStats.wins >= 10,
-    },
-    {
-      id: "streak_5",
-      title: "Série de 5",
-      description: "Gagner 5 parties d'affilée",
-      icon: "🔥",
-      unlocked: userStats.bestStreak >= 5,
-    },
-    {
-      id: "hundred_games",
-      title: "Vétéran",
-      description: "Jouer 100 parties",
-      icon: "⭐",
-      unlocked: userStats.totalGames >= 100,
-    },
-  ];
 
   return (
-    <SafeAreaView style={styles.container} edges={[]}>
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.content}>
-          {/* Section Ranking */}
-          <View style={styles.rankSection}>
-            <RankProgress pr={user?.pr || INITIAL_PR} showDetails />
-          </View>
+    <View style={styles.root}>
+      <DeepBg />
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingTop: headerHeight + 8 },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Active match — rejoin */}
+          {activeGame ? (
+            <Pressable
+              style={styles.activeMatch}
+              onPress={() => router.push(`/(game)/match/${activeGame.gameId}`)}
+              accessibilityRole="button"
+              accessibilityLabel="Rejoindre la partie en cours"
+            >
+              <View style={styles.activeMatchPulse} />
+              <View style={{ flex: 1 }}>
+                <LamapSectionLabel>Partie en cours</LamapSectionLabel>
+                <Text style={styles.activeMatchTitle}>
+                  {activeGame.mode === "AI"
+                    ? "Contre l'IA"
+                    : activeGame.mode === "RANKED"
+                      ? "Match classé"
+                      : "Partie privée"}
+                </Text>
+              </View>
+              <Ionicons name="play-circle" size={32} color={COLORS.or2} />
+            </Pressable>
+          ) : null}
 
-          {activeGame && (
-            <View style={styles.activeMatchCard}>
-              <View style={styles.activeMatchContent}>
-                <View>
-                  <Text style={styles.activeMatchLabel}>Partie en cours</Text>
-                  <Text style={styles.activeMatchInfo}>
-                    {activeGame.mode === "AI" ?
-                      "Contre l'IA"
-                    : activeGame.mode === "RANKED" ?
-                      "Partie Classée"
-                    : "Partie Amicale"}
-                  </Text>
-                </View>
-                <Button
-                  title="Rejoindre"
-                  onPress={() =>
-                    router.push(`/(game)/match/${activeGame.gameId}`)
+          {/* Hero — partie rapide */}
+          <LamapHeroCard
+            eyebrow={`PARTIE RAPIDE · ${quickPlay.modeLabel}`}
+            title={"Affronter\nmaintenant"}
+            subtitle={quickPlay.subtitle}
+            ctaLabel="Lancer ↗"
+            onPress={() => router.push(quickPlay.href)}
+            style={{ marginTop: 18 }}
+          />
+
+          {/* Modes grid */}
+          <View style={styles.section}>
+            <LamapSectionLabel>Modes de jeu</LamapSectionLabel>
+            <View style={styles.modeGrid}>
+              <View style={styles.modeRow}>
+                <LamapModeTile
+                  icon={
+                    <Ionicons
+                      name="hardware-chip-outline"
+                      size={22}
+                      color={COLORS.or2}
+                    />
                   }
-                  style={styles.rejoinButton}
-                  textStyle={styles.rejoinButtonText}
+                  title="IA"
+                  subtitle="3 niveaux"
+                  onPress={() => router.push("/(lobby)/select-difficulty")}
+                />
+                <LamapModeTile
+                  icon={
+                    <Ionicons
+                      name="key-outline"
+                      size={22}
+                      color={COLORS.or2}
+                    />
+                  }
+                  title="Privé"
+                  subtitle="Code partie"
+                  onPress={() => router.push("/(lobby)/create-friendly")}
+                />
+              </View>
+              <View style={styles.modeRow}>
+                <LamapModeTile
+                  icon={
+                    <Ionicons
+                      name="diamond-outline"
+                      size={22}
+                      color={COLORS.or2}
+                    />
+                  }
+                  title="Mise"
+                  subtitle="Bientôt"
+                  locked
+                />
+                <LamapModeTile
+                  icon={
+                    <Ionicons
+                      name="trophy-outline"
+                      size={22}
+                      color={COLORS.or2}
+                    />
+                  }
+                  title="Tournoi"
+                  subtitle="Bientôt"
+                  hot
+                  locked
                 />
               </View>
             </View>
-          )}
-
-          <View style={styles.balanceCard}>
-            <Text style={styles.balanceLabel}>Vos Kora</Text>
-            <Text style={styles.balanceAmount}>
-              {user.balance?.toLocaleString() || 0} Kora
-            </Text>
           </View>
 
-          <Button
-            title="Lancer une partie"
-            onPress={() => router.push("/(lobby)/select-mode")}
-            style={styles.playButton}
-          />
-
-          <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{userStats.wins}</Text>
-              <Text style={styles.statLabel}>Victoires</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{userStats.losses}</Text>
-              <Text style={styles.statLabel}>Défaites</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{userStats.winRate}%</Text>
-              <Text style={styles.statLabel}>Taux</Text>
-            </View>
-          </View>
-
-          {recentGames.length > 0 && (
-            <View style={styles.recentGamesSection}>
-              <Text style={styles.sectionTitle}>Dernières parties</Text>
-              {recentGames.map((game) => (
-                <View key={game.gameId} style={styles.recentGameCard}>
-                  <View style={styles.recentGameInfo}>
-                    <Text style={styles.opponentName}>
-                      vs {game.opponentName}
-                    </Text>
-                    <Text style={styles.gameDate}>
-                      {formatDate(game.endedAt)}
-                    </Text>
-                  </View>
-                  <View
-                    style={[
-                      styles.resultBadge,
-                      game.result === "win" ?
-                        styles.winBadge
-                      : styles.lossBadge,
-                    ]}
-                  >
-                    <Text
+          {/* Recent games */}
+          {recentGames.length > 0 ? (
+            <View style={styles.section}>
+              <View style={styles.sectionHeaderRow}>
+                <LamapSectionLabel>Dernières parties</LamapSectionLabel>
+                <Pressable onPress={() => router.push("/(tabs)/profile")}>
+                  <Text style={styles.linkSmall}>Voir tout</Text>
+                </Pressable>
+              </View>
+              <View style={styles.recentList}>
+                {recentGames.map((game) => (
+                  <View key={game.gameId} style={styles.recentRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.recentOpponent}>
+                        vs {game.opponentName}
+                      </Text>
+                      <Text style={styles.recentMeta}>
+                        {modeLabel(game.mode)} · {formatDate(game.endedAt)}
+                      </Text>
+                    </View>
+                    <View
                       style={[
-                        styles.resultText,
-                        game.result === "win" ?
-                          styles.winText
-                        : styles.lossText,
+                        styles.recentBadge,
+                        game.result === "win"
+                          ? styles.recentBadgeWin
+                          : styles.recentBadgeLoss,
                       ]}
                     >
-                      {game.result === "win" ? "Victoire" : "Défaite"}
-                    </Text>
+                      <Text
+                        style={[
+                          styles.recentBadgeText,
+                          game.result === "win"
+                            ? styles.recentBadgeTextWin
+                            : styles.recentBadgeTextLoss,
+                        ]}
+                      >
+                        {game.result === "win" ? "Victoire" : "Défaite"}
+                      </Text>
+                    </View>
                   </View>
-                </View>
-              ))}
-              <Button
-                title="Voir toutes les parties"
-                onPress={() => router.push("/profile")}
-                variant="outline"
-                style={styles.viewAllButton}
-              />
+                ))}
+              </View>
             </View>
-          )}
+          ) : null}
 
-          <View style={styles.achievementsSection}>
-            <Text style={styles.sectionTitle}>Trophées</Text>
-            {achievements
-              .filter((a) => a.unlocked)
-              .map((achievement) => (
-                <View key={achievement.id} style={styles.achievementCard}>
-                  <Text style={styles.achievementIcon}>{achievement.icon}</Text>
-                  <View style={styles.achievementInfo}>
-                    <Text style={styles.achievementTitle}>
-                      {achievement.title}
-                    </Text>
-                    <Text style={styles.achievementDescription}>
-                      {achievement.description}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          <View style={{ height: 120 }} />
+        </ScrollView>
+      </View>
+    </View>
   );
 }
+
+function modeLabel(mode: string): string {
+  switch (mode) {
+    case "AI":
+      return "IA";
+    case "RANKED":
+      return "Classé";
+    case "ONLINE":
+      return "Privé";
+    case "CASH":
+      return "Mise";
+    default:
+      return mode;
+  }
+}
+
+function formatDate(timestamp: number | null | undefined): string {
+  if (!timestamp) return "";
+  const date = new Date(timestamp);
+  const diffMs = Date.now() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 60) return `Il y a ${Math.max(1, diffMins)} min`;
+  if (diffHours < 24) return `Il y a ${diffHours}h`;
+  if (diffDays < 7) return `Il y a ${diffDays}j`;
+  return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+}
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+  },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  body: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 14,
+    color: COLORS.cream,
+  },
+  activeMatch: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    marginTop: 18,
+    borderRadius: RADII.lg,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.hairlineStrong,
+    overflow: "hidden",
+  },
+  activeMatchPulse: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.terre2,
+    shadowColor: COLORS.terre2,
+    shadowOpacity: 0.7,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 4,
+  },
+  activeMatchTitle: {
+    fontFamily: FONT_WEIGHTS.display.bold,
+    fontSize: 16,
+    color: COLORS.cream,
+    marginTop: 2,
+    letterSpacing: -0.2,
+  },
+  section: {
+    marginTop: 28,
+  },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  linkSmall: {
+    fontFamily: FONT_WEIGHTS.body.medium,
+    fontSize: 12,
+    color: COLORS.or2,
+  },
+  modeGrid: {
+    marginTop: 12,
+    gap: 10,
+  },
+  modeRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  recentList: {
+    gap: 8,
+  },
+  recentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    borderRadius: RADII.md,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.hairline,
+  },
+  recentOpponent: {
+    fontFamily: FONT_WEIGHTS.body.semibold,
+    fontSize: 14,
+    color: COLORS.cream,
+  },
+  recentMeta: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 11,
+    color: "rgba(245, 242, 237, 0.5)",
+    marginTop: 2,
+  },
+  recentBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  recentBadgeWin: {
+    backgroundColor: "rgba(201, 168, 118, 0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(201, 168, 118, 0.45)",
+  },
+  recentBadgeLoss: {
+    backgroundColor: "rgba(212, 99, 93, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(212, 99, 93, 0.4)",
+  },
+  recentBadgeText: {
+    fontFamily: FONT_WEIGHTS.mono.semibold,
+    fontSize: 10,
+    letterSpacing: 1.4,
+  },
+  recentBadgeTextWin: {
+    color: COLORS.or2,
+  },
+  recentBadgeTextLoss: {
+    color: COLORS.terre2,
+  },
+  errorRoot: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+  },
+  errorContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    gap: 16,
+  },
+  errorTitle: {
+    fontFamily: FONT_WEIGHTS.display.bold,
+    fontSize: 24,
+    color: COLORS.cream,
+    textAlign: "center",
+  },
+  errorMessage: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 14,
+    color: "rgba(245, 242, 237, 0.7)",
+    textAlign: "center",
+    maxWidth: 300,
+    lineHeight: 20,
+  },
+  errorActions: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 8,
+  },
+});

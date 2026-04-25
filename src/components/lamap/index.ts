@@ -1,10 +1,16 @@
 export { Avatar } from "./avatar";
+export { LamapBalanceChip } from "./balance-chip";
 export { LamapButton, type LamapButtonVariant } from "./button";
 export { LamapChip } from "./chip";
+export { DeepBg } from "./deep-bg";
 export { Divider } from "./divider";
 export { FlipCard } from "./flip-card";
 export { GoldDust } from "./gold-dust";
+export { LamapHeroCard } from "./hero-card";
+export { HomeTopBar } from "./home-top-bar";
 export { MancheDots } from "./manche-dots";
+export { LamapModeTile } from "./mode-tile";
 export { RankBadge } from "./rank-badge";
+export { LamapSectionLabel } from "./section-label";
 export { Sparks } from "./sparks";
 export { TableBg } from "./table-bg";
