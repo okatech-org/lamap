@@ -30,7 +30,7 @@ interface PlayingCardProps {
   rank: Rank;
   state: "playable" | "disabled" | "selected" | "played";
   onPress?: () => void;
-  size?: "small" | "medium" | "large" | "xl" | "xxl";
+  size?: "small" | "medium" | "large" | "xl" | "xxl" | "2xl";
 }
 
 const CARD_ASPECT_RATIO = 5 / 7;
@@ -41,6 +41,7 @@ const CARD_WIDTHS = {
   large: 100,
   xl: 120,
   xxl: 140,
+  "2xl": 160,
 };
 
 const SMALL_ICON_RATIO = 0.225;
@@ -142,7 +143,7 @@ export const PlayingCard = React.memo(function PlayingCard({
           stiffness: 150,
         }),
         -1,
-        true
+        true,
       );
       pulseOpacity.value = withRepeat(
         withTiming(0.95, {
@@ -150,7 +151,7 @@ export const PlayingCard = React.memo(function PlayingCard({
           easing: Easing.inOut(Easing.ease),
         }),
         -1,
-        true
+        true,
       );
     } else {
       scale.value = withTiming(1, {
@@ -165,7 +166,7 @@ export const PlayingCard = React.memo(function PlayingCard({
     if (isPlayed) {
       rotateY.value = withSequence(
         withTiming(90, { duration: 100 }),
-        withTiming(0, { duration: 100 })
+        withTiming(0, { duration: 100 }),
       );
     }
   }, [isPlayed, rotateY]);

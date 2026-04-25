@@ -1,11 +1,11 @@
-import { useColors } from "@/hooks/use-colors";
+import { GoldDust } from "@/components/lamap";
+import { COLORS } from "@/design";
 import { Image } from "expo-image";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import Svg, {
-  Circle,
   Defs,
-  LinearGradient,
+  RadialGradient,
   Rect,
   Stop,
 } from "react-native-svg";
@@ -17,178 +17,69 @@ const SUIT_IMAGES = {
   diamonds: require("@assets/images/suit_diamond.svg"),
 };
 
+/**
+ * Welcome / landing backdrop — Hero classique variant.
+ *
+ * Deep nuit base + soft terre/or radial highlights, large faded suit motifs,
+ * and a layer of gold-dust particles.
+ */
 export function AuthBackground() {
-  const colors = useColors();
-
-  const gradientColors = {
-    start: "#141923",
-    end: "#1E2530",
-  };
-
-  const decorativeColors = {
-    circle1: "#3D4554",
-    circle2: "#3D4554",
-    circle3: "#B9966E",
-    circle4: "#C34B44",
-    dots: "#5A7A96",
-  };
-
   return (
-    <View style={styles.container}>
+    <View style={styles.container} pointerEvents="none">
       <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
         <Defs>
-          <LinearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <Stop offset="0%" stopColor={gradientColors.start} stopOpacity="1" />
-            <Stop offset="100%" stopColor={gradientColors.end} stopOpacity="1" />
-          </LinearGradient>
+          <RadialGradient id="bg-terre" cx="30%" cy="15%" rx="80%" ry="70%">
+            <Stop offset="0%" stopColor={COLORS.terre} stopOpacity={0.1} />
+            <Stop offset="50%" stopColor={COLORS.terre} stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="bg-or" cx="80%" cy="85%" rx="80%" ry="70%">
+            <Stop offset="0%" stopColor={COLORS.or} stopOpacity={0.08} />
+            <Stop offset="50%" stopColor={COLORS.or} stopOpacity={0} />
+          </RadialGradient>
         </Defs>
-
-        <Rect width="100%" height="100%" fill="url(#bgGradient)" />
-
-        <Circle
-          cx="50"
-          cy="150"
-          r="60"
-          fill={decorativeColors.circle1}
-          opacity={0.06}
-        />
-        <Circle
-          cx="320"
-          cy="100"
-          r="80"
-          fill={decorativeColors.circle2}
-          opacity={0.05}
-        />
-        <Circle
-          cx="280"
-          cy="700"
-          r="100"
-          fill={decorativeColors.circle3}
-          opacity={0.04}
-        />
-        <Circle
-          cx="100"
-          cy="600"
-          r="70"
-          fill={decorativeColors.circle4}
-          opacity={0.03}
-        />
-
-        <Circle
-          cx="50"
-          cy="400"
-          r="2"
-          fill={decorativeColors.dots}
-          opacity={0.12}
-        />
-        <Circle
-          cx="340"
-          cy="300"
-          r="3"
-          fill={colors.primary}
-          opacity={0.1}
-        />
-        <Circle
-          cx="180"
-          cy="180"
-          r="2"
-          fill={decorativeColors.dots}
-          opacity={0.12}
-        />
-        <Circle
-          cx="280"
-          cy="500"
-          r="2"
-          fill={decorativeColors.circle1}
-          opacity={0.12}
-        />
-        <Circle
-          cx="120"
-          cy="720"
-          r="2"
-          fill={colors.primary}
-          opacity={0.08}
-        />
+        <Rect width="100%" height="100%" fill={COLORS.bg} />
+        <Rect width="100%" height="100%" fill="url(#bg-terre)" />
+        <Rect width="100%" height="100%" fill="url(#bg-or)" />
       </Svg>
 
+      {/* Oversized faded suit motifs — same assets as the playing cards. */}
       <Image
         source={SUIT_IMAGES.hearts}
-        style={[
-          styles.suitIcon,
-          { top: 80, left: 40, width: 60, height: 60, opacity: 0.06 },
-        ]}
+        style={[styles.suit, { top: 80, left: -40, width: 220, height: 220, opacity: 0.05 }]}
         contentFit="contain"
-      />
-      <Image
-        source={SUIT_IMAGES.spades}
-        style={[
-          styles.suitIcon,
-          { top: 150, right: 30, width: 80, height: 80, opacity: 0.06 },
-        ]}
-        contentFit="contain"
+        tintColor="#F5F2ED"
       />
       <Image
         source={SUIT_IMAGES.diamonds}
-        style={[
-          styles.suitIcon,
-          { top: 300, left: 20, width: 50, height: 50, opacity: 0.05 },
-        ]}
+        style={[styles.suit, { top: 220, right: -60, width: 260, height: 260, opacity: 0.04 }]}
         contentFit="contain"
-      />
-      <Image
-        source={SUIT_IMAGES.clubs}
-        style={[
-          styles.suitIcon,
-          { top: 450, right: 50, width: 70, height: 70, opacity: 0.06 },
-        ]}
-        contentFit="contain"
-      />
-      <Image
-        source={SUIT_IMAGES.hearts}
-        style={[
-          styles.suitIcon,
-          { bottom: 200, left: 60, width: 55, height: 55, opacity: 0.05 },
-        ]}
-        contentFit="contain"
+        tintColor="#F5F2ED"
       />
       <Image
         source={SUIT_IMAGES.spades}
-        style={[
-          styles.suitIcon,
-          { bottom: 150, right: 40, width: 65, height: 65, opacity: 0.06 },
-        ]}
+        style={[styles.suit, { top: 380, left: 40, width: 90, height: 90, opacity: 0.06 }]}
         contentFit="contain"
-      />
-      <Image
-        source={SUIT_IMAGES.diamonds}
-        style={[
-          styles.suitIcon,
-          { top: 200, left: 70, width: 45, height: 45, opacity: 0.05 },
-        ]}
-        contentFit="contain"
+        tintColor="#F5F2ED"
       />
       <Image
         source={SUIT_IMAGES.clubs}
-        style={[
-          styles.suitIcon,
-          { top: 550, left: 50, width: 60, height: 60, opacity: 0.06 },
-        ]}
+        style={[styles.suit, { bottom: 240, right: 50, width: 70, height: 70, opacity: 0.05 }]}
         contentFit="contain"
+        tintColor="#F5F2ED"
       />
+
+      <GoldDust count={14} opacity={0.45} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
     zIndex: 0,
+    overflow: "hidden",
   },
-  suitIcon: {
+  suit: {
     position: "absolute",
   },
 });

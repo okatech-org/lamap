@@ -1,4 +1,6 @@
 export { Avatar } from "./avatar";
+export { LamapButton, type LamapButtonVariant } from "./button";
+export { LamapChip } from "./chip";
 export { Divider } from "./divider";
 export { FlipCard } from "./flip-card";
 export { GoldDust } from "./gold-dust";

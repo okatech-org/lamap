@@ -65,7 +65,7 @@ function AnimatedCard({
 
   const screenWidth = Dimensions.get("window").width;
   const cardWidth = 100;
-  const spacing = cardWidth * 0.6;
+  const spacing = cardWidth * 0.7;
   const totalWidth = (totalCards - 1) * spacing + cardWidth;
   const startX = (screenWidth - totalWidth) / 2 - 20;
   const cardX = startX + index * spacing;
@@ -76,7 +76,7 @@ function AnimatedCard({
       withTiming(1, {
         duration: 800,
         easing: Easing.out(Easing.ease),
-      })
+      }),
     );
 
     translateY.value = withDelay(
@@ -84,7 +84,7 @@ function AnimatedCard({
       withTiming(0, {
         duration: 800,
         easing: Easing.out(Easing.back(1.2)),
-      })
+      }),
     );
 
     const floatDelay = 1100 + index * 150;
@@ -93,19 +93,19 @@ function AnimatedCard({
       floatY.value = withRepeat(
         withSequence(
           withTiming(-8, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0, { duration: 2000, easing: Easing.inOut(Easing.ease) })
+          withTiming(0, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
         ),
         -1,
-        true
+        true,
       );
 
       floatRotate.value = withRepeat(
         withSequence(
           withTiming(-2, { duration: 2500, easing: Easing.inOut(Easing.ease) }),
-          withTiming(2, { duration: 2500, easing: Easing.inOut(Easing.ease) })
+          withTiming(2, { duration: 2500, easing: Easing.inOut(Easing.ease) }),
         ),
         -1,
-        true
+        true,
       );
     }, floatDelay);
   }, [floatRotate, floatY, index, opacity, translateY]);

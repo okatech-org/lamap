@@ -62,9 +62,6 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={DarkTheme}>
       <Stack>
-        {/* TEMP: Phase 1 design preview — remove before commit */}
-        <Stack.Screen name="design-preview" options={{ headerShown: false }} />
-
         <Stack.Protected guard={!isSignedIn}>
           <Stack.Screen name="welcome" options={{ headerShown: false }} />
         </Stack.Protected>
