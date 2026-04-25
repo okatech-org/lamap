@@ -1,0 +1,157 @@
+/* LaMap — design tokens */
+:root {
+  /* Brand palette */
+  --terre: #B4443E;
+  --terre-2: #D4635D;
+  --terre-deep: #8E2F2A;
+
+  --or: #A68258;
+  --or-2: #C9A876;
+  --or-deep: #6E5536;
+
+  --nuit: #465D74;
+  --nuit-2: #5A7A96;
+  --nuit-deep: #2E3D4D;
+  --nuit-ink: #1B2733;
+
+  --cream: #F5F2ED;
+  --cream-2: #ECE6DA;
+  --ink: #141A22;
+  --ink-2: #1A1A1A;
+
+  /* Surfaces */
+  --bg: #0F1620;
+  --bg-2: #182230;
+  --surface: #1E2A3A;
+  --surface-2: #243245;
+  --hairline: rgba(166, 130, 88, 0.18);
+  --hairline-strong: rgba(166, 130, 88, 0.42);
+
+  /* Type */
+  --font-display: 'Bricolage Grotesque', 'Montserrat', system-ui, -apple-system, Inter, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-card: 'Crimson Pro', Georgia, serif;
+
+  /* Radii */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+
+  /* Shadows */
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.25);
+  --shadow-card-lift: 0 18px 40px rgba(0, 0, 0, 0.45), 0 4px 8px rgba(0, 0, 0, 0.3);
+  --glow-or: 0 0 24px rgba(201, 168, 118, 0.55), 0 0 48px rgba(166, 130, 88, 0.25);
+  --glow-terre: 0 0 24px rgba(212, 99, 93, 0.5), 0 0 48px rgba(180, 68, 62, 0.25);
+}
+
+* { box-sizing: border-box; }
+
+.font-display { font-family: var(--font-display); letter-spacing: -0.01em; }
+.font-body { font-family: var(--font-body); }
+.font-mono { font-family: var(--font-mono); letter-spacing: 0.02em; }
+.font-card { font-family: var(--font-card); }
+
+/* Reusable patterns */
+.bg-table {
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(90, 122, 150, 0.45) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 100%, rgba(46, 61, 77, 0.8) 0%, transparent 70%),
+    linear-gradient(180deg, #3F5567 0%, #2C3D4F 60%, #1F2C3B 100%);
+}
+
+.bg-deep {
+  background:
+    radial-gradient(ellipse at 30% 15%, rgba(180, 68, 62, 0.10) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 85%, rgba(166, 130, 88, 0.08) 0%, transparent 50%),
+    linear-gradient(180deg, #0F1620 0%, #131C28 100%);
+}
+
+.hairline-or { border: 1px solid var(--hairline); }
+.hairline-or-strong { border: 1px solid var(--hairline-strong); }
+
+/* Animations */
+@keyframes lamap-shine {
+  0% { transform: translateX(-110%) skewX(-15deg); }
+  60%, 100% { transform: translateX(220%) skewX(-15deg); }
+}
+@keyframes lamap-float {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.4; }
+  50% { transform: translateY(-12px) translateX(4px); opacity: 0.9; }
+}
+@keyframes lamap-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.06); opacity: 0.85; }
+}
+@keyframes lamap-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes lamap-rise {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes lamap-glow-or {
+  0%, 100% { box-shadow: 0 0 0 rgba(201, 168, 118, 0); }
+  50% { box-shadow: 0 0 32px rgba(201, 168, 118, 0.7); }
+}
+@keyframes lamap-confetti {
+  0% { transform: translate(0, -10px) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--cx, 0), 240px) rotate(540deg); opacity: 0; }
+}
+
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(180deg, #C95048 0%, #A93934 100%);
+  color: var(--cream);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 9999px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: -0.005em;
+  padding: 14px 24px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 16px rgba(180, 68, 62, 0.35), inset 0 1px 0 rgba(255,255,255,0.18);
+  transition: transform 120ms ease;
+}
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%);
+  transform: translateX(-110%) skewX(-15deg);
+  animation: lamap-shine 4s 1.5s infinite;
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--cream);
+  border: 1.5px solid rgba(201, 168, 118, 0.4);
+  border-radius: 9999px;
+  font-family: var(--font-body); font-weight: 600; font-size: 16px;
+  padding: 13px 24px; cursor: pointer;
+}
+.btn-light {
+  background: var(--cream);
+  color: var(--ink);
+  border: none;
+  border-radius: 9999px;
+  font-family: var(--font-body); font-weight: 600; font-size: 16px;
+  padding: 14px 24px; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+/* Chip */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 26px; padding: 0 10px; border-radius: 9999px;
+  font-family: var(--font-body); font-size: 12px; font-weight: 500;
+  background: rgba(166, 130, 88, 0.15);
+  color: var(--or-2);
+  border: 1px solid rgba(166, 130, 88, 0.35);
+}
+
+/* Util */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }

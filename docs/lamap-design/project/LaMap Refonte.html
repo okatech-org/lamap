@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>LaMap — Refonte v2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Crimson+Pro:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/tokens.css">
+  <style>
+    html, body { margin: 0; padding: 0; background: #0A0E14; font-family: var(--font-body); color: var(--cream); }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Foundations -->
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+
+  <!-- Components -->
+  <script type="text/babel" src="components/cards.jsx"></script>
+  <script type="text/babel" src="components/ui.jsx"></script>
+
+  <!-- Screens -->
+  <script type="text/babel" src="screens/landing.jsx"></script>
+  <script type="text/babel" src="screens/mode-select.jsx"></script>
+  <script type="text/babel" src="screens/lobby.jsx"></script>
+  <script type="text/babel" src="screens/game.jsx"></script>
+  <script type="text/babel" src="screens/animated-game.jsx"></script>
+  <script type="text/babel" src="screens/profile.jsx"></script>
+  <script type="text/babel" src="screens/secondary.jsx"></script>
+
+  <script type="text/babel" data-presets="env,react">
+    const { DCSection, DCArtboard, DesignCanvas } = window;
+
+    function App() {
+      return (
+        <DesignCanvas
+          title="LaMap — Refonte"
+          subtitle="Direction arcade épique · 7 écrans · 3 variations · prototype animé"
+        >
+          <DCSection id="prototype" title="0 · Prototype animé" subtitle="Distribution → flip → reveal. Tape les cartes pour jouer.">
+            <DCArtboard id="proto-game" label="La main complète (interactif)" width={400} height={812}>
+              <AnimatedGame />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="landing" title="1 · Landing / Auth" subtitle="3 directions visuelles">
+            <DCArtboard id="landing-hero"      label="A · Hero classique"        width={400} height={812}><LandingHero /></DCArtboard>
+            <DCArtboard id="landing-arcade"    label="B · Arcade épique"         width={400} height={812}><LandingArcade /></DCArtboard>
+            <DCArtboard id="landing-editorial" label="C · Éditorial sobre"       width={400} height={812}><LandingEditorial /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="mode" title="2 · Choix du mode" subtitle="Classé · IA · Mise">
+            <DCArtboard id="mode-fidele"  label="A · Fidèle affiné"     width={400} height={812}><ModeFidele /></DCArtboard>
+            <DCArtboard id="mode-arene"   label="B · Cartes arène"      width={400} height={812}><ModeArene /></DCArtboard>
+            <DCArtboard id="mode-minimal" label="C · Minimal éditorial" width={400} height={812}><ModeMinimal /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="lobby" title="3 · Lobby + matchmaking" subtitle="Recherche d'adversaire">
+            <DCArtboard id="lobby-home"   label="A · Hub d'accueil"     width={400} height={812}><LobbyHome /></DCArtboard>
+            <DCArtboard id="lobby-search" label="B · Matchmaking radar" width={400} height={812}><LobbyMatchmaking /></DCArtboard>
+            <DCArtboard id="lobby-found"  label="C · Adversaire trouvé" width={400} height={812}><LobbyFound /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="game" title="4 · Écran de jeu — états statiques" subtitle="Pour comparer la composition">
+            <DCArtboard id="game-idle"    label="A · À toi de jouer"     width={400} height={812}><GameIdle /></DCArtboard>
+            <DCArtboard id="game-play"    label="B · Mid-trick"          width={400} height={812}><GamePlay /></DCArtboard>
+            <DCArtboard id="game-screen"  label="C · Carte demandée"     width={400} height={812}><GameScreen /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="endgame" title="5 · Fin de manche" subtitle="Victoire, défaite, Kora">
+            <DCArtboard id="end-victory" label="A · Victoire (+12 PR)"  width={400} height={812}><GameVictory /></DCArtboard>
+            <DCArtboard id="end-defeat"  label="B · Défaite (−10 PR)"   width={400} height={812}><GameDefeat /></DCArtboard>
+            <DCArtboard id="end-kora"    label="C · KORA ×2 (épique)"   width={400} height={812}><GameKora /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="profile" title="6 · Profil & classement" subtitle="L'Elo comme pilier d'identité">
+            <DCArtboard id="profile-main" label="A · Profil joueur"     width={400} height={812}><ProfileMain /></DCArtboard>
+            <DCArtboard id="profile-lead" label="B · Leaderboard"       width={400} height={812}><ProfileLeaderboard /></DCArtboard>
+            <DCArtboard id="profile-rank" label="C · L'échelle des rangs" width={400} height={812}><ProfileRanks /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="secondary" title="7 · Écrans secondaires" subtitle="Onboarding · Wallet Kora · Boutique · Notifs">
+            <DCArtboard id="onboarding" label="Onboarding · règle Kora" width={400} height={812}><OnboardingTuto /></DCArtboard>
+            <DCArtboard id="wallet"     label="Wallet · jeton Kora"    width={400} height={812}><WalletScreen /></DCArtboard>
+            <DCArtboard id="shop"       label="Boutique · dos de cartes" width={400} height={812}><ShopScreen /></DCArtboard>
+            <DCArtboard id="notifs"     label="Notifs · défi reçu"     width={400} height={812}><NotificationsScreen /></DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
