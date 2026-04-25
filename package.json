@@ -8,11 +8,12 @@
     "packages/*"
   ],
   "scripts": {
-    "mobile": "bun --filter @lamap/mobile run start",
-    "mobile:ios": "bun --filter @lamap/mobile run ios",
-    "mobile:android": "bun --filter @lamap/mobile run android",
-    "convex:dev": "bun --filter @lamap/convex run dev",
-    "convex:deploy": "bun --filter @lamap/convex run deploy",
+    "mobile": "bun run --filter @lamap/mobile start",
+    "mobile:ios": "bun run --filter @lamap/mobile ios",
+    "mobile:android": "bun run --filter @lamap/mobile android",
+    "convex:dev": "bun run --filter @lamap/convex dev",
+    "convex:deploy": "bun run --filter @lamap/convex deploy",
+    "web": "bun run --filter @lamap/web dev",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean && rm -rf node_modules"

@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "lamap-web",
+      "runtimeExecutable": "/Users/berny/Developer/lamap/node_modules/.bin/next",
+      "runtimeArgs": ["dev", "--turbopack", "-p", "3000"],
+      "cwd": "/Users/berny/Developer/lamap/apps/web",
+      "port": 3000
+    }
+  ]
+}

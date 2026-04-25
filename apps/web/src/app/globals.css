@@ -1,0 +1,48 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+@theme inline {
+  --color-terre: var(--terre);
+  --color-terre-2: var(--terre-2);
+  --color-terre-deep: var(--terre-deep);
+  --color-or: var(--or);
+  --color-or-2: var(--or-2);
+  --color-or-deep: var(--or-deep);
+  --color-nuit: var(--nuit);
+  --color-nuit-2: var(--nuit-2);
+  --color-nuit-deep: var(--nuit-deep);
+  --color-nuit-ink: var(--nuit-ink);
+  --color-cream: var(--cream);
+  --color-cream-2: var(--cream-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+
+  --font-display: "Bricolage Grotesque", system-ui, -apple-system, Inter, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-card: "Crimson Pro", Georgia, serif;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #0A0E14;
+  font-family: var(--font-body);
+  color: var(--cream);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: rgba(201, 168, 118, 0.35);
+  color: var(--cream);
+}
