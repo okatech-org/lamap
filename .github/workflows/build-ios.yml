@@ -1,0 +1,142 @@
+name: Build iOS (IPA) + App Store
+
+# Builds the iOS IPA on EAS Build and attaches it to a GitHub Release.
+# Optionally submits the same build to App Store Connect via `eas submit`.
+#
+# Triggers
+#   • Manual: pick a profile + opt-in App Store submission.
+#   • Tag push: pushing a `v*` tag automatically builds the production IPA,
+#     creates the matching release and submits it to App Store Connect.
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "EAS build profile"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - preview
+          - production
+      submit_to_app_store:
+        description: "Submit the build to App Store Connect after upload"
+        required: true
+        default: false
+        type: boolean
+      release_tag:
+        description: "GitHub release tag (defaults to ios-build-<run_number>)"
+        required: false
+        type: string
+
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-ios-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: EAS build → IPA → GitHub Release (+ App Store)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Expo + EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies (workspace root)
+        run: bun install --frozen-lockfile
+
+      - name: Resolve build profile + submit flag
+        id: opts
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "profile=production" >> "$GITHUB_OUTPUT"
+            echo "submit=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "profile=${{ inputs.profile }}" >> "$GITHUB_OUTPUT"
+            echo "submit=${{ inputs.submit_to_app_store }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build iOS IPA on EAS
+        id: eas
+        working-directory: apps/mobile
+        run: |
+          set -euo pipefail
+          eas build \
+            --platform ios \
+            --profile "${{ steps.opts.outputs.profile }}" \
+            --non-interactive \
+            --json > build.json
+          jq '.' build.json
+          ARTIFACT_URL=$(jq -r '.[0].artifacts.buildUrl' build.json)
+          BUILD_ID=$(jq -r '.[0].id' build.json)
+          if [ -z "$ARTIFACT_URL" ] || [ "$ARTIFACT_URL" = "null" ]; then
+            echo "::error::EAS build did not return an artifact URL"
+            exit 1
+          fi
+          echo "artifact_url=$ARTIFACT_URL" >> "$GITHUB_OUTPUT"
+          echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Download IPA
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 --retry-delay 5 \
+            -o "lamap-ios.ipa" \
+            "${{ steps.eas.outputs.artifact_url }}"
+          ls -lh lamap-ios.ipa
+
+      - name: Resolve release tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "name=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ inputs.release_tag }}" ]; then
+            echo "name=${{ inputs.release_tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=ios-build-${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: ${{ steps.tag.outputs.name }} (iOS)
+          body: |
+            ## iOS IPA
+            - Profile: `${{ steps.opts.outputs.profile }}`
+            - EAS build: https://expo.dev/accounts/kamau_it/projects/lamap/builds/${{ steps.eas.outputs.build_id }}
+            - Commit: `${{ github.sha }}`
+            - App Store submission: `${{ steps.opts.outputs.submit }}`
+          files: lamap-ios.ipa
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+
+      - name: Submit to App Store Connect
+        if: steps.opts.outputs.submit == 'true'
+        working-directory: apps/mobile
+        run: |
+          set -euo pipefail
+          eas submit \
+            --platform ios \
+            --profile production \
+            --id "${{ steps.eas.outputs.build_id }}" \
+            --non-interactive

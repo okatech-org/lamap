@@ -1,0 +1,123 @@
+name: Build Android (APK)
+
+# Builds the Android APK on EAS Build (Expo cloud) and attaches the artifact
+# to a GitHub Release so it can be downloaded directly from GitHub.
+#
+# Triggers
+#   • Manual: pick a profile (preview or production).
+#   • Tag push: pushing a `v*` tag automatically builds the production APK
+#     and creates the matching release.
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "EAS build profile"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - preview
+          - production
+      release_tag:
+        description: "GitHub release tag (defaults to android-build-<run_number>)"
+        required: false
+        type: string
+
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # needed to create / update releases
+
+concurrency:
+  group: build-android-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: EAS build → APK → GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Expo + EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies (workspace root)
+        run: bun install --frozen-lockfile
+
+      - name: Resolve build profile
+        id: profile
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "name=production" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${{ inputs.profile }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build Android APK on EAS
+        id: eas
+        working-directory: apps/mobile
+        run: |
+          set -euo pipefail
+          eas build \
+            --platform android \
+            --profile "${{ steps.profile.outputs.name }}" \
+            --non-interactive \
+            --json > build.json
+          jq '.' build.json
+          ARTIFACT_URL=$(jq -r '.[0].artifacts.buildUrl' build.json)
+          BUILD_ID=$(jq -r '.[0].id' build.json)
+          if [ -z "$ARTIFACT_URL" ] || [ "$ARTIFACT_URL" = "null" ]; then
+            echo "::error::EAS build did not return an artifact URL"
+            exit 1
+          fi
+          echo "artifact_url=$ARTIFACT_URL" >> "$GITHUB_OUTPUT"
+          echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Download APK
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 --retry-delay 5 \
+            -o "lamap-android.apk" \
+            "${{ steps.eas.outputs.artifact_url }}"
+          ls -lh lamap-android.apk
+
+      - name: Resolve release tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "name=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ inputs.release_tag }}" ]; then
+            echo "name=${{ inputs.release_tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=android-build-${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: ${{ steps.tag.outputs.name }} (Android)
+          body: |
+            ## Android APK
+            - Profile: `${{ steps.profile.outputs.name }}`
+            - EAS build: https://expo.dev/accounts/kamau_it/projects/lamap/builds/${{ steps.eas.outputs.build_id }}
+            - Commit: `${{ github.sha }}`
+          files: lamap-android.apk
+          generate_release_notes: true
+          draft: false
+          prerelease: false

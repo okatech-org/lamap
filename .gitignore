@@ -38,9 +38,12 @@ yarn-error.*
 
 app-example
 
-# generated native folders
-/ios
-/android
+# generated native folders (per-app)
+**/ios
+**/android
+
+# turborepo
+.turbo/
 
 *.apk
 *.ipa
