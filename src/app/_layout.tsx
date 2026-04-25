@@ -1,3 +1,4 @@
+import { fontAssets } from "@/design";
 import { useColors } from "@/hooks/use-colors";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import {
@@ -9,6 +10,7 @@ import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
+import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Platform } from "react-native";
@@ -27,9 +29,10 @@ export const unstable_settings = {
 function RootLayoutNav() {
   const { isSignedIn, isLoaded } = useClerkAuth();
   const colors = useColors();
+  const [fontsLoaded] = useFonts(fontAssets);
   usePushNotifications();
 
-  if (!isLoaded) {
+  if (!isLoaded || !fontsLoaded) {
     return null;
   }
 
@@ -59,6 +62,9 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={DarkTheme}>
       <Stack>
+        {/* TEMP: Phase 1 design preview — remove before commit */}
+        <Stack.Screen name="design-preview" options={{ headerShown: false }} />
+
         <Stack.Protected guard={!isSignedIn}>
           <Stack.Screen name="welcome" options={{ headerShown: false }} />
         </Stack.Protected>

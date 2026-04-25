@@ -1,5 +1,6 @@
 import { AnimationDurations } from "@/constants/animations";
 import { Spacing } from "@/constants/spacing";
+import { FONT_WEIGHTS } from "@/design";
 import { useColors } from "@/hooks/use-colors";
 import { getCardShadow, getPlayableCardShadow } from "@/utils/shadows";
 import { Image } from "expo-image";
@@ -103,9 +104,10 @@ export const PlayingCard = React.memo(function PlayingCard({
       alignItems: "center",
     },
     value: {
-      fontSize: cardWidth * 0.12,
-      fontWeight: "700",
-      lineHeight: 20,
+      fontFamily: FONT_WEIGHTS.card.bold,
+      fontSize: cardWidth * 0.18,
+      lineHeight: cardWidth * 0.18,
+      letterSpacing: -cardWidth * 0.18 * 0.02,
     },
     suitIcon: {
       marginTop: 2,

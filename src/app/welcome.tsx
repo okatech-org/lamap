@@ -299,6 +299,13 @@ export default function WelcomeScreen() {
             Devenez maître du Garame !{"\n"}Affrontez des joueurs, misez d&apos;
             l&apos;argent.
           </Text>
+          {/* TEMP: Phase 1 design preview — remove before commit */}
+          <Text
+            onPress={() => router.push("/design-preview")}
+            style={[styles.footerText, { marginTop: 12, textDecorationLine: "underline" }]}
+          >
+            Aperçu du design (Phase 1)
+          </Text>
         </Animated.View>
       </View>
     </SafeAreaView>
