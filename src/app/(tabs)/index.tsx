@@ -219,6 +219,12 @@ export default function HomeScreen() {
                 />
               </View>
             </View>
+            <LamapButton
+              title="Nouvelle partie"
+              variant="ghost"
+              onPress={() => router.push("/(lobby)/select-mode")}
+              style={{ marginTop: 14 }}
+            />
           </View>
 
           {/* Recent games */}

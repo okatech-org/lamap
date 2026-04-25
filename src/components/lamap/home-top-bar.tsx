@@ -111,6 +111,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 20,
     backgroundColor: "transparent",
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.hairline,
   },
   greeting: {
     flexDirection: "row",

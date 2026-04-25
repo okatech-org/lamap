@@ -149,6 +149,19 @@ export const RANKS: readonly RankTier[] = [
   { name: "Légende",     short: "L", color: "#9D5BD2", glow: "rgba(157,91,210,0.7)" },
 ] as const;
 
+/**
+ * Map a Convex PR value to one of the six visual rank tiers used by the design.
+ * UI-only — game logic still uses `convex/ranking.ts` thresholds.
+ */
+export function prToDesignRank(pr: number): RankTier {
+  if (pr < 1000) return RANKS[0]; // Apprenti
+  if (pr < 1200) return RANKS[1]; // Initié
+  if (pr < 1400) return RANKS[2]; // Tacticien
+  if (pr < 1600) return RANKS[3]; // Maître
+  if (pr < 1800) return RANKS[4]; // Grand Bandi
+  return RANKS[5]; // Légende
+}
+
 // Common reusable text recipes (consumed by callers as `style={textStyles.displayLg}`).
 export const textStyles = {
   displayXl: {

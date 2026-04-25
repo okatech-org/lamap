@@ -1,285 +1,344 @@
-import { RankBadge } from "@/components/ranking/rank-badge";
-import { Button } from "@/components/ui/button";
-import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Spacing } from "@/constants/spacing";
-import { typography } from "@/constants/typography";
-import { api } from "@convex/_generated/api";
-import { getRankFromPR, INITIAL_PR } from "@convex/ranking";
+import {
+  DeepBg,
+  HomeTopBar,
+  LamapButton,
+  LamapSectionLabel,
+  RankBadge,
+} from "@/components/lamap";
+import { COLORS, FONT_WEIGHTS, prToDesignRank, RADII } from "@/design";
 import { useAuth } from "@/hooks/use-auth";
-import { useColors } from "@/hooks/use-colors";
 import { Ionicons } from "@expo/vector-icons";
+import { api } from "@convex/_generated/api";
+import { INITIAL_PR } from "@convex/ranking";
 import { useQuery } from "convex/react";
-import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Stack, useRouter } from "expo-router";
+import React from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
 export default function SelectModeScreen() {
-  const colors = useColors();
   const router = useRouter();
   const { userId, convexUser } = useAuth();
 
   const activeGame = useQuery(
     api.games.getActiveMatch,
-    userId ? { clerkId: userId } : "skip"
+    userId ? { clerkId: userId } : "skip",
   );
 
   const userPR = convexUser?.pr || INITIAL_PR;
-  const userRank = getRankFromPR(userPR);
-
-  const styles = StyleSheet.create({
-    activeMatchCard: {
-      backgroundColor: colors.accent,
-      borderRadius: Spacing.radius.lg,  // 16px
-      padding: Spacing.card.horizontal,  // 20px
-      marginBottom: Spacing.lg,  // 24px
-      borderWidth: 2,
-      borderColor: colors.secondary,
-    },
-    activeMatchContent: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: Spacing.md,  // 16px
-    },
-    activeMatchLabel: {
-      fontSize: typography.caption.fontSize,  // 14px
-      color: colors.secondary,
-      fontWeight: typography.captionBold.fontWeight,  // 600
-      marginBottom: Spacing.xs,  // 4px
-    },
-    activeMatchInfo: {
-      fontSize: typography.body.fontSize,  // 16px
-      color: colors.text,
-      fontWeight: typography.bodyBold.fontWeight,  // 600
-    },
-    rejoinButton: {
-      minHeight: 40,
-      paddingHorizontal: Spacing.md,
-      backgroundColor: colors.secondary,
-    },
-    rejoinButtonText: {
-      color: colors.secondaryForeground,
-      fontSize: typography.caption.fontSize,
-    },
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    scrollView: {
-      flex: 1,
-    },
-    content: {
-      padding: Spacing.container.horizontal,  // 24px
-      paddingTop: Spacing.xl,  // 32px
-    },
-    header: {
-      marginBottom: Spacing.xl,  // 32px
-    },
-    title: {
-      fontSize: typography.h1.fontSize,  // 32px
-      fontWeight: typography.h1.fontWeight,  // 700
-      color: colors.text,
-      textAlign: "center",
-      marginBottom: Spacing.sm,  // 8px
-    },
-    subtitle: {
-      fontSize: typography.body.fontSize,  // 16px
-      color: colors.mutedForeground,
-      textAlign: "center",
-    },
-    modesContainer: {
-      gap: Spacing.md,  // 16px
-      marginBottom: Spacing.xl,  // 32px
-    },
-    modeCard: {
-      backgroundColor: colors.card,
-      borderRadius: Spacing.radius.lg,  // 16px
-      padding: Spacing.card.horizontal,  // 20px
-      borderWidth: 1,
-      borderColor: colors.border,
-      minHeight: 180,  // Larger cards for better impact
-    },
-    modeHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: Spacing.md,  // 16px
-    },
-    modeIconContainer: {
-      width: 56,  // Larger icons (reference: 48px → 56px)
-      height: 56,
-      borderRadius: Spacing.radius.md,  // 12px
-      backgroundColor: colors.secondary,
-      justifyContent: "center",
-      alignItems: "center",
-      marginRight: Spacing.md,  // 16px
-    },
-    modeInfo: {
-      flex: 1,
-    },
-    modeTitle: {
-      fontSize: typography.h3.fontSize,  // 20px
-      fontWeight: typography.h3.fontWeight,  // 600
-      color: colors.text,
-      marginBottom: Spacing.xs,  // 4px
-    },
-    modeDescription: {
-      fontSize: typography.caption.fontSize,  // 14px
-      color: colors.mutedForeground,
-    },
-    modeFeatures: {
-      fontSize: typography.small.fontSize,  // 12px
-      lineHeight: typography.small.lineHeight,  // 18px
-      marginTop: Spacing.sm,  // 8px
-      marginBottom: Spacing.xs,  // 4px
-    },
-    modeButton: {
-      minHeight: 48,
-      marginTop: Spacing.md,  // 16px
-    },
-    friendlySection: {
-      marginTop: Spacing.lg,  // 24px
-      paddingTop: Spacing.lg,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    sectionTitle: {
-      fontSize: typography.h4.fontSize,  // 18px
-      fontWeight: typography.h3.fontWeight,  // 600
-      color: colors.text,
-      marginBottom: Spacing.md,  // 16px
-    },
-    friendlyOptions: {
-      gap: Spacing.md,  // 16px
-    },
-    friendlyButton: {
-      minHeight: 56,
-    },
-  });
+  const designRank = prToDesignRank(userPR);
 
   return (
-    <SafeAreaView style={styles.container} edges={[]}>
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.content}>
-          {activeGame && (
-            <View style={styles.activeMatchCard}>
-              <View style={styles.activeMatchContent}>
-                <View>
-                  <Text style={styles.activeMatchLabel}>Partie en cours</Text>
-                  <Text style={styles.activeMatchInfo}>
-                    {activeGame.mode === "AI" ?
-                      "Contre l'IA"
-                    : activeGame.mode === "RANKED" ?
-                      "Partie Classée"
-                    : "Partie Amicale"}
-                  </Text>
-                </View>
-                <Button
-                  title="Rejoindre"
-                  onPress={() =>
-                    router.push(`/(game)/match/${activeGame.gameId}`)
-                  }
-                  style={styles.rejoinButton}
-                  textStyle={styles.rejoinButtonText}
-                />
-              </View>
-            </View>
-          )}
-
-          <View style={styles.header}>
+    <View style={styles.root}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <DeepBg />
+      <HomeTopBar />
+      <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Heading */}
+          <View style={styles.heading}>
             <Text style={styles.title}>Choisir un mode</Text>
             <Text style={styles.subtitle}>Comment voulez-vous jouer ?</Text>
           </View>
 
-          <View style={styles.modesContainer}>
-            {/* Mode Classé */}
-            <View
-              style={[
-                styles.modeCard,
-                { borderColor: userRank.color, borderWidth: 2 },
-              ]}
+          {/* Active match — rejoin */}
+          {activeGame ? (
+            <Pressable
+              style={styles.activeMatch}
+              onPress={() => router.push(`/(game)/match/${activeGame.gameId}`)}
+              accessibilityRole="button"
+              accessibilityLabel="Rejoindre la partie en cours"
             >
-              <View style={styles.modeHeader}>
-                <View
-                  style={[
-                    styles.modeIconContainer,
-                    { backgroundColor: userRank.color },
-                  ]}
-                >
-                  <Ionicons name="trophy" size={28} color="#FFF" />
-                </View>
-                <View style={styles.modeInfo}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
-                    <Text style={styles.modeTitle}>Mode Classé</Text>
-                    <RankBadge rank={userRank} size="small" />
-                  </View>
-                  <Text style={styles.modeDescription}>
-                    Gratuit • Affecte votre classement • {userPR} PR
-                  </Text>
-                </View>
+              <View style={styles.activeMatchPulse} />
+              <View style={{ flex: 1 }}>
+                <LamapSectionLabel>Partie en cours</LamapSectionLabel>
+                <Text style={styles.activeMatchTitle}>
+                  {activeGame.mode === "AI"
+                    ? "Contre l'IA"
+                    : activeGame.mode === "RANKED"
+                      ? "Match classé"
+                      : "Partie privée"}
+                </Text>
               </View>
-              <Text
-                style={[styles.modeFeatures, { color: colors.mutedForeground }]}
-              >
-                ✓ Matchmaking par rang{"\n"}✓ Progression compétitive{"\n"}✓
-                Sans mise &apos;argent&apos;
-              </Text>
-              <Button
-                title="Jouer en Classé"
-                onPress={() => router.push("/(lobby)/ranked-matchmaking")}
-                variant="primary"
-                style={styles.modeButton}
-              />
+              <Ionicons name="play-circle" size={32} color={COLORS.or2} />
+            </Pressable>
+          ) : null}
+
+          {/* Mode Classé — featured */}
+          <View style={styles.modeClassed}>
+            <View style={styles.classedHalo} pointerEvents="none">
+              <Svg width={160} height={160}>
+                <Defs>
+                  <RadialGradient
+                    id="classed-halo"
+                    cx="50%"
+                    cy="50%"
+                    rx="50%"
+                    ry="50%"
+                  >
+                    <Stop
+                      offset="0%"
+                      stopColor="#E8C879"
+                      stopOpacity={0.25}
+                    />
+                    <Stop offset="70%" stopColor="#E8C879" stopOpacity={0} />
+                  </RadialGradient>
+                </Defs>
+                <Rect width={160} height={160} fill="url(#classed-halo)" />
+              </Svg>
             </View>
 
-            {/* Mode IA */}
-            <View style={styles.modeCard}>
-              <View style={styles.modeHeader}>
-                <View
-                  style={[
-                    styles.modeIconContainer,
-                    { backgroundColor: colors.muted },
-                  ]}
-                >
-                  <Ionicons name="hardware-chip" size={28} color="#FFF" />
+            <View style={styles.modeRow}>
+              <View style={styles.classedIcon}>
+                <LinearGradient
+                  colors={["#C9A876", "#6E5536"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[StyleSheet.absoluteFill, { borderRadius: 12 }]}
+                />
+                <Ionicons name="trophy" size={28} color={COLORS.ink} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={styles.classedTitleRow}>
+                  <Text style={styles.modeTitle}>Mode Classé</Text>
+                  <View style={{ transform: [{ scale: 0.7 }] }}>
+                    <RankBadge rank={designRank.name} size={36} />
+                  </View>
                 </View>
-                <View style={styles.modeInfo}>
-                  <Text style={styles.modeTitle}>Mode IA</Text>
-                  <Text style={styles.modeDescription}>
-                    Entraînement • Sans classement
-                  </Text>
+                <Text style={styles.modeMeta}>
+                  Gratuit · Affecte votre classement ·{" "}
+                  <Text style={styles.metaAccent}>{userPR} PR</Text>
+                </Text>
+                <View style={styles.featureList}>
+                  <FeatureLine>Matchmaking par rang</FeatureLine>
+                  <FeatureLine>Progression compétitive</FeatureLine>
+                  <FeatureLine>Sans mise d&apos;argent</FeatureLine>
                 </View>
               </View>
-              <Text
-                style={[styles.modeFeatures, { color: colors.mutedForeground }]}
-              >
-                ✓ Pratiquez sans risque{"\n"}✓ 3 niveaux de difficulté{"\n"}✓
-                N&apos;affecte pas votre classement
-              </Text>
-              <Button
-                title="S'entraîner"
-                onPress={() => router.push("/(lobby)/select-difficulty")}
-                variant="secondary"
-                style={styles.modeButton}
-              />
             </View>
+            <LamapButton
+              title="Jouer en Classé"
+              variant="primary"
+              onPress={() => router.push("/(lobby)/ranked-matchmaking")}
+              style={{ marginTop: 18 }}
+            />
           </View>
 
-          <Button
-            title="Retour"
+          {/* Mode IA */}
+          <View style={styles.modeAI}>
+            <View style={styles.modeRow}>
+              <View style={styles.aiIcon}>
+                <Ionicons
+                  name="hardware-chip-outline"
+                  size={26}
+                  color={COLORS.or2}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modeTitle}>Mode IA</Text>
+                <Text style={styles.modeMeta}>
+                  Entraînement · Sans classement
+                </Text>
+                <View style={styles.featureList}>
+                  <FeatureLine>Pratiquez sans risque</FeatureLine>
+                  <FeatureLine>3 niveaux de difficulté</FeatureLine>
+                  <FeatureLine>N&apos;affecte pas votre classement</FeatureLine>
+                </View>
+              </View>
+            </View>
+            <LamapButton
+              title="S'entraîner"
+              variant="light"
+              onPress={() => router.push("/(lobby)/select-difficulty")}
+              style={{ marginTop: 18 }}
+            />
+          </View>
+
+          {/* Footer back link */}
+          <Pressable
             onPress={() => router.back()}
-            variant="ghost"
-            icon={
-              <IconSymbol name="arrow.left" size={24} color={colors.text} />
-            }
-          />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            style={styles.backLink}
+            hitSlop={8}
+          >
+            <Text style={styles.backLinkText}>← Retour</Text>
+          </Pressable>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
+
+function FeatureLine({ children }: { children: string }) {
+  return (
+    <View style={styles.featureRow}>
+      <Text style={styles.featureCheck}>✓</Text>
+      <Text style={styles.featureText}>{children}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+  },
+  scroll: {
+    paddingHorizontal: 20,
+    paddingTop: 32,
+    paddingBottom: 40,
+  },
+  heading: {
+    alignItems: "center",
+    marginBottom: 24,
+    gap: 6,
+  },
+  title: {
+    fontFamily: FONT_WEIGHTS.display.bold,
+    fontSize: 32,
+    color: COLORS.cream,
+    letterSpacing: -0.8,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 15,
+    color: "rgba(245, 242, 237, 0.55)",
+    textAlign: "center",
+  },
+  activeMatch: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    marginBottom: 16,
+    borderRadius: RADII.lg,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.hairlineStrong,
+  },
+  activeMatchPulse: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.terre2,
+    shadowColor: COLORS.terre2,
+    shadowOpacity: 0.7,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 4,
+  },
+  activeMatchTitle: {
+    fontFamily: FONT_WEIGHTS.display.bold,
+    fontSize: 16,
+    color: COLORS.cream,
+    marginTop: 2,
+    letterSpacing: -0.2,
+  },
+  modeClassed: {
+    padding: 18,
+    borderRadius: RADII.xl,
+    borderWidth: 1.5,
+    borderColor: COLORS.or,
+    backgroundColor: "rgba(166, 130, 88, 0.1)",
+    overflow: "hidden",
+    marginBottom: 14,
+    position: "relative",
+  },
+  classedHalo: {
+    position: "absolute",
+    top: -20,
+    right: -30,
+    width: 160,
+    height: 160,
+  },
+  modeAI: {
+    padding: 18,
+    borderRadius: RADII.xl,
+    borderWidth: 1,
+    borderColor: COLORS.hairline,
+    backgroundColor: "rgba(46, 61, 77, 0.45)",
+  },
+  modeRow: {
+    flexDirection: "row",
+    gap: 14,
+    alignItems: "flex-start",
+  },
+  classedIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    shadowColor: COLORS.or,
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  aiIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(46, 61, 77, 0.8)",
+    borderWidth: 1,
+    borderColor: COLORS.hairline,
+  },
+  classedTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flexWrap: "wrap",
+  },
+  modeTitle: {
+    fontFamily: FONT_WEIGHTS.display.bold,
+    fontSize: 22,
+    color: COLORS.cream,
+    letterSpacing: -0.5,
+  },
+  modeMeta: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 13,
+    color: "rgba(245, 242, 237, 0.65)",
+    marginTop: 4,
+  },
+  metaAccent: {
+    fontFamily: FONT_WEIGHTS.body.semibold,
+    color: COLORS.or2,
+  },
+  featureList: {
+    marginTop: 12,
+    gap: 4,
+  },
+  featureRow: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  featureCheck: {
+    fontFamily: FONT_WEIGHTS.body.bold,
+    fontSize: 13,
+    color: COLORS.or2,
+  },
+  featureText: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 13,
+    color: "rgba(245, 242, 237, 0.78)",
+  },
+  backLink: {
+    alignSelf: "center",
+    marginTop: 24,
+    padding: 8,
+  },
+  backLinkText: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 14,
+    color: "rgba(245, 242, 237, 0.65)",
+  },
+});
