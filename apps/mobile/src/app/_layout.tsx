@@ -126,6 +126,7 @@ function RootLayoutNav() {
           <Stack.Screen name="tournaments" options={{ headerShown: false }} />
           <Stack.Screen name="tournament/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="gift" options={{ headerShown: false }} />
+          <Stack.Screen name="inspect" options={{ headerShown: false }} />
           <Stack.Screen
             name="vip"
             options={{ headerShown: false, presentation: "modal" }}
