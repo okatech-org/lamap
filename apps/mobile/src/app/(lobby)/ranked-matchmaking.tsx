@@ -296,9 +296,9 @@ function MatchFound({
       </View>
 
       <View style={styles.stakesPanel}>
-        <StakeCol label="En jeu" value="+12 PR" tone="or" />
+        <StakeCol label="Gain" value="+12 PR" tone="or" />
         <View style={styles.stakeDivider} />
-        <StakeCol label="Risque" value="−10 PR" tone="terre" />
+        <StakeCol label="Perte" value="−10 PR" tone="terre" />
         <View style={styles.stakeDivider} />
         <StakeCol label="Bonus Kora" value="×2 — ×8" tone="or" />
       </View>

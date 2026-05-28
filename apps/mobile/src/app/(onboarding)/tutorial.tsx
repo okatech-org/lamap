@@ -44,8 +44,8 @@ const TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     eyebrow: "RÈGLE 4 / 4",
-    title: "Le jeton Kora.",
-    body: "Tu mises en Kora. Le gagnant reçoit 90% de la mise totale. La plateforme prélève 10%. Ton classement évolue à chaque match.",
+    title: "Classé ou contre IA.",
+    body: "Affronte des bots pour t'entraîner, ou plonge dans le mode classé pour faire grimper ton PR. Les Kora se gagnent en jouant et débloquent des cosmétiques.",
     visual: "game",
   },
 ];
@@ -232,13 +232,13 @@ function GameVisual() {
         <Text style={styles.koraDiscText}>K</Text>
       </View>
       <View style={styles.gameStats}>
-        <Text style={styles.gameStatLabel}>GAGNANT</Text>
-        <Text style={styles.gameStatValue}>+90%</Text>
+        <Text style={styles.gameStatLabel}>CLASSÉ</Text>
+        <Text style={styles.gameStatValue}>+PR</Text>
       </View>
       <View style={styles.gameStats}>
-        <Text style={styles.gameStatLabel}>PLATEFORME</Text>
-        <Text style={[styles.gameStatValue, { color: COLORS.terre2 }]}>
-          −10%
+        <Text style={styles.gameStatLabel}>VS IA</Text>
+        <Text style={[styles.gameStatValue, { color: COLORS.or2 }]}>
+          ENTRAÎNE-TOI
         </Text>
       </View>
     </View>

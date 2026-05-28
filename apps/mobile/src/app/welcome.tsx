@@ -1,13 +1,15 @@
 import { LamapButton, LamapChip } from "@/components/lamap";
 import { AuthBackground } from "@/components/ui/auth-background";
 import { WelcomeCards } from "@/components/ui/welcome-cards";
+import { PRIVACY_URL, TERMS_URL } from "@/config/legal";
 import { COLORS, FONT_WEIGHTS } from "@/design";
 import { useWarmUpBrowser } from "@/hooks/use-warm-up-browser";
 import { useSSO } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
+import * as WebBrowser from "expo-web-browser";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -31,6 +33,9 @@ export default function WelcomeScreen() {
   const taglineTranslateY = useSharedValue(-8);
 
   const chipOpacity = useSharedValue(0);
+
+  const button0Opacity = useSharedValue(0);
+  const button0TranslateY = useSharedValue(16);
 
   const button1Opacity = useSharedValue(0);
   const button1TranslateY = useSharedValue(16);
@@ -64,11 +69,14 @@ export default function WelcomeScreen() {
 
     chipOpacity.value = withDelay(320, withTiming(1, timing(320, 400)));
 
-    button1Opacity.value = withDelay(440, withTiming(1, timing(440)));
-    button1TranslateY.value = withDelay(440, withTiming(0, timing(440)));
+    button0Opacity.value = withDelay(420, withTiming(1, timing(420)));
+    button0TranslateY.value = withDelay(420, withTiming(0, timing(420)));
 
-    button2Opacity.value = withDelay(540, withTiming(1, timing(540)));
-    button2TranslateY.value = withDelay(540, withTiming(0, timing(540)));
+    button1Opacity.value = withDelay(500, withTiming(1, timing(500)));
+    button1TranslateY.value = withDelay(500, withTiming(0, timing(500)));
+
+    button2Opacity.value = withDelay(580, withTiming(1, timing(580)));
+    button2TranslateY.value = withDelay(580, withTiming(0, timing(580)));
 
     footerOpacity.value = withDelay(
       720,
@@ -76,7 +84,7 @@ export default function WelcomeScreen() {
     );
   });
 
-  const handleOAuth = async (strategy: "google" | "facebook") => {
+  const handleOAuth = async (strategy: "google" | "facebook" | "apple") => {
     try {
       setLoading(strategy);
       const { createdSessionId, setActive } = await startSSOFlow({
@@ -114,6 +122,10 @@ export default function WelcomeScreen() {
     transform: [{ translateY: taglineTranslateY.value }],
   }));
   const chipStyle = useAnimatedStyle(() => ({ opacity: chipOpacity.value }));
+  const button0Style = useAnimatedStyle(() => ({
+    opacity: button0Opacity.value,
+    transform: [{ translateY: button0TranslateY.value }],
+  }));
   const button1Style = useAnimatedStyle(() => ({
     opacity: button1Opacity.value,
     transform: [{ translateY: button1TranslateY.value }],
@@ -151,6 +163,18 @@ export default function WelcomeScreen() {
 
         <View style={styles.bottomGroup}>
           <View style={styles.buttons}>
+            <Animated.View style={button0Style}>
+              <LamapButton
+                title="Continuer avec Apple"
+                variant="primary"
+                onPress={() => handleOAuth("apple")}
+                loading={loading === "apple"}
+                disabled={!!loading}
+                icon={
+                  <Ionicons name="logo-apple" size={20} color={COLORS.cream} />
+                }
+              />
+            </Animated.View>
             <Animated.View style={button1Style}>
               <LamapButton
                 title="Continuer avec Google"
@@ -166,7 +190,7 @@ export default function WelcomeScreen() {
             <Animated.View style={button2Style}>
               <LamapButton
                 title="Continuer avec Facebook"
-                variant="primary"
+                variant="ghost"
                 onPress={() => handleOAuth("facebook")}
                 loading={loading === "facebook"}
                 disabled={!!loading}
@@ -180,7 +204,24 @@ export default function WelcomeScreen() {
           <Animated.View style={[styles.footer, footerStyle]}>
             <Text style={styles.footerText}>
               Devenez maître du Garame.{"\n"}
-              Affrontez des joueurs, misez votre Kora.
+              Affrontez des joueurs, gagnez des Kora.
+            </Text>
+            <Text style={styles.legalText}>
+              En continuant, vous acceptez nos{" "}
+              <Text
+                style={styles.legalLink}
+                onPress={() => WebBrowser.openBrowserAsync(TERMS_URL)}
+              >
+                CGU
+              </Text>{" "}
+              et notre{" "}
+              <Text
+                style={styles.legalLink}
+                onPress={() => WebBrowser.openBrowserAsync(PRIVACY_URL)}
+              >
+                Politique de confidentialité
+              </Text>
+              .
             </Text>
           </Animated.View>
         </View>
@@ -246,5 +287,18 @@ const styles = StyleSheet.create({
     color: "rgba(245,242,237,0.45)",
     textAlign: "center",
     lineHeight: 19,
+  },
+  legalText: {
+    fontFamily: FONT_WEIGHTS.body.regular,
+    fontSize: 11,
+    color: "rgba(245,242,237,0.4)",
+    textAlign: "center",
+    lineHeight: 16,
+    marginTop: 10,
+    paddingHorizontal: 12,
+  },
+  legalLink: {
+    color: COLORS.or2,
+    textDecorationLine: "underline",
   },
 });

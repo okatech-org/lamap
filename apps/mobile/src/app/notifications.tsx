@@ -194,7 +194,6 @@ function ChallengeRow({
   onPress: () => void;
 }) {
   const sender = notification.data?.senderUsername ?? "Un joueur";
-  const stake = notification.data?.betAmount;
   return (
     <Pressable style={styles.challenge} onPress={onPress}>
       <View style={styles.challengeRow}>
@@ -215,7 +214,6 @@ function ChallengeRow({
           </Text>
           <Text style={styles.challengeMeta}>
             {formatTime(notification._creationTime)}
-            {stake ? ` · Mise ${stake.toLocaleString("fr-FR")} K` : ""}
           </Text>
         </View>
         <View style={styles.unreadDot} />

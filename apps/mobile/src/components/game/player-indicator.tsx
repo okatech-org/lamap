@@ -1,5 +1,5 @@
 import { useColors } from "@/hooks/use-colors";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -61,7 +61,7 @@ export function PlayerIndicator({
   return (
     <View style={styles.container}>
       {hasHand && (
-        <Ionicons
+        <MaterialCommunityIcons
           name="crown"
           size={14}
           color={isCurrentTurn ? colors.secondaryForeground : colors.secondary}
