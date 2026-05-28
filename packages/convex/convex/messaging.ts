@@ -1,6 +1,8 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
+import { containsBadWord } from "./badWords";
+import { getBlockedIdsByUser } from "./moderation";
 
 export const createConversation = mutation({
   args: {
@@ -57,6 +59,24 @@ export const sendMessage = mutation({
       throw new Error("Sender not in conversation");
     }
 
+    if (containsBadWord(args.content)) {
+      throw new Error(
+        "Votre message contient des termes interdits par nos CGU."
+      );
+    }
+
+    const otherParticipantId = conversation.participants.find(
+      (id) => id !== args.senderId
+    );
+    if (otherParticipantId) {
+      const blocks = await getBlockedIdsByUser(ctx, args.senderId);
+      if (blocks.has(otherParticipantId)) {
+        throw new Error(
+          "Vous ne pouvez pas envoyer de message à un utilisateur bloqué."
+        );
+      }
+    }
+
     const now = Date.now();
 
     await ctx.db.insert("messages", {
@@ -105,8 +125,12 @@ export const getConversations = query({
       .withIndex("by_last_message")
       .collect();
 
-    const userConversations = allConversations.filter((conv) =>
-      conv.participants.includes(args.userId)
+    const blockedIds = await getBlockedIdsByUser(ctx, args.userId);
+
+    const userConversations = allConversations.filter(
+      (conv) =>
+        conv.participants.includes(args.userId) &&
+        !conv.participants.some((p) => p !== args.userId && blockedIds.has(p))
     );
 
     const conversationsWithData = await Promise.all(

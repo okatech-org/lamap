@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { containsBadWord } from "./badWords";
 
 export const sendGameMessage = mutation({
   args: {
@@ -29,6 +30,12 @@ export const sendGameMessage = mutation({
 
     if (!isPlayerInGame) {
       throw new Error("Player not in game");
+    }
+
+    if (containsBadWord(args.message)) {
+      throw new Error(
+        "Votre message contient des termes interdits par nos CGU."
+      );
     }
 
     const messageData = {

@@ -7,9 +7,12 @@ import { useMutation, useQuery } from "convex/react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActionSheetIOS,
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -52,6 +55,149 @@ export default function ConversationScreen() {
 
   const sendMessage = useMutation((api as any).messaging.sendMessage);
   const markAsRead = useMutation((api as any).messaging.markAsRead);
+  const reportContent = useMutation((api as any).moderation.reportContent);
+  const blockUser = useMutation((api as any).moderation.blockUser);
+
+  const reasonLabels: Record<string, string> = {
+    spam: "Spam",
+    harassment: "Harcèlement",
+    sexual: "Contenu sexuel",
+    other: "Autre",
+  };
+
+  const submitReport = async (
+    targetType: "message" | "user",
+    targetId: string,
+    reason: "spam" | "harassment" | "sexual" | "other"
+  ) => {
+    if (!myUserId) return;
+    try {
+      await reportContent({
+        reporterId: myUserId,
+        targetType,
+        targetId,
+        reason,
+      });
+      Alert.alert(
+        "Signalement envoyé",
+        "Merci. Notre équipe va examiner ce contenu, conformément à nos CGU.",
+      );
+    } catch (err) {
+      Alert.alert(
+        "Erreur",
+        err instanceof Error ? err.message : "Impossible d'envoyer le signalement.",
+      );
+    }
+  };
+
+  const showReportSheet = (
+    targetType: "message" | "user",
+    targetId: string,
+  ) => {
+    const reasons: ("spam" | "harassment" | "sexual" | "other")[] = [
+      "spam",
+      "harassment",
+      "sexual",
+      "other",
+    ];
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: "Signaler",
+          message: "Choisissez un motif (conformément à nos CGU)",
+          options: [...reasons.map((r) => reasonLabels[r]), "Annuler"],
+          cancelButtonIndex: reasons.length,
+        },
+        (idx) => {
+          if (idx >= 0 && idx < reasons.length) {
+            submitReport(targetType, targetId, reasons[idx]);
+          }
+        },
+      );
+    } else {
+      Alert.alert(
+        "Signaler",
+        "Choisissez un motif (conformément à nos CGU)",
+        [
+          ...reasons.map((r) => ({
+            text: reasonLabels[r],
+            onPress: () => submitReport(targetType, targetId, r),
+          })),
+          { text: "Annuler", style: "cancel" as const },
+        ],
+      );
+    }
+  };
+
+  const confirmBlock = (blockedId: string, blockedName: string) => {
+    Alert.alert(
+      "Bloquer l'utilisateur",
+      `Voulez-vous bloquer ${blockedName} ? Vous ne verrez plus ses messages, conformément à nos CGU.`,
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Bloquer",
+          style: "destructive",
+          onPress: async () => {
+            if (!myUserId) return;
+            try {
+              await blockUser({
+                blockerId: myUserId,
+                blockedId: blockedId as any,
+              });
+              Alert.alert(
+                "Utilisateur bloqué",
+                `${blockedName} a été bloqué.`,
+              );
+              router.back();
+            } catch (err) {
+              Alert.alert(
+                "Erreur",
+                err instanceof Error
+                  ? err.message
+                  : "Impossible de bloquer cet utilisateur.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const showMessageMenu = (msg: any, isMine: boolean) => {
+    if (isMine) return;
+    const senderId = msg.sender?._id;
+    const senderName = msg.sender?.username || "cet utilisateur";
+    if (!senderId) return;
+
+    const options = ["Signaler", "Bloquer l'utilisateur", "Annuler"];
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          destructiveButtonIndex: 1,
+          cancelButtonIndex: 2,
+        },
+        (idx) => {
+          if (idx === 0) showReportSheet("message", msg._id);
+          else if (idx === 1) confirmBlock(senderId, senderName);
+        },
+      );
+    } else {
+      Alert.alert(senderName, undefined, [
+        {
+          text: "Signaler",
+          onPress: () => showReportSheet("message", msg._id),
+        },
+        {
+          text: "Bloquer l'utilisateur",
+          style: "destructive",
+          onPress: () => confirmBlock(senderId, senderName),
+        },
+        { text: "Annuler", style: "cancel" },
+      ]);
+    }
+  };
   const [messageText, setMessageText] = useState("");
   const [sending, setSending] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -269,7 +415,9 @@ export default function ConversationScreen() {
                       style={styles.messageAvatar}
                     />
                   )}
-                  <View
+                  <Pressable
+                    onLongPress={() => showMessageMenu(msg, isMyMessage)}
+                    delayLongPress={350}
                     style={[
                       styles.messageBubble,
                       isMyMessage ? styles.myMessageBubble : null,
@@ -288,7 +436,7 @@ export default function ConversationScreen() {
                     >
                       {msg.content}
                     </Text>
-                  </View>
+                  </Pressable>
                 </View>
               );
             })
