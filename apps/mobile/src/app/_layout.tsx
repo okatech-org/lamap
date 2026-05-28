@@ -1,4 +1,4 @@
-import { fontAssets } from "@/design";
+import { fontAssets, ThemeProvider as LamapThemeProvider } from "@/design";
 import { useColors } from "@/hooks/use-colors";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import {
@@ -197,7 +197,9 @@ export default function RootLayout() {
           tokenCache={tokenCache}
         >
           <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-            <RootLayoutNav />
+            <LamapThemeProvider>
+              <RootLayoutNav />
+            </LamapThemeProvider>
           </ConvexProviderWithClerk>
         </ClerkProvider>
       </SafeAreaProvider>

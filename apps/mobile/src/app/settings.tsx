@@ -1,5 +1,6 @@
 import { BattleLayoutPreview } from "@/components/settings/battle-layout-preview";
 import { CardLayoutPreview } from "@/components/settings/card-layout-preview";
+import { ThemePicker } from "@/components/settings/theme-picker";
 import { Button } from "@/components/ui/button";
 import { PRIVACY_URL, TERMS_URL } from "@/config/legal";
 import { useAuth } from "@/hooks/use-auth";
@@ -221,6 +222,20 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.container} edges={[]}>
       <ScrollView style={styles.scrollView}>
         <View style={styles.content}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Apparence</Text>
+            <View style={styles.settingRow}>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingDescription}>
+                  Choisissez la palette de couleurs de l&apos;application
+                </Text>
+              </View>
+            </View>
+            <View style={{ marginTop: 12 }}>
+              <ThemePicker />
+            </View>
+          </View>
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Compte</Text>
 

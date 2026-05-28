@@ -4,6 +4,7 @@ export { LamapButton, type LamapButtonVariant } from "./button";
 export { LamapChip } from "./chip";
 export { DeepBg } from "./deep-bg";
 export { Divider } from "./divider";
+export { Embers } from "./embers";
 export { FlipCard } from "./flip-card";
 export { LamapGameTopBar } from "./game-top-bar";
 export { GoldDust } from "./gold-dust";
