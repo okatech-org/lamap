@@ -33,23 +33,11 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="profile"
-        options={{
-          title: "Profil",
-          header: () => <HomeTopBar />,
-          headerTransparent: true,
-          headerStyle: { backgroundColor: "transparent" },
-          headerShadowVisible: false,
-        }}
+        options={{ title: "Profil", headerShown: false }}
       />
       <Tabs.Screen
         name="leaderboard"
-        options={{
-          title: "Classement",
-          header: () => <HomeTopBar />,
-          headerTransparent: true,
-          headerStyle: { backgroundColor: "transparent" },
-          headerShadowVisible: false,
-        }}
+        options={{ title: "Classement", headerShown: false }}
       />
       <Tabs.Screen
         name="wallet"

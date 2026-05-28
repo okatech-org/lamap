@@ -1,344 +1,217 @@
-import {
-  Avatar,
-  DeepBg,
-  LamapSectionLabel,
-  LamapTabPillRow,
-} from "@/components/lamap";
-import { COLORS, FONT_WEIGHTS, prToDesignRank, RADII } from "@/design";
+import { AppBackdrop, PageTitle } from "@/components/lamap";
+import { FONT_WEIGHTS, prToDesignRank, useTheme, type Theme } from "@/design";
 import { useAuth } from "@/hooks/use-auth";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@lamap/convex/_generated/api";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const FILTERS = [
-  { id: "global" as const, label: "Mondial" },
-  { id: "country" as const, label: "Cameroun", disabled: true },
-  { id: "friends" as const, label: "Amis", disabled: true },
+type Filter = "global" | "country" | "friends";
+const FILTERS: { id: Filter; label: string }[] = [
+  { id: "global", label: "Mondial" },
+  { id: "country", label: "National" },
+  { id: "friends", label: "Amis" },
 ];
 
-const PODIUM_COLORS = ["#E8C879", "#C0C0C0", "#C9722F"];
-const PODIUM_HEIGHTS = [165, 130, 110];
+function initialsOf(name: string): string {
+  return (name.match(/\b[A-ZÉÈÀÂÊÎÔÛ0-9]/giu) || [name[0] ?? "L"]).slice(0, 2).join("").toUpperCase();
+}
 
 export default function LeaderboardScreen() {
   const router = useRouter();
-  const headerHeight = useHeaderHeight();
+  const theme = useTheme();
+  const s = makeStyles(theme);
   const { convexUser } = useAuth();
-  const [filter, setFilter] = useState<"global" | "country" | "friends">(
-    "global",
-  );
-
+  const [filter, setFilter] = useState<Filter>("global");
   const board = useQuery(api.leaderboard.getGlobalLeaderboard, { limit: 100 });
 
   if (!board) {
     return (
-      <View style={styles.root}>
-        <DeepBg />
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={COLORS.or2} />
-        </View>
+      <View style={s.root}>
+        <AppBackdrop />
+        <SafeAreaView style={s.center}>
+          <ActivityIndicator size="large" color={theme.gold} />
+        </SafeAreaView>
       </View>
     );
   }
 
   const top3 = board.slice(0, 3);
   const rest = board.slice(3, 30);
-  const myEntry = convexUser?._id
-    ? board.find((p) => p.userId === convexUser._id)
-    : null;
+  const myEntry = convexUser?._id ? board.find((p) => p.userId === convexUser._id) : null;
+  const podiumOrder = [top3[1] ?? null, top3[0] ?? null, top3[2] ?? null];
 
   return (
-    <View style={styles.root}>
-      <DeepBg />
-      <ScrollView
-        contentContainerStyle={[
-          styles.scroll,
-          { paddingTop: headerHeight + 16 },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.header}>
-          <LamapSectionLabel>Classement</LamapSectionLabel>
-          <Text style={styles.title}>Le tableau d&apos;honneur</Text>
-          <Pressable
-            onPress={() => router.push("/leaderboard/ranks" as any)}
-          >
-            <Text style={styles.linkRight}>Voir l&apos;échelle des rangs →</Text>
-          </Pressable>
-        </View>
+    <View style={s.root}>
+      <AppBackdrop dust={8} />
+      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
+          <PageTitle eyebrow="CLASSEMENT · SAISON 04" title="Top joueurs." />
 
-        <View style={styles.filterRow}>
-          <LamapTabPillRow
-            options={FILTERS}
-            selected={filter}
-            onSelect={setFilter}
-          />
-        </View>
-
-        {filter !== "global" ? (
-          <View style={styles.empty}>
-            <Ionicons name="time-outline" size={28} color={COLORS.or2} />
-            <Text style={styles.emptyText}>Bientôt disponible.</Text>
+          <View style={s.tabs}>
+            {FILTERS.map((f) => {
+              const active = f.id === filter;
+              return (
+                <Pressable
+                  key={f.id}
+                  onPress={() => setFilter(f.id)}
+                  style={[
+                    s.tab,
+                    {
+                      backgroundColor: active ? theme.goldA(0.18) : theme.surfA(0.55),
+                      borderColor: active ? theme.goldA(0.5) : theme.goldA(0.12),
+                    },
+                  ]}
+                >
+                  <Text style={[s.tabText, { color: active ? theme.goldBright : theme.creamA(0.55) }]}>
+                    {f.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
-        ) : (
-          <>
-            {/* Podium */}
-            {top3.length > 0 ? (
-              <View style={styles.podium}>
-                {[
-                  top3[1] ?? null,
-                  top3[0] ?? null,
-                  top3[2] ?? null,
-                ].map((entry, i) => {
-                  if (!entry) {
-                    return <View key={`empty-${i}`} style={styles.podiumCol} />;
-                  }
+
+          {filter !== "global" ? (
+            <View style={s.empty}>
+              <Ionicons name="time-outline" size={28} color={theme.gold} />
+              <Text style={s.emptyText}>Bientôt disponible.</Text>
+            </View>
+          ) : (
+            <>
+              {/* Podium */}
+              <View style={s.podium}>
+                {podiumOrder.map((entry, i) => {
+                  if (!entry) return <View key={`e-${i}`} style={{ flex: 1 }} />;
                   const rank = i === 0 ? 2 : i === 1 ? 1 : 3;
-                  const color = PODIUM_COLORS[rank - 1];
-                  const height = PODIUM_HEIGHTS[rank - 1];
+                  const winner = rank === 1;
+                  const h = winner ? 108 : rank === 2 ? 88 : 72;
                   return (
-                    <Pressable
-                      key={entry.userId}
-                      style={styles.podiumCol}
-                      onPress={() => router.push(`/user/${entry.userId}`)}
-                    >
-                      <Avatar
-                        initials={initialsOf(entry.username)}
-                        size={48}
-                      />
-                      <Text style={styles.podiumName} numberOfLines={1}>
-                        {entry.username}
-                      </Text>
-                      <Text style={[styles.podiumPr, { color }]}>
-                        {entry.pr} PR
-                      </Text>
+                    <Pressable key={entry.userId} style={s.podCol} onPress={() => router.push(`/user/${entry.userId}`)}>
+                      <View style={[s.podAvatar, { width: winner ? 56 : 44, height: winner ? 56 : 44, borderRadius: winner ? 28 : 22, backgroundColor: winner ? theme.gold : theme.accent }]}>
+                        <Text style={[s.podInitials, { color: winner ? "#1F1810" : theme.cream }]}>
+                          {initialsOf(entry.username)}
+                        </Text>
+                      </View>
+                      <Text style={s.podName} numberOfLines={1}>{entry.username}</Text>
+                      <Text style={s.podPr}>{entry.pr}</Text>
                       <View
                         style={[
-                          styles.podiumBar,
+                          s.podBar,
                           {
-                            height,
-                            borderColor: color + "80",
-                            backgroundColor: color + "30",
-                            shadowColor: rank === 1 ? color : undefined,
-                            shadowOpacity: rank === 1 ? 0.5 : 0,
-                            shadowRadius: rank === 1 ? 18 : 0,
+                            height: h,
+                            backgroundColor: winner ? theme.goldA(0.4) : theme.accentA(0.3),
+                            borderColor: winner ? theme.goldA(0.6) : theme.accentA(0.4),
                           },
                         ]}
                       >
-                        <Text style={[styles.podiumRank, { color }]}>
-                          {rank}
-                        </Text>
+                        <Text style={[s.podRank, { color: winner ? "#1F1810" : theme.cream }]}>{rank}</Text>
                       </View>
                     </Pressable>
                   );
                 })}
               </View>
-            ) : null}
 
-            {/* List */}
-            <View style={styles.list}>
-              {rest.map((entry) => {
-                const tier = prToDesignRank(entry.pr);
-                return (
-                  <Pressable
-                    key={entry.userId}
-                    style={styles.row}
-                    onPress={() => router.push(`/user/${entry.userId}`)}
-                  >
-                    <Text style={styles.rowRank}>{entry.rank}</Text>
-                    <Avatar
-                      initials={initialsOf(entry.username)}
-                      size={32}
-                    />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.rowName}>{entry.username}</Text>
-                      <Text style={styles.rowTier}>{tier.name}</Text>
-                    </View>
-                    <Text style={styles.rowPr}>{entry.pr}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            {/* You */}
-            {myEntry ? (
-              <View style={styles.youRow}>
-                <Text style={styles.youRank}>{myEntry.rank}</Text>
-                <Avatar
-                  initials={initialsOf(myEntry.username)}
-                  size={32}
-                />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.youName}>Toi</Text>
-                  <Text style={styles.youTier}>
-                    {prToDesignRank(myEntry.pr).name}
-                  </Text>
-                </View>
-                <Text style={styles.youPr}>{myEntry.pr}</Text>
+              {/* Rest */}
+              <View style={s.list}>
+                {rest.map((entry) => {
+                  const tier = prToDesignRank(entry.pr);
+                  return (
+                    <Pressable key={entry.userId} style={s.row} onPress={() => router.push(`/user/${entry.userId}`)}>
+                      <Text style={s.rowRank}>#{entry.rank}</Text>
+                      <View style={[s.rowAvatar, { backgroundColor: theme.accent }]}>
+                        <Text style={s.rowInitials}>{initialsOf(entry.username)}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={s.rowName}>{entry.username}</Text>
+                        <Text style={[s.rowTier, { color: tier.color }]}>{tier.name}</Text>
+                      </View>
+                      <Text style={s.rowPr}>{entry.pr.toLocaleString("fr-FR")}</Text>
+                    </Pressable>
+                  );
+                })}
               </View>
-            ) : null}
-          </>
-        )}
 
-        <View style={{ height: 120 }} />
-      </ScrollView>
+              {myEntry ? (
+                <View style={[s.row, s.youRow]}>
+                  <Text style={[s.rowRank, { color: theme.goldBright }]}>#{myEntry.rank}</Text>
+                  <View style={[s.rowAvatar, { backgroundColor: theme.gold }]}>
+                    <Text style={[s.rowInitials, { color: "#1F1810" }]}>{initialsOf(myEntry.username)}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.rowName}>Toi</Text>
+                    <Text style={[s.rowTier, { color: theme.gold }]}>{prToDesignRank(myEntry.pr).name}</Text>
+                  </View>
+                  <Text style={[s.rowPr, { color: theme.goldBright }]}>{myEntry.pr.toLocaleString("fr-FR")}</Text>
+                </View>
+              ) : null}
+            </>
+          )}
+        </ScrollView>
+      </SafeAreaView>
     </View>
   );
 }
 
-function initialsOf(name: string): string {
-  return (
-    (name.match(/\b[A-ZÉÈÀÂÊÎÔÛ0-9]/giu) || [name[0] ?? "L"])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase()
-  );
+function makeStyles(theme: Theme) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: theme.abyss },
+    center: { flex: 1, alignItems: "center", justifyContent: "center" },
+    tabs: { flexDirection: "row", gap: 8, paddingHorizontal: 20, paddingBottom: 16 },
+    tab: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, borderWidth: 1 },
+    tabText: { fontFamily: FONT_WEIGHTS.display.semibold, fontSize: 12 },
+    empty: { alignItems: "center", gap: 10, paddingVertical: 80 },
+    emptyText: { fontFamily: FONT_WEIGHTS.body.regular, fontSize: 14, color: theme.creamA(0.55) },
+    podium: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+      justifyContent: "space-around",
+      gap: 10,
+      marginHorizontal: 20,
+      marginBottom: 20,
+      padding: 16,
+      paddingBottom: 0,
+      borderRadius: 18,
+      backgroundColor: theme.goldA(0.08),
+      borderWidth: 1,
+      borderColor: theme.goldA(0.2),
+      overflow: "hidden",
+    },
+    podCol: { flex: 1, alignItems: "center", gap: 6 },
+    podAvatar: { alignItems: "center", justifyContent: "center" },
+    podInitials: { fontFamily: FONT_WEIGHTS.display.bold, fontSize: 14 },
+    podName: { fontFamily: FONT_WEIGHTS.display.bold, fontSize: 11, color: theme.cream, maxWidth: 90 },
+    podPr: { fontFamily: FONT_WEIGHTS.mono.medium, fontSize: 9, color: theme.goldBright },
+    podBar: {
+      width: "92%",
+      borderTopLeftRadius: 8,
+      borderTopRightRadius: 8,
+      borderWidth: 1,
+      borderBottomWidth: 0,
+      alignItems: "center",
+      paddingTop: 6,
+    },
+    podRank: { fontFamily: FONT_WEIGHTS.display.extrabold, fontSize: 18 },
+    list: { paddingHorizontal: 20, gap: 6 },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 12,
+      backgroundColor: theme.surface,
+      borderWidth: 1,
+      borderColor: theme.goldA(0.1),
+    },
+    rowRank: { width: 30, fontFamily: FONT_WEIGHTS.mono.bold, fontSize: 11, color: theme.creamA(0.55) },
+    rowAvatar: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+    rowInitials: { fontFamily: FONT_WEIGHTS.display.bold, fontSize: 11, color: theme.cream },
+    rowName: { fontFamily: FONT_WEIGHTS.display.bold, fontSize: 13, color: theme.cream },
+    rowTier: { fontFamily: FONT_WEIGHTS.mono.medium, fontSize: 9, marginTop: 1 },
+    rowPr: { fontFamily: FONT_WEIGHTS.mono.medium, fontSize: 11, color: theme.goldBright, minWidth: 50, textAlign: "right" },
+    youRow: { marginHorizontal: 20, marginTop: 12, backgroundColor: theme.goldA(0.1), borderColor: theme.goldA(0.4) },
+  });
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.bg },
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  scroll: { paddingHorizontal: 20 },
-  header: { gap: 6, marginBottom: 16 },
-  title: {
-    fontFamily: FONT_WEIGHTS.display.bold,
-    fontSize: 28,
-    color: COLORS.cream,
-    letterSpacing: -0.6,
-    marginTop: 4,
-  },
-  linkRight: {
-    fontFamily: FONT_WEIGHTS.body.medium,
-    fontSize: 12,
-    color: COLORS.or2,
-    marginTop: 4,
-  },
-  filterRow: { marginBottom: 18 },
-  empty: {
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 80,
-  },
-  emptyText: {
-    fontFamily: FONT_WEIGHTS.body.regular,
-    fontSize: 14,
-    color: "rgba(245, 242, 237, 0.55)",
-  },
-  podium: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "center",
-    gap: 8,
-    height: 240,
-    marginBottom: 24,
-  },
-  podiumCol: {
-    flex: 1,
-    alignItems: "center",
-  },
-  podiumName: {
-    fontFamily: FONT_WEIGHTS.display.bold,
-    fontSize: 12,
-    color: COLORS.cream,
-    marginTop: 6,
-  },
-  podiumPr: {
-    fontFamily: FONT_WEIGHTS.mono.medium,
-    fontSize: 10,
-    marginTop: 2,
-  },
-  podiumBar: {
-    marginTop: 6,
-    width: "100%",
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
-    borderWidth: 1,
-    borderBottomWidth: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 10,
-  },
-  podiumRank: {
-    fontFamily: FONT_WEIGHTS.display.extrabold,
-    fontSize: 32,
-    letterSpacing: -0.8,
-  },
-  list: { gap: 6 },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: RADII.md,
-    backgroundColor: "rgba(46, 61, 77, 0.5)",
-    borderWidth: 1,
-    borderColor: "rgba(201, 168, 118, 0.12)",
-  },
-  rowRank: {
-    width: 26,
-    fontFamily: FONT_WEIGHTS.display.bold,
-    fontSize: 16,
-    color: "rgba(245, 242, 237, 0.4)",
-    textAlign: "center",
-  },
-  rowName: {
-    fontFamily: FONT_WEIGHTS.body.semibold,
-    fontSize: 13,
-    color: COLORS.cream,
-  },
-  rowTier: {
-    fontFamily: FONT_WEIGHTS.mono.medium,
-    fontSize: 10,
-    color: COLORS.or2,
-  },
-  rowPr: {
-    fontFamily: FONT_WEIGHTS.display.bold,
-    fontSize: 14,
-    color: COLORS.cream,
-  },
-  youRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginTop: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: RADII.md,
-    backgroundColor: "rgba(180, 68, 62, 0.18)",
-    borderWidth: 1.5,
-    borderColor: COLORS.terre2,
-  },
-  youRank: {
-    width: 26,
-    fontFamily: FONT_WEIGHTS.display.bold,
-    fontSize: 16,
-    color: COLORS.terre2,
-    textAlign: "center",
-  },
-  youName: {
-    fontFamily: FONT_WEIGHTS.body.semibold,
-    fontSize: 13,
-    color: COLORS.cream,
-  },
-  youTier: {
-    fontFamily: FONT_WEIGHTS.mono.medium,
-    fontSize: 10,
-    color: COLORS.or2,
-  },
-  youPr: {
-    fontFamily: FONT_WEIGHTS.display.bold,
-    fontSize: 14,
-    color: COLORS.cream,
-  },
-});
