@@ -4,23 +4,21 @@ import {
   LamapKoraCoin,
   LamapSectionLabel,
 } from "@/components/lamap";
-import { COLORS, FONT_WEIGHTS, RADII } from "@/design";
+import { COLORS, FONT_WEIGHTS } from "@/design";
 import { useAuth } from "@/hooks/use-auth";
 import { useEconomy } from "@/hooks/use-economy";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, type ErrorBoundaryProps, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BuyKoraSheet } from "@/components/wallet/buy-kora-sheet";
 
 const KORA_TO_XAF = 10;
 
@@ -51,10 +49,8 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 export default function WalletScreen() {
   const router = useRouter();
   const { isSignedIn } = useAuth();
-  const { balance, currency, transactions, redeemCode } = useEconomy();
-  const [rechargeModalVisible, setRechargeModalVisible] = useState(false);
-  const [rechargeCode, setRechargeCode] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const { balance, currency, transactions } = useEconomy();
+  const [buySheetVisible, setBuySheetVisible] = useState(false);
 
   if (!isSignedIn) {
     return (
@@ -66,27 +62,6 @@ export default function WalletScreen() {
       </View>
     );
   }
-
-  const handleRedeem = async () => {
-    if (!rechargeCode.trim()) return;
-    setSubmitting(true);
-    try {
-      const result = await redeemCode(rechargeCode.trim());
-      Alert.alert(
-        "Recharge réussie",
-        `+${result.amount.toLocaleString("fr-FR")} ${result.currency}`,
-      );
-      setRechargeCode("");
-      setRechargeModalVisible(false);
-    } catch (e) {
-      Alert.alert(
-        "Erreur",
-        e instanceof Error ? e.message : "Code invalide",
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const xafApprox = Math.round(balance * KORA_TO_XAF);
 
@@ -130,16 +105,11 @@ export default function WalletScreen() {
 
           {/* Actions */}
           <View style={styles.actionsRow}>
-            <View style={styles.actionFlex}>
-              <LamapButton
-                title="+ Recharger"
-                variant="primary"
-                onPress={() => setRechargeModalVisible(true)}
-              />
-            </View>
-            <View style={styles.actionFlex}>
-              <LamapButton title="Retirer" variant="ghost" onPress={() => {}} disabled />
-            </View>
+            <LamapButton
+              title="+ Acheter du Kora"
+              variant="primary"
+              onPress={() => setBuySheetVisible(true)}
+            />
           </View>
 
           {/* History */}
@@ -193,47 +163,10 @@ export default function WalletScreen() {
         </ScrollView>
       </SafeAreaView>
 
-      {/* Recharge modal */}
-      <Modal
-        visible={rechargeModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setRechargeModalVisible(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Recharge Kora</Text>
-            <Text style={styles.modalSub}>
-              Entrez votre code de recharge.
-            </Text>
-            <TextInput
-              value={rechargeCode}
-              onChangeText={setRechargeCode}
-              placeholder="Code"
-              placeholderTextColor="rgba(245, 242, 237, 0.4)"
-              autoCapitalize="characters"
-              style={styles.modalInput}
-            />
-            <View style={styles.modalActions}>
-              <View style={styles.actionFlex}>
-                <LamapButton
-                  title="Annuler"
-                  variant="ghost"
-                  onPress={() => setRechargeModalVisible(false)}
-                />
-              </View>
-              <View style={styles.actionFlex}>
-                <LamapButton
-                  title={submitting ? "…" : "Valider"}
-                  variant="primary"
-                  onPress={handleRedeem}
-                  disabled={submitting || !rechargeCode.trim()}
-                />
-              </View>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <BuyKoraSheet
+        visible={buySheetVisible}
+        onClose={() => setBuySheetVisible(false)}
+      />
     </View>
   );
 }
@@ -330,11 +263,8 @@ const styles = StyleSheet.create({
     color: "rgba(245, 242, 237, 0.55)",
   },
   actionsRow: {
-    flexDirection: "row",
-    gap: 10,
     marginTop: 24,
   },
-  actionFlex: { flex: 1 },
   section: { marginTop: 32 },
   transactionList: { marginTop: 12 },
   empty: {
@@ -384,50 +314,6 @@ const styles = StyleSheet.create({
     fontFamily: FONT_WEIGHTS.display.bold,
     fontSize: 14,
     letterSpacing: -0.2,
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(15, 22, 32, 0.7)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
-  modalCard: {
-    width: "100%",
-    maxWidth: 380,
-    padding: 22,
-    borderRadius: RADII.xl,
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.hairlineStrong,
-    gap: 12,
-  },
-  modalTitle: {
-    fontFamily: FONT_WEIGHTS.display.bold,
-    fontSize: 22,
-    color: COLORS.cream,
-    letterSpacing: -0.4,
-  },
-  modalSub: {
-    fontFamily: FONT_WEIGHTS.body.regular,
-    fontSize: 13,
-    color: "rgba(245, 242, 237, 0.65)",
-  },
-  modalInput: {
-    height: 52,
-    borderRadius: RADII.md,
-    backgroundColor: COLORS.bg2,
-    borderWidth: 1,
-    borderColor: COLORS.hairline,
-    paddingHorizontal: 14,
-    fontFamily: FONT_WEIGHTS.mono.medium,
-    fontSize: 16,
-    color: COLORS.cream,
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 4,
   },
   errorWrap: {
     flex: 1,
