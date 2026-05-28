@@ -1,0 +1,606 @@
+/* LaMap Arcade — design tokens · themeable via [data-theme] attribute */
+
+/* ────────────────────────────────────────────────────────────────
+   Default theme = Esmeralda (emerald + gold + cream)
+   Other themes override these vars in [data-theme="..."] blocks
+   ──────────────────────────────────────────────────────────────── */
+:root {
+  /* Surfaces */
+  --abyss:   #060E0C;
+  --night:   #0A1814;
+  --night-2: #0E2620;
+  --night-3: #14342B;
+  --velvet:  #051A14;
+
+  /* Signature accent (originally "jade" for Esmeralda — generic accent slot) */
+  --jade:        #1B4A3A;
+  --jade-bright: #2C7A5C;
+  --jade-glow:   #3FA877;
+  --jade-deep:   #0C2A20;
+
+  /* Premium metal (constant theme-to-theme but tone can shift) */
+  --gold:        #E8C879;
+  --gold-bright: #F5D88B;
+  --gold-deep:   #8B6E40;
+
+  /* Ember (alerts, defeat) */
+  --ember:        #D4574F;
+  --ember-bright: #E8765C;
+  --ember-deep:   #7B2520;
+
+  /* Neutrals */
+  --cream: #F6EFDF;
+  --bone:  #C9BDA6;
+  --ash:   #8A8170;
+  --ink:   #060E0C;
+
+  /* Backgrounds (as full gradient strings — themeable) */
+  --bg-app:
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(63,168,119,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 60% at 50% 100%, rgba(27,74,58,0.25) 0%, transparent 60%),
+    linear-gradient(180deg, #0E2620 0%, #0A1814 60%, #060E0C 100%);
+
+  --bg-table:
+    radial-gradient(ellipse 55% 36% at 50% 50%, rgba(63,168,119,0.20) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(0,0,0,0.55) 0%, transparent 60%),
+    radial-gradient(ellipse at center, #14342B 0%, #0A1814 55%, #060E0C 100%);
+
+  --bg-velvet:
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.008) 0 2px, transparent 2px 8px),
+    radial-gradient(ellipse at 50% 30%, rgba(232,200,121,0.05) 0%, transparent 60%),
+    linear-gradient(180deg, #0E2620 0%, #060E0C 100%);
+
+  /* Surfaces / chips translucent values */
+  --surface:           rgba(14, 38, 32, 0.55);
+  --surface-elev:      rgba(20, 52, 43, 0.85);
+  --surface-deep:      rgba(10, 24, 20, 0.92);
+  --hairline:          rgba(232,200,121,0.10);
+  --hairline-str:      rgba(232,200,121,0.35);
+
+  --chip-gold-bg:      rgba(232,200,121,0.10);
+  --chip-gold-border:  rgba(232,200,121,0.28);
+  --chip-gold-color:   var(--gold);
+
+  --chip-accent-bg:     rgba(63,168,119,0.14);
+  --chip-accent-border: rgba(63,168,119,0.4);
+  --chip-accent-color:  #6FD4A8;
+
+  --chip-ember-bg:     rgba(212,80,72,0.12);
+  --chip-ember-border: rgba(212,80,72,0.4);
+  --chip-ember-color:  #FFA89F;
+
+  /* Gold alpha steps (themed) */
+  --gold-06: rgba(232,200,121,0.06);
+  --gold-08: rgba(232,200,121,0.08);
+  --gold-10: rgba(232,200,121,0.10);
+  --gold-12: rgba(232,200,121,0.12);
+  --gold-14: rgba(232,200,121,0.14);
+  --gold-15: rgba(232,200,121,0.15);
+  --gold-18: rgba(232,200,121,0.18);
+  --gold-20: rgba(232,200,121,0.20);
+  --gold-22: rgba(232,200,121,0.22);
+  --gold-25: rgba(232,200,121,0.25);
+  --gold-28: rgba(232,200,121,0.28);
+  --gold-30: rgba(232,200,121,0.30);
+  --gold-32: rgba(232,200,121,0.32);
+  --gold-35: rgba(232,200,121,0.35);
+  --gold-40: rgba(232,200,121,0.40);
+  --gold-45: rgba(232,200,121,0.45);
+  --gold-50: rgba(232,200,121,0.50);
+  --gold-55: rgba(232,200,121,0.55);
+  --gold-60: rgba(232,200,121,0.60);
+  --gold-70: rgba(232,200,121,0.70);
+
+  /* Ember alpha steps (themed) */
+  --ember-08: rgba(212,80,72,0.08);
+  --ember-12: rgba(212,80,72,0.12);
+  --ember-15: rgba(212,80,72,0.15);
+  --ember-18: rgba(212,80,72,0.18);
+  --ember-20: rgba(212,80,72,0.20);
+  --ember-30: rgba(212,80,72,0.30);
+  --ember-40: rgba(212,80,72,0.40);
+  --ember-45: rgba(212,80,72,0.45);
+  --ember-50: rgba(212,80,72,0.50);
+
+  /* Accent alpha steps (used by inline rgba in screens) */
+  --accent-text: #6FD4A8;
+  --accent-08: rgba(63,168,119,0.08);
+  --accent-10: rgba(63,168,119,0.10);
+  --accent-12: rgba(63,168,119,0.12);
+  --accent-14: rgba(63,168,119,0.14);
+  --accent-18: rgba(63,168,119,0.18);
+  --accent-20: rgba(63,168,119,0.20);
+  --accent-25: rgba(63,168,119,0.25);
+  --accent-30: rgba(63,168,119,0.30);
+  --accent-35: rgba(63,168,119,0.35);
+  --accent-40: rgba(63,168,119,0.40);
+  --accent-45: rgba(63,168,119,0.45);
+  --accent-50: rgba(63,168,119,0.50);
+  --accent-60: rgba(63,168,119,0.60);
+  --accent-70: rgba(63,168,119,0.70);
+
+  /* Surface alpha steps */
+  --surf-40: rgba(14,38,32,0.40);
+  --surf-55: rgba(14,38,32,0.55);
+  --surf-60: rgba(14,38,32,0.60);
+  --surf-65: rgba(14,38,32,0.65);
+  --surf-70: rgba(14,38,32,0.70);
+  --surf-85: rgba(20,52,43,0.85);
+  --surf-92: rgba(10,24,20,0.92);
+
+  /* Type */
+  --font-display: 'Bricolage Grotesque', 'Inter Tight', system-ui, sans-serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+  --font-card:    'Cormorant Garamond', 'Crimson Pro', Georgia, serif;
+  --font-roman:   'Cormorant SC', 'Cormorant Garamond', Georgia, serif;
+
+  /* Shadows / glows */
+  --shadow-card:      0 14px 36px rgba(0,0,0,0.55), 0 4px 8px rgba(0,0,0,0.35);
+  --shadow-card-lift: 0 28px 56px rgba(0,0,0,0.7),  0 8px 16px rgba(0,0,0,0.45);
+  --shadow-frame:     0 30px 80px rgba(0,0,0,0.7),  inset 0 1px 0 rgba(255,255,255,0.04);
+  --glow-gold:        0 0 32px rgba(232,200,121,0.55), 0 0 80px rgba(166,130,88,0.25);
+  --glow-accent:      0 0 32px rgba(63,168,119,0.45),  0 0 80px rgba(27,74,58,0.30);
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Theme: Ember Royal — rouge + or + bleu nuit (palette d'origine)
+   ──────────────────────────────────────────────────────────────── */
+[data-theme="ember-royal"] {
+  --abyss:   #0A0F1A;
+  --night:   #10182A;
+  --night-2: #1A2438;
+  --night-3: #243245;
+  --velvet:  #2A1014;
+
+  --jade:        #8E2F2A;
+  --jade-bright: #C04A44;
+  --jade-glow:   #D4574F;
+  --jade-deep:   #4F1814;
+
+  --gold:        #E8C879;
+  --gold-bright: #F5D88B;
+  --gold-deep:   #8B6E40;
+
+  --ember:        #D4574F;
+  --ember-bright: #E8765C;
+  --ember-deep:   #7B2520;
+
+  --cream: #F5F2ED;
+
+  --bg-app:
+    radial-gradient(ellipse 60% 50% at 20% 0%, rgba(180,68,62,0.20) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 60% at 80% 100%, rgba(70,93,116,0.22) 0%, transparent 60%),
+    linear-gradient(180deg, #1A2438 0%, #10182A 60%, #0A0F1A 100%);
+
+  --bg-table:
+    radial-gradient(ellipse 50% 36% at 50% 50%, rgba(180,68,62,0.35) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(0,0,0,0.55) 0%, transparent 60%),
+    radial-gradient(ellipse at center, #3A1D1F 0%, #1E1018 55%, #0B0710 100%);
+
+  --bg-velvet:
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.012) 0 2px, transparent 2px 8px),
+    radial-gradient(ellipse at 50% 30%, rgba(232,200,121,0.06) 0%, transparent 60%),
+    linear-gradient(180deg, #1A1014 0%, #0E0A0F 100%);
+
+  --surface:      rgba(26, 36, 56, 0.6);
+  --surface-elev: rgba(36, 50, 69, 0.85);
+  --surface-deep: rgba(16, 24, 42, 0.92);
+
+  --chip-accent-bg:     rgba(212,80,72,0.16);
+  --chip-accent-border: rgba(212,80,72,0.45);
+  --chip-accent-color:  #FFB39F;
+
+  /* Gold alphas (gold stays warm) */
+  --gold-06: rgba(232,200,121,0.06);
+  --gold-08: rgba(232,200,121,0.08);
+  --gold-10: rgba(232,200,121,0.10);
+  --gold-12: rgba(232,200,121,0.12);
+  --gold-14: rgba(232,200,121,0.14);
+  --gold-15: rgba(232,200,121,0.15);
+  --gold-18: rgba(232,200,121,0.18);
+  --gold-20: rgba(232,200,121,0.20);
+  --gold-22: rgba(232,200,121,0.22);
+  --gold-25: rgba(232,200,121,0.25);
+  --gold-28: rgba(232,200,121,0.28);
+  --gold-30: rgba(232,200,121,0.30);
+  --gold-32: rgba(232,200,121,0.32);
+  --gold-35: rgba(232,200,121,0.35);
+  --gold-40: rgba(232,200,121,0.40);
+  --gold-45: rgba(232,200,121,0.45);
+  --gold-50: rgba(232,200,121,0.50);
+  --gold-55: rgba(232,200,121,0.55);
+  --gold-60: rgba(232,200,121,0.60);
+  --gold-70: rgba(232,200,121,0.70);
+
+  /* Accent alphas (now ember red) */
+  --accent-text: #FFB39F;
+  --accent-08: rgba(180,68,62,0.08);
+  --accent-10: rgba(180,68,62,0.10);
+  --accent-12: rgba(180,68,62,0.12);
+  --accent-14: rgba(180,68,62,0.16);
+  --accent-18: rgba(180,68,62,0.20);
+  --accent-20: rgba(180,68,62,0.22);
+  --accent-25: rgba(180,68,62,0.28);
+  --accent-30: rgba(180,68,62,0.32);
+  --accent-35: rgba(180,68,62,0.38);
+  --accent-40: rgba(180,68,62,0.42);
+  --accent-45: rgba(180,68,62,0.48);
+  --accent-50: rgba(180,68,62,0.52);
+  --accent-60: rgba(180,68,62,0.62);
+  --accent-70: rgba(180,68,62,0.72);
+
+  --surf-40: rgba(26,36,56,0.40);
+  --surf-55: rgba(26,36,56,0.55);
+  --surf-60: rgba(26,36,56,0.60);
+  --surf-65: rgba(26,36,56,0.65);
+  --surf-70: rgba(26,36,56,0.70);
+  --surf-85: rgba(36,50,69,0.85);
+  --surf-92: rgba(16,24,42,0.92);
+
+  --glow-accent: 0 0 32px rgba(212,80,72,0.45), 0 0 80px rgba(142,47,42,0.30);
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Theme: Onyx Noir — charcoal + champagne (monochrome chic)
+   ──────────────────────────────────────────────────────────────── */
+[data-theme="onyx"] {
+  --abyss:   #020202;
+  --night:   #0A0A0A;
+  --night-2: #141414;
+  --night-3: #1E1E1E;
+  --velvet:  #0F0F10;
+
+  --jade:        #2A2A2C;
+  --jade-bright: #44443E;
+  --jade-glow:   #6A6660;
+  --jade-deep:   #0E0E10;
+
+  --gold:        #D4AF5E;
+  --gold-bright: #EAC880;
+  --gold-deep:   #7A6536;
+
+  --ember:        #C95048;
+  --ember-bright: #E8765C;
+  --ember-deep:   #6E2520;
+
+  --cream: #F6EFDF;
+
+  --bg-app:
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(212,175,94,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 60% at 50% 100%, rgba(40,40,40,0.4) 0%, transparent 60%),
+    linear-gradient(180deg, #141414 0%, #0A0A0A 60%, #020202 100%);
+
+  --bg-table:
+    radial-gradient(ellipse 55% 36% at 50% 50%, rgba(212,175,94,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(0,0,0,0.65) 0%, transparent 60%),
+    radial-gradient(ellipse at center, #1E1E1E 0%, #0A0A0A 55%, #020202 100%);
+
+  --bg-velvet:
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.012) 0 2px, transparent 2px 8px),
+    radial-gradient(ellipse at 50% 30%, rgba(212,175,94,0.05) 0%, transparent 60%),
+    linear-gradient(180deg, #141414 0%, #020202 100%);
+
+  --surface:      rgba(20, 20, 20, 0.65);
+  --surface-elev: rgba(30, 30, 30, 0.9);
+  --surface-deep: rgba(10, 10, 10, 0.95);
+
+  --chip-accent-bg:     rgba(212,175,94,0.12);
+  --chip-accent-border: rgba(212,175,94,0.4);
+  --chip-accent-color:  #EAC880;
+
+  /* Gold alphas (champagne) */
+  --gold-06: rgba(212,175,94,0.06);
+  --gold-08: rgba(212,175,94,0.08);
+  --gold-10: rgba(212,175,94,0.10);
+  --gold-12: rgba(212,175,94,0.12);
+  --gold-14: rgba(212,175,94,0.14);
+  --gold-15: rgba(212,175,94,0.15);
+  --gold-18: rgba(212,175,94,0.18);
+  --gold-20: rgba(212,175,94,0.20);
+  --gold-22: rgba(212,175,94,0.22);
+  --gold-25: rgba(212,175,94,0.25);
+  --gold-28: rgba(212,175,94,0.28);
+  --gold-30: rgba(212,175,94,0.30);
+  --gold-32: rgba(212,175,94,0.32);
+  --gold-35: rgba(212,175,94,0.35);
+  --gold-40: rgba(212,175,94,0.40);
+  --gold-45: rgba(212,175,94,0.45);
+  --gold-50: rgba(212,175,94,0.50);
+  --gold-55: rgba(212,175,94,0.55);
+  --gold-60: rgba(212,175,94,0.60);
+  --gold-70: rgba(212,175,94,0.70);
+
+  /* Accent alphas (champagne gold metallic) */
+  --accent-text: #EAC880;
+  --accent-08: rgba(212,175,94,0.08);
+  --accent-10: rgba(212,175,94,0.10);
+  --accent-12: rgba(212,175,94,0.12);
+  --accent-14: rgba(212,175,94,0.14);
+  --accent-18: rgba(212,175,94,0.18);
+  --accent-20: rgba(212,175,94,0.20);
+  --accent-25: rgba(212,175,94,0.25);
+  --accent-30: rgba(212,175,94,0.30);
+  --accent-35: rgba(212,175,94,0.35);
+  --accent-40: rgba(212,175,94,0.40);
+  --accent-45: rgba(212,175,94,0.45);
+  --accent-50: rgba(212,175,94,0.50);
+  --accent-60: rgba(212,175,94,0.60);
+  --accent-70: rgba(212,175,94,0.70);
+
+  --surf-40: rgba(20,20,20,0.40);
+  --surf-55: rgba(20,20,20,0.55);
+  --surf-60: rgba(20,20,20,0.60);
+  --surf-65: rgba(20,20,20,0.65);
+  --surf-70: rgba(20,20,20,0.75);
+  --surf-85: rgba(30,30,30,0.85);
+  --surf-92: rgba(10,10,10,0.92);
+
+  --glow-accent: 0 0 32px rgba(212,175,94,0.45), 0 0 80px rgba(122,101,54,0.30);
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Theme: Améthyste — aubergine + or rose (royal & mystique)
+   ──────────────────────────────────────────────────────────────── */
+[data-theme="amethyste"] {
+  --abyss:   #0A0518;
+  --night:   #16102A;
+  --night-2: #221A40;
+  --night-3: #2E2455;
+  --velvet:  #180C2E;
+
+  --jade:        #3A2A6B;
+  --jade-bright: #5C4396;
+  --jade-glow:   #8A6BC9;
+  --jade-deep:   #1F1542;
+
+  --gold:        #E5B5C0;
+  --gold-bright: #F2C9D5;
+  --gold-deep:   #A37381;
+
+  --ember:        #D4574F;
+  --ember-bright: #E8765C;
+  --ember-deep:   #7B2520;
+
+  --cream: #F6EFDF;
+
+  --bg-app:
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(138,107,201,0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 60% at 50% 100%, rgba(34,26,64,0.3) 0%, transparent 60%),
+    linear-gradient(180deg, #221A40 0%, #16102A 60%, #0A0518 100%);
+
+  --bg-table:
+    radial-gradient(ellipse 55% 36% at 50% 50%, rgba(138,107,201,0.22) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(0,0,0,0.55) 0%, transparent 60%),
+    radial-gradient(ellipse at center, #2E2455 0%, #16102A 55%, #0A0518 100%);
+
+  --bg-velvet:
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.012) 0 2px, transparent 2px 8px),
+    radial-gradient(ellipse at 50% 30%, rgba(229,181,192,0.06) 0%, transparent 60%),
+    linear-gradient(180deg, #16102A 0%, #0A0518 100%);
+
+  --surface:      rgba(34, 26, 64, 0.65);
+  --surface-elev: rgba(46, 36, 85, 0.85);
+  --surface-deep: rgba(22, 16, 42, 0.92);
+
+  --chip-accent-bg:     rgba(138,107,201,0.16);
+  --chip-accent-border: rgba(138,107,201,0.45);
+  --chip-accent-color:  #B79FD8;
+
+  /* Gold alphas (rose gold) */
+  --gold-06: rgba(229,181,192,0.06);
+  --gold-08: rgba(229,181,192,0.08);
+  --gold-10: rgba(229,181,192,0.10);
+  --gold-12: rgba(229,181,192,0.12);
+  --gold-14: rgba(229,181,192,0.14);
+  --gold-15: rgba(229,181,192,0.15);
+  --gold-18: rgba(229,181,192,0.18);
+  --gold-20: rgba(229,181,192,0.20);
+  --gold-22: rgba(229,181,192,0.22);
+  --gold-25: rgba(229,181,192,0.25);
+  --gold-28: rgba(229,181,192,0.28);
+  --gold-30: rgba(229,181,192,0.30);
+  --gold-32: rgba(229,181,192,0.32);
+  --gold-35: rgba(229,181,192,0.35);
+  --gold-40: rgba(229,181,192,0.40);
+  --gold-45: rgba(229,181,192,0.45);
+  --gold-50: rgba(229,181,192,0.50);
+  --gold-55: rgba(229,181,192,0.55);
+  --gold-60: rgba(229,181,192,0.60);
+  --gold-70: rgba(229,181,192,0.70);
+
+  /* Accent alphas (royal purple) */
+  --accent-text: #B79FD8;
+  --accent-08: rgba(138,107,201,0.08);
+  --accent-10: rgba(138,107,201,0.10);
+  --accent-12: rgba(138,107,201,0.12);
+  --accent-14: rgba(138,107,201,0.14);
+  --accent-18: rgba(138,107,201,0.18);
+  --accent-20: rgba(138,107,201,0.22);
+  --accent-25: rgba(138,107,201,0.25);
+  --accent-30: rgba(138,107,201,0.30);
+  --accent-35: rgba(138,107,201,0.35);
+  --accent-40: rgba(138,107,201,0.40);
+  --accent-45: rgba(138,107,201,0.45);
+  --accent-50: rgba(138,107,201,0.50);
+  --accent-60: rgba(138,107,201,0.60);
+  --accent-70: rgba(138,107,201,0.70);
+
+  --surf-40: rgba(34,26,64,0.40);
+  --surf-55: rgba(34,26,64,0.55);
+  --surf-60: rgba(34,26,64,0.60);
+  --surf-65: rgba(34,26,64,0.65);
+  --surf-70: rgba(34,26,64,0.75);
+  --surf-85: rgba(46,36,85,0.85);
+  --surf-92: rgba(22,16,42,0.92);
+
+  --glow-accent: 0 0 32px rgba(138,107,201,0.45), 0 0 80px rgba(58,42,107,0.30);
+}
+
+* { box-sizing: border-box; }
+html, body { background: var(--abyss); color: var(--cream); }
+
+/* Smooth theme transitions */
+html { transition: background 400ms ease; }
+
+/* ─── Type ─── */
+.f-display { font-family: var(--font-display); letter-spacing: -0.02em; font-weight: 800; }
+.f-body    { font-family: var(--font-body); }
+.f-mono    { font-family: var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+.f-card    { font-family: var(--font-card); font-weight: 600; }
+.f-roman   { font-family: var(--font-roman); letter-spacing: 0.08em; }
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.78;
+}
+
+/* ─── Backgrounds (now themeable) ─── */
+.bg-app    { background: var(--bg-app); }
+.bg-table  { background: var(--bg-table); }
+.bg-velvet { background: var(--bg-velvet); }
+
+.hairline { border: 1px solid var(--hairline); }
+.hairline-str { border: 1px solid var(--hairline-str); }
+
+/* ─── Animations ─── */
+@keyframes la-shine {
+  0%   { transform: translateX(-110%) skewX(-18deg); }
+  60%, 100% { transform: translateX(220%) skewX(-18deg); }
+}
+@keyframes la-float {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+  50%      { transform: translate(2px, -14px) scale(1.15); opacity: 1; }
+}
+@keyframes la-ember {
+  0%   { transform: translate(0, 0) scale(1);   opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translate(var(--dx,0), -120px) scale(0.4); opacity: 0; }
+}
+@keyframes la-pulse {
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  50%      { transform: scale(1.06); opacity: 0.85; }
+}
+@keyframes la-breathe {
+  0%, 100% { box-shadow: 0 0 24px rgba(232,200,121,0.35); }
+  50%      { box-shadow: 0 0 56px rgba(232,200,121,0.7); }
+}
+@keyframes la-rise {
+  from { transform: translateY(14px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes la-rotate {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Buttons (now themeable via vars) ─── */
+.btn {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.005em;
+  padding: 14px 28px;
+  border-radius: 999px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 120ms ease, filter 120ms ease;
+  border: none;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-gold {
+  background:
+    radial-gradient(ellipse 80% 100% at 50% 0%, rgba(255,255,255,0.32), transparent 55%),
+    linear-gradient(180deg, var(--gold-bright) 0%, var(--gold) 50%, var(--gold-deep) 100%);
+  color: #1F1810;
+  box-shadow:
+    0 10px 26px rgba(0,0,0,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.5),
+    inset 0 -1px 0 rgba(80,52,18,0.55);
+}
+.btn-gold::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%);
+  transform: translateX(-110%) skewX(-15deg);
+  animation: la-shine 6s 1.5s infinite;
+}
+
+.btn-jade {
+  background:
+    radial-gradient(ellipse 80% 100% at 50% 0%, rgba(255,255,255,0.14), transparent 55%),
+    linear-gradient(180deg, var(--jade-bright) 0%, var(--jade) 60%, var(--jade-deep) 100%);
+  color: var(--cream);
+  box-shadow:
+    0 10px 24px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 -1px 0 rgba(0,0,0,0.45);
+}
+
+.btn-ember {
+  background:
+    radial-gradient(ellipse 80% 100% at 50% 0%, rgba(255,255,255,0.18), transparent 55%),
+    linear-gradient(180deg, var(--ember-bright) 0%, var(--ember) 60%, var(--ember-deep) 100%);
+  color: var(--cream);
+  box-shadow:
+    0 10px 26px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    inset 0 -1px 0 rgba(0,0,0,0.40);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--cream);
+  border: 1px solid var(--hairline-str);
+}
+
+.btn-dark {
+  background: var(--surface-deep);
+  color: var(--cream);
+  border: 1px solid var(--hairline);
+}
+
+/* ─── Chips ─── */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 26px; padding: 0 12px; border-radius: 999px;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  background: var(--chip-gold-bg);
+  color: var(--chip-gold-color);
+  border: 1px solid var(--chip-gold-border);
+}
+.chip-jade {
+  background: var(--chip-accent-bg);
+  color: var(--chip-accent-color);
+  border-color: var(--chip-accent-border);
+}
+.chip-ember {
+  background: var(--chip-ember-bg);
+  color: var(--chip-ember-color);
+  border-color: var(--chip-ember-border);
+}
+
+/* ─── Surfaces ─── */
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  backdrop-filter: blur(8px);
+}
+
+.surface-elev {
+  background: linear-gradient(180deg, var(--surface-elev), var(--surface-deep));
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  box-shadow: 0 16px 32px rgba(0,0,0,0.4);
+}
+
+/* ─── Utilities ─── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+.gpu { transform: translateZ(0); will-change: transform; backface-visibility: hidden; }
