@@ -20,16 +20,23 @@
       }
     },
     "production": {
+      "autoIncrement": true,
       "ios": {
         "simulator": false
       },
       "android": {
-        "buildType": "apk"
+        "buildType": "app-bundle"
       }
     }
   },
   "submit": {
     "production": {
+      "ios": {
+        "ascAppId": "REPLACE_WITH_APP_STORE_CONNECT_APP_ID",
+        "appleTeamId": "REPLACE_WITH_APPLE_TEAM_ID"
+      }
+    },
+    "preview": {
       "ios": {
         "ascAppId": "REPLACE_WITH_APP_STORE_CONNECT_APP_ID",
         "appleTeamId": "REPLACE_WITH_APPLE_TEAM_ID"
