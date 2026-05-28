@@ -1,13 +1,19 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
+import { getBlockedIdsByUser } from "./moderation";
 import { getRankFromPR, RANK_TIERS } from "./ranking";
 
 export const getGlobalLeaderboard = query({
   args: {
     limit: v.optional(v.number()),
+    viewerId: v.optional(v.id("users")),
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 500;
+
+    const blockedIds = args.viewerId
+      ? await getBlockedIdsByUser(ctx, args.viewerId)
+      : new Set<string>();
 
     const players = await ctx.db
       .query("users")
@@ -22,15 +28,17 @@ export const getGlobalLeaderboard = query({
       )
       .take(limit);
 
-    return players.map((player, index) => ({
-      rank: index + 1,
-      userId: player._id,
-      username: player.username,
-      avatarUrl: player.avatarUrl,
-      pr: player.pr || 0,
-      rankTier: getRankFromPR(player.pr || 0),
-      country: player.country,
-    }));
+    return players
+      .filter((p) => !blockedIds.has(p._id))
+      .map((player, index) => ({
+        rank: index + 1,
+        userId: player._id,
+        username: player.username,
+        avatarUrl: player.avatarUrl,
+        pr: player.pr || 0,
+        rankTier: getRankFromPR(player.pr || 0),
+        country: player.country,
+      }));
   },
 });
 
@@ -46,10 +54,15 @@ export const getRankLeaderboard = query({
       v.literal("LEGEND")
     ),
     limit: v.optional(v.number()),
+    viewerId: v.optional(v.id("users")),
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 100;
     const rankInfo = RANK_TIERS[args.rankTier];
+
+    const blockedIds = args.viewerId
+      ? await getBlockedIdsByUser(ctx, args.viewerId)
+      : new Set<string>();
 
     const players = await ctx.db
       .query("users")
@@ -65,15 +78,17 @@ export const getRankLeaderboard = query({
       )
       .take(limit);
 
-    return players.map((player, index) => ({
-      rank: index + 1,
-      userId: player._id,
-      username: player.username,
-      avatarUrl: player.avatarUrl,
-      pr: player.pr || 0,
-      rankTier: getRankFromPR(player.pr || 0),
-      country: player.country,
-    }));
+    return players
+      .filter((p) => !blockedIds.has(p._id))
+      .map((player, index) => ({
+        rank: index + 1,
+        userId: player._id,
+        username: player.username,
+        avatarUrl: player.avatarUrl,
+        pr: player.pr || 0,
+        rankTier: getRankFromPR(player.pr || 0),
+        country: player.country,
+      }));
   },
 });
 

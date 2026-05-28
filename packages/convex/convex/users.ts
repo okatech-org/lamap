@@ -365,3 +365,114 @@ export const getUserStats = query({
     };
   },
 });
+
+export const deleteAccount = mutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    const user = await ctx.db.get(userId);
+    if (!user) return { success: true };
+
+    // Transactions
+    const transactions = await ctx.db
+      .query("transactions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    for (const tx of transactions) await ctx.db.delete(tx._id);
+
+    // PR history
+    const prHistory = await ctx.db
+      .query("prHistory")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    for (const row of prHistory) await ctx.db.delete(row._id);
+
+    // IAP transactions (kept for audit, but unlink user)
+    const iap = await ctx.db
+      .query("iapTransactions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    for (const row of iap) await ctx.db.delete(row._id);
+
+    // Matchmaking queue entries
+    const queue = await ctx.db
+      .query("matchmakingQueue")
+      .filter((q) => q.eq(q.field("userId"), userId))
+      .collect();
+    for (const row of queue) await ctx.db.delete(row._id);
+
+    // Friendships
+    const friendships1 = await ctx.db
+      .query("friendships")
+      .withIndex("by_user1", (q) => q.eq("user1Id", userId))
+      .collect();
+    const friendships2 = await ctx.db
+      .query("friendships")
+      .withIndex("by_user2", (q) => q.eq("user2Id", userId))
+      .collect();
+    for (const row of [...friendships1, ...friendships2]) {
+      await ctx.db.delete(row._id);
+    }
+
+    // Friend requests (sender or receiver)
+    const requestsSent = await ctx.db
+      .query("friendRequests")
+      .withIndex("by_sender", (q) => q.eq("senderId", userId))
+      .collect();
+    const requestsReceived = await ctx.db
+      .query("friendRequests")
+      .withIndex("by_receiver", (q) => q.eq("receiverId", userId))
+      .collect();
+    for (const row of [...requestsSent, ...requestsReceived]) {
+      await ctx.db.delete(row._id);
+    }
+
+    // Challenges (challenger or challenged)
+    const challengesSent = await ctx.db
+      .query("challenges")
+      .withIndex("by_challenger", (q) => q.eq("challengerId", userId))
+      .collect();
+    const challengesReceived = await ctx.db
+      .query("challenges")
+      .withIndex("by_challenged", (q) => q.eq("challengedId", userId))
+      .collect();
+    for (const row of [...challengesSent, ...challengesReceived]) {
+      await ctx.db.delete(row._id);
+    }
+
+    // Conversations + messages
+    const conversations = await ctx.db.query("conversations").collect();
+    for (const conv of conversations) {
+      if (conv.participants.includes(userId)) {
+        const messages = await ctx.db
+          .query("messages")
+          .withIndex("by_conversation", (q) => q.eq("conversationId", conv._id))
+          .collect();
+        for (const m of messages) await ctx.db.delete(m._id);
+        await ctx.db.delete(conv._id);
+      }
+    }
+
+    // Pending or in-progress games where this user is host — delete.
+    // Finished games are kept for leaderboard integrity (anonymized via the
+    // user document removal).
+    const hostedGames = await ctx.db
+      .query("games")
+      .withIndex("by_host", (q) => q.eq("hostId", userId))
+      .collect();
+    for (const game of hostedGames) {
+      if (game.status !== "ENDED") {
+        const messages = await ctx.db
+          .query("gameMessages")
+          .withIndex("by_game_id", (q) => q.eq("gameId", game.gameId))
+          .collect();
+        for (const m of messages) await ctx.db.delete(m._id);
+        await ctx.db.delete(game._id);
+      }
+    }
+
+    // Finally, the user document itself.
+    await ctx.db.delete(userId);
+
+    return { success: true };
+  },
+});

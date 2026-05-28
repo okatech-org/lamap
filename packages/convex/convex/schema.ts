@@ -179,6 +179,55 @@ const friendRequestsTable = defineTable({
   .index("by_status", ["status"])
   .index("by_sender_receiver", ["senderId", "receiverId"]);
 
+const iapTransactionsTable = defineTable({
+  userId: v.id("users"),
+  platform: v.union(v.literal("ios"), v.literal("android")),
+  productId: v.string(),
+  transactionId: v.string(),
+  originalTransactionId: v.optional(v.string()),
+  koraCredited: v.number(),
+  status: v.union(
+    v.literal("pending"),
+    v.literal("validated"),
+    v.literal("failed"),
+    v.literal("refunded")
+  ),
+  rawReceiptHash: v.optional(v.string()),
+  createdAt: v.number(),
+  validatedAt: v.optional(v.number()),
+})
+  .index("by_user", ["userId"])
+  .index("by_transaction", ["platform", "transactionId"])
+  .index("by_original_transaction", ["platform", "originalTransactionId"]);
+
+const reportsTable = defineTable({
+  reporterId: v.id("users"),
+  targetType: v.union(v.literal("message"), v.literal("user")),
+  targetId: v.string(),
+  reason: v.union(
+    v.literal("spam"),
+    v.literal("harassment"),
+    v.literal("sexual"),
+    v.literal("other")
+  ),
+  note: v.optional(v.string()),
+  status: v.union(v.literal("open"), v.literal("resolved")),
+  createdAt: v.number(),
+  resolvedAt: v.optional(v.number()),
+  resolvedBy: v.optional(v.id("users")),
+})
+  .index("by_status", ["status"])
+  .index("by_target", ["targetType", "targetId"]);
+
+const blocksTable = defineTable({
+  blockerId: v.id("users"),
+  blockedId: v.id("users"),
+  createdAt: v.number(),
+})
+  .index("by_blocker", ["blockerId"])
+  .index("by_blocked", ["blockedId"])
+  .index("by_pair", ["blockerId", "blockedId"]);
+
 const challengesTable = defineTable({
   challengerId: v.id("users"),
   challengedId: v.id("users"),
@@ -214,4 +263,7 @@ export default defineSchema({
   friendships: friendshipsTable,
   friendRequests: friendRequestsTable,
   challenges: challengesTable,
+  iapTransactions: iapTransactionsTable,
+  reports: reportsTable,
+  blocks: blocksTable,
 });

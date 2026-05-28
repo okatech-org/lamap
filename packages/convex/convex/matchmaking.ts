@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
+import { getBlockedIdsByUser } from "./moderation";
 import { INITIAL_PR } from "./ranking";
 import { aiDifficultyValidator, currencyValidator, Player } from "./validators";
 
@@ -70,10 +71,13 @@ export const joinQueue = mutation({
       .filter((q) => q.neq(q.field("userId"), args.userId))
       .collect();
 
+    const blockedIds = await getBlockedIdsByUser(ctx, args.userId);
+
     let potentialMatch = null;
     let bestPRDifference = Infinity;
 
     for (const candidate of waitingPlayers) {
+      if (blockedIds.has(candidate.userId)) continue;
       const candidateUser = await ctx.db.get(candidate.userId);
       if (!candidateUser) continue;
 

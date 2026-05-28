@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
+import { getBlockedIdsByUser } from "./moderation";
 
 function getOrderedUserIds(userId1: Id<"users">, userId2: Id<"users">) {
   return userId1 < userId2 ?
@@ -206,10 +207,12 @@ export const getFriends = query({
       .withIndex("by_user2", (q) => q.eq("user2Id", args.userId))
       .collect();
 
+    const blockedIds = await getBlockedIdsByUser(ctx, args.userId);
+
     const friendIds = [
       ...friendshipsAsUser1.map((f) => f.user2Id),
       ...friendshipsAsUser2.map((f) => f.user1Id),
-    ];
+    ].filter((id) => !blockedIds.has(id));
 
     const friends = await Promise.all(
       friendIds.map(async (friendId) => {
@@ -328,12 +331,14 @@ export const searchUsers = query({
     const limit = args.limit || 20;
 
     const allUsers = await ctx.db.query("users").collect();
+    const blockedIds = await getBlockedIdsByUser(ctx, args.currentUserId);
 
     const searchLower = args.searchTerm.toLowerCase();
     const matchingUsers = allUsers
       .filter(
         (user) =>
           user._id !== args.currentUserId &&
+          !blockedIds.has(user._id) &&
           user.username.toLowerCase().includes(searchLower)
       )
       .slice(0, limit);
