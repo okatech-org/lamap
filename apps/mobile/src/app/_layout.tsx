@@ -13,7 +13,8 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Platform } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -100,6 +101,17 @@ function RootLayoutNav() {
           />
           <Stack.Screen name="user" options={{ headerShown: false }} />
           <Stack.Screen name="leaderboard/ranks" options={{ headerShown: false }} />
+          <Stack.Screen name="card-poc" options={{ headerShown: false }} />
+          <Stack.Screen name="card-poc-hand" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="settings/blocked-users"
+            options={{
+              title: "Utilisateurs bloqués",
+              headerBackTitle: "Retour",
+              headerShown: true,
+              ...modalHeaderOptions,
+            }}
+          />
         </Stack.Protected>
       </Stack>
       <StatusBar style="light" />
@@ -107,25 +119,88 @@ function RootLayoutNav() {
   );
 }
 
-export default function RootLayout() {
-  if (!clerkPublishableKey) {
-    console.warn("Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY");
-  }
+function ConfigurationError({ missing }: { missing: string[] }) {
+  return (
+    <View style={configErrorStyles.root}>
+      <Text style={configErrorStyles.title}>Configuration manquante</Text>
+      <Text style={configErrorStyles.body}>
+        L&apos;application n&apos;a pas pu démarrer car les variables suivantes
+        sont absentes&nbsp;:
+      </Text>
+      {missing.map((key) => (
+        <Text key={key} style={configErrorStyles.item}>
+          • {key}
+        </Text>
+      ))}
+      <Text style={configErrorStyles.hint}>
+        Contactez le support à{"\n"}support@lamap.okatech.fr
+      </Text>
+    </View>
+  );
+}
 
-  if (!convexUrl) {
-    console.warn("Missing EXPO_PUBLIC_CONVEX_URL");
+const configErrorStyles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: "#0F1620",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 32,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#F5F2ED",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  body: {
+    fontSize: 14,
+    color: "rgba(245, 242, 237, 0.75)",
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  item: {
+    fontFamily: Platform.select({ ios: "Menlo", default: "monospace" }),
+    fontSize: 13,
+    color: "#C9A876",
+    marginVertical: 2,
+  },
+  hint: {
+    marginTop: 24,
+    fontSize: 13,
+    color: "rgba(245, 242, 237, 0.5)",
+    textAlign: "center",
+    lineHeight: 18,
+  },
+});
+
+export default function RootLayout() {
+  const missing: string[] = [];
+  if (!clerkPublishableKey) missing.push("EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY");
+  if (!convexUrl) missing.push("EXPO_PUBLIC_CONVEX_URL");
+
+  if (missing.length > 0) {
+    return (
+      <SafeAreaProvider>
+        <ConfigurationError missing={missing} />
+      </SafeAreaProvider>
+    );
   }
 
   return (
-    <SafeAreaProvider>
-      <ClerkProvider
-        publishableKey={clerkPublishableKey}
-        tokenCache={tokenCache}
-      >
-        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-          <RootLayoutNav />
-        </ConvexProviderWithClerk>
-      </ClerkProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ClerkProvider
+          publishableKey={clerkPublishableKey}
+          tokenCache={tokenCache}
+        >
+          <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+            <RootLayoutNav />
+          </ConvexProviderWithClerk>
+        </ClerkProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -1,5 +1,4 @@
-import { BattleZone } from "@/components/game/battle-zone";
-import { CardHand, type Card } from "@/components/game/card-hand";
+import { GameTableSkia, type Card } from "@/components/game/game-table-skia";
 import { GameTimer } from "@/components/game/game-timer";
 import { PlaceholderCardHand } from "@/components/game/placeholder-card-hand";
 import { ResultAnimation } from "@/components/game/result-animation";
@@ -41,7 +40,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const router = useRouter();
@@ -98,7 +97,8 @@ export default function MatchScreen() {
   const { matchId } = params;
   const isTutorial = params.tutorial === "true";
   const router = useRouter();
-  const { playAreaMode, battleLayout } = useSettings();
+  const insets = useSafeAreaInsets();
+  const { playAreaMode } = useSettings();
 
   const {
     game,
@@ -519,6 +519,19 @@ export default function MatchScreen() {
     .map((r, i) => (r.winnerId === myUserId ? i : -1))
     .filter((i) => i >= 0);
 
+  // Winner of the most recently resolved trick — drives the Skia table's
+  // particle burst (keyed on the number of resolved tricks).
+  const lastTrick =
+    turnResults && turnResults.length > 0
+      ? turnResults[turnResults.length - 1]
+      : null;
+  const trickWinner: "me" | "opponent" | null = lastTrick
+    ? lastTrick.winnerId === myUserId
+      ? "me"
+      : "opponent"
+    : null;
+  const trickNonce = turnResults?.length ?? 0;
+
   const showKoraOverlay =
     game.status === "ENDED" &&
     !!game.victoryType &&
@@ -691,46 +704,49 @@ export default function MatchScreen() {
           </View>
         ) : null}
 
-        <View style={styles.playArea}>
-          {playAreaMode === "battle" ?
-            <BattleZone
-              opponentCards={allOpponentCards.map((card: any) => ({
-                suit: card?.suit as Suit,
-                rank: card?.rank as Rank,
-              }))}
-              playerCards={allPlayerCards.map((card: any) => ({
-                suit: card?.suit as Suit,
-                rank: card?.rank as Rank,
-              }))}
-              // leadSuit chip is rendered above the play area via
-              // <LamapLeadSuitChip /> — don't double up here.
-              battleLayout={battleLayout}
-            />
-          : <TurnHistory
-              results={turnResults}
-              myPlayerId={myUserId}
-              game={game}
-              currentPlays={currentPlays}
-              currentRound={game.currentRound}
-            />
-          }
-        </View>
+        {/* Unified Skia game table — battle stacks + hand in ONE canvas,
+            with cards landing on the table and a particle burst on trick win. */}
+        <View style={styles.tableRegion}>
+          <GameTableSkia
+            myHand={myHand}
+            playerStack={allPlayerCards.map((card: any) => ({
+              suit: card?.suit as Suit,
+              rank: card?.rank as Rank,
+            }))}
+            opponentStack={allOpponentCards.map((card: any) => ({
+              suit: card?.suit as Suit,
+              rank: card?.rank as Rank,
+            }))}
+            leadSuit={leadSuit as Suit | undefined}
+            isMyTurn={isMyTurn}
+            disabled={isPlaying}
+            selectedCard={selectedCard}
+            onCardSelect={handleCardSelect}
+            onCardDoubleTap={handleDoubleTapCard}
+            showBattle={playAreaMode === "battle"}
+            trickWinner={trickWinner}
+            trickNonce={trickNonce}
+            bottomInset={insets.bottom}
+          />
 
-        <View style={styles.handArea}>
-          <View style={styles.turnBadgeContainer}>
+          {playAreaMode === "history" && (
+            <View style={styles.historyOverlay} pointerEvents="box-none">
+              <TurnHistory
+                results={turnResults}
+                myPlayerId={myUserId}
+                game={game}
+                currentPlays={currentPlays}
+                currentRound={game.currentRound}
+              />
+            </View>
+          )}
+
+          <View style={styles.turnBadgeFloating} pointerEvents="none">
             <LamapTurnBadge
               visible={isMyTurn && game.status === "PLAYING"}
               label={iHaveHand ? "À toi de mener" : "À toi de jouer"}
             />
           </View>
-          <CardHand
-            cards={myHand}
-            isMyTurn={isMyTurn}
-            onCardSelect={handleCardSelect}
-            onCardDoubleTap={handleDoubleTapCard}
-            selectedCard={selectedCard}
-            disabled={isPlaying}
-          />
         </View>
 
         {game.status === "ENDED" && game.victoryType && !showKoraOverlay && (
@@ -858,17 +874,26 @@ const screenStyles = StyleSheet.create({
     alignItems: "center",
   },
   handArea: {
-    paddingTop: 20,
-    height: 200,
+    height: 170,
     position: "relative",
     backgroundColor: "transparent",
   },
-  turnBadgeContainer: {
+  tableRegion: {
+    flex: 1,
+    position: "relative",
+  },
+  historyOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    bottom: 220,
     alignItems: "center",
-    paddingVertical: 8,
+    justifyContent: "center",
+  },
+  turnBadgeFloating: {
     position: "absolute",
-    width: "100%",
-    top: -60,
+    left: 0,
+    right: 0,
+    bottom: 196,
+    alignItems: "center",
     zIndex: 5,
   },
   loadingOverlay: {

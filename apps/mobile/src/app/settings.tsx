@@ -1,15 +1,20 @@
 import { BattleLayoutPreview } from "@/components/settings/battle-layout-preview";
 import { CardLayoutPreview } from "@/components/settings/card-layout-preview";
 import { Button } from "@/components/ui/button";
+import { PRIVACY_URL, TERMS_URL } from "@/config/legal";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/use-colors";
 import { useSettings } from "@/hooks/use-settings";
-import { useClerk } from "@clerk/clerk-expo";
+import { useClerk, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
+import { api } from "@lamap/convex/_generated/api";
+import { useMutation } from "convex/react";
 import { useRouter } from "expo-router";
-import { useCallback } from "react";
+import * as WebBrowser from "expo-web-browser";
+import { useCallback, useState } from "react";
 import {
     ActivityIndicator,
+    Alert,
     ScrollView,
     StyleSheet,
     Text,
@@ -22,6 +27,7 @@ export default function SettingsScreen() {
   const colors = useColors();
   const { convexUser } = useAuth();
   const { signOut } = useClerk();
+  const { user: clerkUser } = useUser();
   const router = useRouter();
   const {
     cardLayout,
@@ -30,6 +36,8 @@ export default function SettingsScreen() {
     setBattleLayout,
     isLoading,
   } = useSettings();
+  const deleteAccount = useMutation(api.users.deleteAccount);
+  const [deleting, setDeleting] = useState(false);
 
   const handleSignOut = useCallback(async () => {
     try {
@@ -39,6 +47,61 @@ export default function SettingsScreen() {
       console.error("Error signing out:", error);
     }
   }, [signOut, router]);
+
+  const handleOpenPrivacy = useCallback(() => {
+    WebBrowser.openBrowserAsync(PRIVACY_URL).catch(() => {});
+  }, []);
+
+  const handleOpenTerms = useCallback(() => {
+    WebBrowser.openBrowserAsync(TERMS_URL).catch(() => {});
+  }, []);
+
+  const handleDeleteAccount = useCallback(() => {
+    if (!convexUser?._id) return;
+    Alert.alert(
+      "Supprimer mon compte",
+      "Cette action est irréversible. Vous perdrez votre solde Kora, votre classement, votre historique de parties et tous vos cosmétiques.",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Continuer",
+          style: "destructive",
+          onPress: () => {
+            Alert.alert(
+              "Confirmer la suppression",
+              "Toutes vos données seront définitivement effacées. Êtes-vous absolument sûr ?",
+              [
+                { text: "Annuler", style: "cancel" },
+                {
+                  text: "Supprimer définitivement",
+                  style: "destructive",
+                  onPress: async () => {
+                    setDeleting(true);
+                    try {
+                      await deleteAccount({ userId: convexUser._id });
+                      await clerkUser?.delete();
+                      await signOut();
+                      router.replace("/");
+                    } catch (err) {
+                      console.error("Account deletion failed:", err);
+                      Alert.alert(
+                        "Erreur",
+                        err instanceof Error
+                          ? err.message
+                          : "La suppression a échoué. Réessayez plus tard.",
+                      );
+                    } finally {
+                      setDeleting(false);
+                    }
+                  },
+                },
+              ],
+            );
+          },
+        },
+      ],
+    );
+  }, [clerkUser, convexUser?._id, deleteAccount, router, signOut]);
 
   const styles = StyleSheet.create({
     container: {
@@ -276,6 +339,26 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Sécurité</Text>
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={() => router.push("/settings/blocked-users")}
+            >
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingTitle}>Utilisateurs bloqués</Text>
+                <Text style={styles.settingDescription}>
+                  Gérez la liste des comptes que vous avez bloqués
+                </Text>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={colors.mutedForeground}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.section}>
             <Text style={styles.sectionTitle}>Aide</Text>
             <Button
               title="Révoir le tutoriel"
@@ -283,6 +366,52 @@ export default function SettingsScreen() {
               variant="outline"
               style={{ marginBottom: 12 }}
             />
+            <Button
+              title="POC carte Skia"
+              onPress={() => router.push("/card-poc")}
+              variant="outline"
+              style={{ marginBottom: 12 }}
+            />
+            <Button
+              title="POC #2 — Main de cartes"
+              onPress={() => router.push("/card-poc-hand")}
+              variant="outline"
+            />
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Légal</Text>
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={handleOpenPrivacy}
+            >
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingTitle}>
+                  Politique de confidentialité
+                </Text>
+              </View>
+              <Ionicons
+                name="open-outline"
+                size={20}
+                color={colors.mutedForeground}
+              />
+            </TouchableOpacity>
+            <View style={{ height: 12 }} />
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={handleOpenTerms}
+            >
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingTitle}>
+                  Conditions d&apos;utilisation
+                </Text>
+              </View>
+              <Ionicons
+                name="open-outline"
+                size={20}
+                color={colors.mutedForeground}
+              />
+            </TouchableOpacity>
           </View>
 
           <View style={styles.section}>
@@ -290,6 +419,17 @@ export default function SettingsScreen() {
               title="Se déconnecter"
               onPress={handleSignOut}
               variant="destructive"
+              style={{ marginBottom: 12 }}
+            />
+            <Button
+              title={
+                deleting
+                  ? "Suppression…"
+                  : "Supprimer mon compte / Delete account"
+              }
+              onPress={handleDeleteAccount}
+              variant="destructive"
+              disabled={deleting}
             />
           </View>
         </View>
