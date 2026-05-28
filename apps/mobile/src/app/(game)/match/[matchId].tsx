@@ -688,25 +688,26 @@ export default function MatchScreen() {
           />
         )}
 
-        {leadSuit ? (
-          <View style={styles.leadSuitWrap}>
-            <LamapLeadSuitChip suit={leadSuit as any} />
-          </View>
-        ) : null}
-
-        {/* Subtle indicator while we wait for the opponent — replaces the
-            heavy isOpponentTurn pulse from the legacy OpponentZone. */}
-        {isOpponentTurn && game.status === "PLAYING" && opponentTimeRemaining > 0 ? (
-          <View style={styles.opponentTurnHint}>
-            <Text style={styles.opponentTurnText}>
-              Tour de {opponent?.username || "l'adversaire"}…
-            </Text>
-          </View>
-        ) : null}
-
         {/* Unified Skia game table — battle stacks + hand in ONE canvas,
-            with cards landing on the table and a particle burst on trick win. */}
+            with cards landing on the table and a particle burst on trick win.
+            Lead-suit chip & opponent-turn hint are absolute overlays inside the
+            table so they never reflow the flex column (which would make the
+            hand jump vertically when they appear/disappear on play). */}
         <View style={styles.tableRegion}>
+          {/* Top info overlay (out of flow) */}
+          <View style={styles.topInfoOverlay} pointerEvents="box-none">
+            {leadSuit ? <LamapLeadSuitChip suit={leadSuit as any} /> : null}
+            {isOpponentTurn &&
+            game.status === "PLAYING" &&
+            opponentTimeRemaining > 0 ? (
+              <View style={styles.opponentTurnHint}>
+                <Text style={styles.opponentTurnText}>
+                  Tour de {opponent?.username || "l'adversaire"}…
+                </Text>
+              </View>
+            ) : null}
+          </View>
+
           <GameTableSkia
             myHand={myHand}
             playerStack={allPlayerCards.map((card: any) => ({
@@ -847,13 +848,17 @@ const screenStyles = StyleSheet.create({
     fontSize: 10,
     color: COLORS.cream,
   },
-  leadSuitWrap: {
+  topInfoOverlay: {
+    position: "absolute",
+    top: 10,
+    left: 0,
+    right: 0,
     alignItems: "center",
-    marginTop: 8,
+    gap: 8,
+    zIndex: 6,
   },
   opponentTurnHint: {
     alignSelf: "center",
-    marginTop: 8,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 999,

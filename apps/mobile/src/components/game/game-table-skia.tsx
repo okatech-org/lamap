@@ -451,7 +451,7 @@ export function GameTableSkia({
                 index={i}
                 slot={slots[i]}
                 card={card}
-                interactive={interactive}
+                dimmed={!isMyTurn || !card.playable}
                 cardW={handCardW}
                 cardH={handCardH}
                 font={handFont}
@@ -472,7 +472,7 @@ export function GameTableSkia({
                 index={i}
                 slot={slots[i]}
                 card={card}
-                interactive={interactive}
+                dimmed={!isMyTurn || !card.playable}
                 cardW={handCardW}
                 cardH={handCardH}
                 font={handFont}
@@ -493,7 +493,7 @@ export function GameTableSkia({
 }
 
 // ───────────────────────── Card face (shared) ─────────────────────────
-function CardFaceSkia({
+export function CardFaceSkia({
   cardW,
   cardH,
   font,
@@ -625,46 +625,71 @@ function StackCardSkia({
   const targetX = slotX + offX;
   const targetY = slotY + index * -4;
 
-  // Landing animation on mount.
+  // Two-phase "thrown card" animation on mount:
+  //  - travel: shoots out of the hand fast then decelerates hard (quint-out)
+  //  - land:   a squash + expanding impact ring the moment it touches down
   const t = useSharedValue(0);
+  const land = useSharedValue(0);
+  const TRAVEL_MS = 300;
   useEffect(() => {
     t.value = withDelay(
-      40,
-      withTiming(1, { duration: 420, easing: Easing.out(Easing.cubic) }),
+      20,
+      withTiming(1, { duration: TRAVEL_MS, easing: Easing.out(Easing.poly(4)) }),
+    );
+    land.value = withDelay(
+      20 + TRAVEL_MS - 40,
+      withTiming(1, { duration: 340, easing: Easing.out(Easing.quad) }),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const transform = useDerivedValue(() => {
     const p = t.value;
+    // Impact squash peaks mid-landing then recovers (sin 0→1→0 over land 0→1).
+    const squash = 1 - Math.sin(land.value * Math.PI) * 0.08;
     const x = targetX;
     const y = fromY + (targetY - fromY) * p;
-    const scale = 1.25 - 0.25 * p;
+    const baseScale = 1.3 - 0.3 * p;
     const rot = offRot * p;
     return [
       { translateX: x },
       { translateY: y },
       { rotate: rot },
-      { scale },
+      { scale: baseScale * squash },
       { translateX: -cardW / 2 },
       { translateY: -cardH / 2 },
     ];
   });
-  const opacity = useDerivedValue(() => Math.min(1, t.value * 2));
+  const opacity = useDerivedValue(() => Math.min(1, t.value * 3));
+
+  // Expanding impact ring at the landing spot.
+  const ringR = useDerivedValue(() => cardW * (0.32 + land.value * 0.78));
+  const ringOpacity = useDerivedValue(() => Math.sin(land.value * Math.PI) * 0.45);
 
   return (
-    <Group transform={transform} opacity={opacity}>
-      <RoundedRect
-        x={0}
-        y={6}
-        width={cardW}
-        height={cardH}
-        r={cardW * 0.1}
-        color="rgba(0,0,0,0.4)"
-      >
-        <BlurMask blur={8} style="normal" />
-      </RoundedRect>
-      <CardFaceSkia cardW={cardW} cardH={cardH} font={font} suit={card.suit} rank={card.rank} />
+    <Group>
+      <Circle
+        cx={targetX}
+        cy={targetY}
+        r={ringR}
+        color={COLORS.or2}
+        style="stroke"
+        strokeWidth={2}
+        opacity={ringOpacity}
+      />
+      <Group transform={transform} opacity={opacity}>
+        <RoundedRect
+          x={0}
+          y={6}
+          width={cardW}
+          height={cardH}
+          r={cardW * 0.1}
+          color="rgba(0,0,0,0.4)"
+        >
+          <BlurMask blur={8} style="normal" />
+        </RoundedRect>
+        <CardFaceSkia cardW={cardW} cardH={cardH} font={font} suit={card.suit} rank={card.rank} />
+      </Group>
     </Group>
   );
 }
@@ -853,7 +878,7 @@ function HandCardSkia({
   index,
   slot,
   card,
-  interactive,
+  dimmed,
   cardW,
   cardH,
   font,
@@ -869,7 +894,7 @@ function HandCardSkia({
   index: number;
   slot: Slot;
   card: Card;
-  interactive: boolean;
+  dimmed: boolean;
   cardW: number;
   cardH: number;
   font: SkFont;
@@ -881,8 +906,6 @@ function HandCardSkia({
   selectedIndex: SharedValue<number>;
   selectionLift: SharedValue<number>;
 }) {
-  const dimmed = !interactive || !card.playable;
-
   const entrance = useSharedValue(layer === "base" ? 0 : 1);
   useEffect(() => {
     if (layer === "base") {

@@ -1,6 +1,12 @@
-import { PlayingCard } from "@/components/game/playing-card";
+import { CardFaceSkia } from "@/components/game/game-table-skia";
+import {
+  Canvas,
+  matchFont,
+  useFont,
+  type SkFont,
+} from "@shopify/react-native-skia";
 import React, { useEffect, useMemo } from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
+import { Dimensions, Platform, StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -16,6 +22,15 @@ type Rank = "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 const RANKS: Rank[] = ["3", "4", "5", "6", "7", "8", "9", "10"];
+
+const CARD_WIDTH = 140;
+const CARD_HEIGHT = CARD_WIDTH / (5 / 7);
+
+const SYSTEM_FONT_FAMILY = Platform.select({
+  ios: "Georgia",
+  android: "serif",
+  default: "serif",
+});
 
 interface CardData {
   suit: Suit;
@@ -43,12 +58,36 @@ function generateRandomCards(count: number): CardData[] {
   return cards;
 }
 
+// Static Skia card face (no gestures, no pulse) — just the premium look.
+function StaticCardSkia({
+  suit,
+  rank,
+  font,
+}: {
+  suit: Suit;
+  rank: Rank;
+  font: SkFont;
+}) {
+  return (
+    <Canvas style={{ width: CARD_WIDTH, height: CARD_HEIGHT }}>
+      <CardFaceSkia
+        cardW={CARD_WIDTH}
+        cardH={CARD_HEIGHT}
+        font={font}
+        suit={suit}
+        rank={rank}
+      />
+    </Canvas>
+  );
+}
+
 interface AnimatedCardProps {
   suit: Suit;
   rank: Rank;
   rotation: number;
   index: number;
   totalCards: number;
+  font: SkFont;
 }
 
 function AnimatedCard({
@@ -57,6 +96,7 @@ function AnimatedCard({
   rotation,
   index,
   totalCards,
+  font,
 }: AnimatedCardProps) {
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(150);
@@ -64,27 +104,20 @@ function AnimatedCard({
   const floatRotate = useSharedValue(0);
 
   const screenWidth = Dimensions.get("window").width;
-  const cardWidth = 100;
-  const spacing = cardWidth * 0.7;
-  const totalWidth = (totalCards - 1) * spacing + cardWidth;
+  const spacing = CARD_WIDTH * 0.7;
+  const totalWidth = (totalCards - 1) * spacing + CARD_WIDTH;
   const startX = (screenWidth - totalWidth) / 2 - 20;
   const cardX = startX + index * spacing;
 
   useEffect(() => {
     opacity.value = withDelay(
       300,
-      withTiming(1, {
-        duration: 800,
-        easing: Easing.out(Easing.ease),
-      }),
+      withTiming(1, { duration: 800, easing: Easing.out(Easing.ease) }),
     );
 
     translateY.value = withDelay(
       300,
-      withTiming(0, {
-        duration: 800,
-        easing: Easing.out(Easing.back(1.2)),
-      }),
+      withTiming(0, { duration: 800, easing: Easing.out(Easing.back(1.2)) }),
     );
 
     const floatDelay = 1100 + index * 150;
@@ -119,22 +152,30 @@ function AnimatedCard({
   }));
 
   return (
-    <Animated.View
-      style={[
-        styles.cardWrapper,
-        {
-          left: cardX,
-        },
-        animatedStyle,
-      ]}
-    >
-      <PlayingCard suit={suit} rank={rank} state="playable" size="xxl" />
+    <Animated.View style={[styles.cardWrapper, { left: cardX }, animatedStyle]}>
+      <StaticCardSkia suit={suit} rank={rank} font={font} />
     </Animated.View>
   );
 }
 
 export function WelcomeCards() {
   const cards = useMemo(() => generateRandomCards(5), []);
+
+  const fontSize = Math.round(CARD_WIDTH * 0.2);
+  const ttf = useFont(
+    require("@expo-google-fonts/crimson-pro/700Bold/CrimsonPro_700Bold.ttf"),
+    fontSize,
+  );
+  const fallback = useMemo(
+    () =>
+      matchFont({
+        fontFamily: SYSTEM_FONT_FAMILY,
+        fontSize,
+        fontWeight: "700",
+      }),
+    [fontSize],
+  );
+  const font = ttf ?? fallback;
 
   return (
     <View style={styles.container}>
@@ -146,6 +187,7 @@ export function WelcomeCards() {
           rotation={card.rotation}
           index={index}
           totalCards={cards.length}
+          font={font}
         />
       ))}
     </View>
