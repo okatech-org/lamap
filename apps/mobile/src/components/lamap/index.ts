@@ -1,3 +1,14 @@
+export {
+  AppBar,
+  Chip,
+  PageTitle,
+  Row,
+  RoundIcon,
+  SectionHeader,
+  Surface,
+  screenRoot,
+  type ChipTone,
+} from "./arcade-ui";
 export { AppBackdrop } from "./app-backdrop";
 export { Avatar } from "./avatar";
 export { LamapBalanceChip } from "./balance-chip";
@@ -21,6 +32,7 @@ export { LamapOpponentBar } from "./opponent-bar";
 export { LamapProgressBar } from "./progress-bar";
 export { RankBadge } from "./rank-badge";
 export { LamapSectionLabel } from "./section-label";
+export { LamapTabBar } from "./tab-bar";
 export { Sparks } from "./sparks";
 export { TableBg } from "./table-bg";
 export { LamapTabPillRow } from "./tab-pill-row";

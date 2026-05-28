@@ -103,6 +103,26 @@ function RootLayoutNav() {
           <Stack.Screen name="leaderboard/ranks" options={{ headerShown: false }} />
           <Stack.Screen name="card-poc" options={{ headerShown: false }} />
           <Stack.Screen name="card-poc-hand" options={{ headerShown: false }} />
+          <Stack.Screen name="rules" options={{ headerShown: false }} />
+          <Stack.Screen name="season" options={{ headerShown: false }} />
+          <Stack.Screen name="history" options={{ headerShown: false }} />
+          <Stack.Screen name="recharge" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="rebuy"
+            options={{ headerShown: false, presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="daily-bonus"
+            options={{ headerShown: false, presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="ad-reward"
+            options={{ headerShown: false, presentation: "fullScreenModal" }}
+          />
+          <Stack.Screen
+            name="recharge-success"
+            options={{ headerShown: false, presentation: "modal" }}
+          />
           <Stack.Screen
             name="settings/blocked-users"
             options={{
