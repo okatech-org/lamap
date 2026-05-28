@@ -25,8 +25,11 @@ const usersTable = defineTable({
   balance: v.optional(v.number()),
   currency: v.optional(v.string()),
   country: v.optional(v.string()),
-  onboardingCompleted: v.boolean(),
-  tutorialCompleted: v.optional(v.boolean()),
+  metadata: v.optional(
+    v.object({
+      onboardingCompleted: v.optional(v.boolean()),
+    }),
+  ),
   pr: v.optional(v.number()),
   kora: v.optional(v.number()),
   rankHistory: v.optional(v.array(v.string())),

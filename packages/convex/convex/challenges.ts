@@ -27,7 +27,7 @@ export const sendChallenge = mutation({
       throw new Error("Utilisateur non trouvé.");
     }
 
-    if (!challenged.onboardingCompleted) {
+    if (!challenged.metadata?.onboardingCompleted) {
       throw new Error("L'utilisateur n'a pas terminé son onboarding.");
     }
 

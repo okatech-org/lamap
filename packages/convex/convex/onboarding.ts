@@ -111,7 +111,7 @@ export const completeOnboarding = mutation({
     }
 
     await ctx.db.patch(args.userId, {
-      onboardingCompleted: true,
+      metadata: { ...user.metadata, onboardingCompleted: true },
     });
 
     return { success: true };
@@ -128,25 +128,27 @@ export const completeTutorial = mutation({
       throw new Error("Utilisateur non trouvé");
     }
 
+    const alreadyOnboarded = user.metadata?.onboardingCompleted ?? false;
     const TUTORIAL_REWARD = 500;
-    const currentKora = user.kora || 0;
+    const reward = alreadyOnboarded ? 0 : TUTORIAL_REWARD;
 
     await ctx.db.patch(args.userId, {
-      tutorialCompleted: true,
-      onboardingCompleted: true,
-      kora: currentKora + TUTORIAL_REWARD,
+      metadata: { ...user.metadata, onboardingCompleted: true },
+      ...(reward > 0 ? { kora: (user.kora || 0) + reward } : {}),
     });
 
-    await ctx.db.insert("transactions", {
-      userId: args.userId,
-      type: "tutorial_reward",
-      amount: TUTORIAL_REWARD,
-      currency: user.currency || "XAF",
-      description: "Récompense tutoriel",
-      createdAt: Date.now(),
-    });
+    if (reward > 0) {
+      await ctx.db.insert("transactions", {
+        userId: args.userId,
+        type: "tutorial_reward",
+        amount: reward,
+        currency: user.currency || "XAF",
+        description: "Récompense tutoriel",
+        createdAt: Date.now(),
+      });
+    }
 
-    return { success: true, koraReward: TUTORIAL_REWARD };
+    return { success: true, koraReward: reward };
   },
 });
 
@@ -161,11 +163,32 @@ export const getOnboardingStatus = query({
     }
 
     return {
-      onboardingCompleted: user.onboardingCompleted || false,
-      tutorialCompleted: user.tutorialCompleted || false,
+      onboardingCompleted: user.metadata?.onboardingCompleted ?? false,
       hasUsername: !!user.username && user.username.length > 0,
       hasCountry: !!user.country,
       hasCurrency: !!user.currency,
     };
+  },
+});
+
+/**
+ * Dev/QA helper — re-arm the onboarding flow so the 4 explainer screens show
+ * again on next app entry. Clears the metadata flag (and legacy mirrors).
+ */
+export const resetOnboarding = mutation({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("Utilisateur non trouvé");
+    }
+
+    await ctx.db.patch(args.userId, {
+      metadata: { ...user.metadata, onboardingCompleted: false },
+    });
+
+    return { success: true };
   },
 });

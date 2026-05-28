@@ -32,7 +32,6 @@ export default function UsernameScreen() {
   
   const setUsernameMutation = useMutation(api.onboarding.setUsername);
   const setCountryMutation = useMutation(api.onboarding.setCountry);
-  const completeOnboardingMutation = useMutation(api.onboarding.completeOnboarding);
   
   const handleContinue = async () => {
     if (!convexUser?._id || !isValid) return;
@@ -53,11 +52,8 @@ export default function UsernameScreen() {
         countryCode: detectedCountry,
       });
       
-      // Complete onboarding
-      await completeOnboardingMutation({ userId: convexUser._id });
-      
-      // Go to tutorial or main app
-      router.replace("/(tabs)");
+      // On enchaîne sur le tutoriel (qui marque l'onboarding terminé à la fin).
+      router.replace("/(onboarding)/tutorial");
     } catch (error) {
       console.error("Erreur lors de l'onboarding:", error);
     } finally {

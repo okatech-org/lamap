@@ -93,12 +93,12 @@ export default function WelcomeScreen() {
 
       if (createdSessionId) {
         await setActive!({ session: createdSessionId });
-        router.replace("/(tabs)");
+        router.replace("/");
       }
     } catch (err: any) {
       const errorMessage = err.errors?.[0]?.message || "";
       if (errorMessage.includes("Session already exists")) {
-        router.replace("/(tabs)");
+        router.replace("/");
       } else {
         Alert.alert(
           "Erreur",

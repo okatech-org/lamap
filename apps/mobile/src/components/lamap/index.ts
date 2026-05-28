@@ -1,3 +1,4 @@
+export { AppBackdrop } from "./app-backdrop";
 export { Avatar } from "./avatar";
 export { LamapBalanceChip } from "./balance-chip";
 export { LamapButton, type LamapButtonVariant } from "./button";

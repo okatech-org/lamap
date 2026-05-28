@@ -24,8 +24,9 @@ export default function OnboardingLayout() {
     );
   }
 
-  if (isSignedIn && convexUser && convexUser.onboardingCompleted === true) {
-    return <Redirect href="/(tabs)/index" />;
+  const onboarded = convexUser?.metadata?.onboardingCompleted;
+  if (isSignedIn && convexUser && onboarded === true) {
+    return <Redirect href="/(tabs)" />;
   }
 
   return (

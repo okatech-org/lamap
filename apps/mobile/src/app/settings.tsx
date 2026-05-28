@@ -38,6 +38,7 @@ export default function SettingsScreen() {
     isLoading,
   } = useSettings();
   const deleteAccount = useMutation(api.users.deleteAccount);
+  const resetOnboarding = useMutation(api.onboarding.resetOnboarding);
   const [deleting, setDeleting] = useState(false);
 
   const handleSignOut = useCallback(async () => {
@@ -48,6 +49,16 @@ export default function SettingsScreen() {
       console.error("Error signing out:", error);
     }
   }, [signOut, router]);
+
+  const handleResetOnboarding = useCallback(async () => {
+    if (!convexUser?._id) return;
+    try {
+      await resetOnboarding({ userId: convexUser._id });
+      router.replace("/(onboarding)/username");
+    } catch (error) {
+      console.error("Reset onboarding failed:", error);
+    }
+  }, [convexUser?._id, resetOnboarding, router]);
 
   const handleOpenPrivacy = useCallback(() => {
     WebBrowser.openBrowserAsync(PRIVACY_URL).catch(() => {});
@@ -392,6 +403,14 @@ export default function SettingsScreen() {
               onPress={() => router.push("/card-poc-hand")}
               variant="outline"
             />
+            {__DEV__ && (
+              <Button
+                title="Réinitialiser l'onboarding (dev)"
+                onPress={handleResetOnboarding}
+                variant="outline"
+                style={{ marginTop: 12 }}
+              />
+            )}
           </View>
 
           <View style={styles.section}>

@@ -37,7 +37,7 @@ export default function Index() {
     if (needsOnboarding === true) {
       return <Redirect href="/(onboarding)/username" />;
     }
-    return <Redirect href="/(tabs)/index" />;
+    return <Redirect href="/(tabs)" />;
   }
 
   return <Redirect href="/welcome" />;

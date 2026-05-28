@@ -53,7 +53,7 @@ export const updateOrCreateUser = internalMutation({
         isActive: true,
         username: clerkUser.username ?? email.split("@")[0],
         clerkUserId: clerkUser.id,
-        onboardingCompleted: false,
+        metadata: { onboardingCompleted: false },
       });
       return newUserId;
     }
@@ -98,8 +98,11 @@ const getUserQuery = {
       balance: v.optional(v.number()),
       currency: v.optional(v.string()),
       country: v.optional(v.string()),
-      onboardingCompleted: v.boolean(),
-      tutorialCompleted: v.optional(v.boolean()),
+      metadata: v.optional(
+        v.object({
+          onboardingCompleted: v.optional(v.boolean()),
+        }),
+      ),
 
       pr: v.optional(v.number()),
       kora: v.optional(v.number()),
@@ -161,7 +164,7 @@ export const getPublicUserProfile = query({
   ),
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
-    if (!user || !user.onboardingCompleted) return null;
+    if (!user || !user.metadata?.onboardingCompleted) return null;
 
     return {
       _id: user._id,
@@ -210,7 +213,7 @@ export const createOrUpdateUser = mutation({
       clerkUserId: args.clerkId,
       balance: 1000,
       currency: "XAF",
-      onboardingCompleted: false,
+      metadata: { onboardingCompleted: false },
     });
   },
 });

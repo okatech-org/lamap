@@ -12,6 +12,8 @@ import Animated, {
 interface GoldDustProps {
   count?: number;
   opacity?: number;
+  /** Mote color. Defaults to the legacy gold so existing callers are unchanged. */
+  color?: string;
 }
 
 interface Dot {
@@ -27,7 +29,15 @@ function seed(i: number) {
   return ((i * 9301 + 49297) % 233280) / 233280;
 }
 
-function Particle({ dot, opacity }: { dot: Dot; opacity: number }) {
+function Particle({
+  dot,
+  opacity,
+  color,
+}: {
+  dot: Dot;
+  opacity: number;
+  color: string;
+}) {
   const t = useSharedValue(0);
 
   useEffect(() => {
@@ -62,6 +72,7 @@ function Particle({ dot, opacity }: { dot: Dot; opacity: number }) {
           width: dot.size,
           height: dot.size,
           borderRadius: dot.size / 2,
+          backgroundColor: color,
           opacity,
         },
         style,
@@ -70,7 +81,11 @@ function Particle({ dot, opacity }: { dot: Dot; opacity: number }) {
   );
 }
 
-export function GoldDust({ count = 18, opacity = 0.6 }: GoldDustProps) {
+export function GoldDust({
+  count = 18,
+  opacity = 0.6,
+  color = "rgba(201, 168, 118, 0.9)",
+}: GoldDustProps) {
   const dots = useMemo<Dot[]>(
     () =>
       Array.from({ length: count }).map((_, i) => ({
@@ -86,7 +101,7 @@ export function GoldDust({ count = 18, opacity = 0.6 }: GoldDustProps) {
   return (
     <View style={styles.layer} pointerEvents="none">
       {dots.map((d, i) => (
-        <Particle key={i} dot={d} opacity={opacity} />
+        <Particle key={i} dot={d} opacity={opacity} color={color} />
       ))}
     </View>
   );
@@ -99,6 +114,5 @@ const styles = StyleSheet.create({
   },
   dot: {
     position: "absolute",
-    backgroundColor: "rgba(201, 168, 118, 0.9)",
   },
 });

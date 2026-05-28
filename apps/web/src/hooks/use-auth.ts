@@ -40,7 +40,7 @@ function useEnabledAuth(): UseAuthReturn {
     convexUser === null
       ? undefined
       : convexUser !== undefined
-        ? !convexUser.onboardingCompleted
+        ? !convexUser.metadata?.onboardingCompleted
         : undefined;
 
   const isConvexUserLoaded = !isSignedIn || convexUser !== undefined;

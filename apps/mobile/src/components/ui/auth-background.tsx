@@ -1,14 +1,18 @@
 import { GoldDust } from "@/components/lamap";
 import { COLORS } from "@/design";
 import { Image } from "expo-image";
-import React from "react";
-import { StyleSheet, View } from "react-native";
-import Svg, {
-  Defs,
-  RadialGradient,
-  Rect,
-  Stop,
-} from "react-native-svg";
+import React, { useEffect } from "react";
+import { StyleSheet, View, type ViewStyle } from "react-native";
+import Animated, {
+  Easing,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
+import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
 const SUIT_IMAGES = {
   spades: require("@assets/images/suit_spade.svg"),
@@ -17,11 +21,66 @@ const SUIT_IMAGES = {
   diamonds: require("@assets/images/suit_diamond.svg"),
 };
 
+interface SuitProps {
+  source: number;
+  pos: ViewStyle;
+  size: number;
+  baseOpacity: number;
+  delay: number;
+  dur: number;
+  amp: number;
+  rot: number;
+}
+
+/** A single faded suit motif that drifts + breathes very gently, on a loop. */
+function AnimatedSuit({
+  source,
+  pos,
+  size,
+  baseOpacity,
+  delay,
+  dur,
+  amp,
+  rot,
+}: SuitProps) {
+  const t = useSharedValue(0);
+
+  useEffect(() => {
+    t.value = withDelay(
+      delay,
+      withRepeat(
+        withTiming(1, { duration: dur, easing: Easing.inOut(Easing.ease) }),
+        -1,
+        true,
+      ),
+    );
+  }, [delay, dur, t]);
+
+  const style = useAnimatedStyle(() => ({
+    opacity: interpolate(t.value, [0, 1], [baseOpacity * 0.7, baseOpacity * 1.2]),
+    transform: [
+      { translateY: interpolate(t.value, [0, 1], [amp, -amp]) },
+      { rotate: `${interpolate(t.value, [0, 1], [-rot, rot])}deg` },
+    ],
+  }));
+
+  return (
+    <Animated.View style={[styles.suit, pos, style]} pointerEvents="none">
+      <Image
+        source={source}
+        style={{ width: size, height: size }}
+        contentFit="contain"
+        tintColor="#F5F2ED"
+      />
+    </Animated.View>
+  );
+}
+
 /**
  * Welcome / landing backdrop — Hero classique variant.
  *
- * Deep nuit base + soft terre/or radial highlights, large faded suit motifs,
- * and a layer of gold-dust particles.
+ * Deep nuit base + soft terre/or radial highlights, large faded suit motifs
+ * (now gently animated), and a layer of gold-dust particles.
  */
 export function AuthBackground() {
   return (
@@ -43,29 +102,45 @@ export function AuthBackground() {
       </Svg>
 
       {/* Oversized faded suit motifs — same assets as the playing cards. */}
-      <Image
+      <AnimatedSuit
         source={SUIT_IMAGES.hearts}
-        style={[styles.suit, { top: 80, left: -40, width: 220, height: 220, opacity: 0.05 }]}
-        contentFit="contain"
-        tintColor="#F5F2ED"
+        pos={{ top: 80, left: -40 }}
+        size={220}
+        baseOpacity={0.05}
+        delay={0}
+        dur={7000}
+        amp={10}
+        rot={3}
       />
-      <Image
+      <AnimatedSuit
         source={SUIT_IMAGES.diamonds}
-        style={[styles.suit, { top: 220, right: -60, width: 260, height: 260, opacity: 0.04 }]}
-        contentFit="contain"
-        tintColor="#F5F2ED"
+        pos={{ top: 220, right: -60 }}
+        size={260}
+        baseOpacity={0.04}
+        delay={1200}
+        dur={9000}
+        amp={12}
+        rot={2.5}
       />
-      <Image
+      <AnimatedSuit
         source={SUIT_IMAGES.spades}
-        style={[styles.suit, { top: 380, left: 40, width: 90, height: 90, opacity: 0.06 }]}
-        contentFit="contain"
-        tintColor="#F5F2ED"
+        pos={{ top: 380, left: 40 }}
+        size={90}
+        baseOpacity={0.06}
+        delay={600}
+        dur={6000}
+        amp={8}
+        rot={4}
       />
-      <Image
+      <AnimatedSuit
         source={SUIT_IMAGES.clubs}
-        style={[styles.suit, { bottom: 240, right: 50, width: 70, height: 70, opacity: 0.05 }]}
-        contentFit="contain"
-        tintColor="#F5F2ED"
+        pos={{ bottom: 240, right: 50 }}
+        size={70}
+        baseOpacity={0.05}
+        delay={1800}
+        dur={8000}
+        amp={7}
+        rot={4}
       />
 
       <GoldDust count={14} opacity={0.45} />

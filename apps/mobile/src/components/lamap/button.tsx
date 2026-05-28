@@ -1,4 +1,4 @@
-import { COLORS, FONT_WEIGHTS, RADII } from "@/design";
+import { COLORS, FONT_WEIGHTS, RADII, useTheme } from "@/design";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
 import {
@@ -22,7 +22,14 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-export type LamapButtonVariant = "primary" | "light" | "ghost";
+export type LamapButtonVariant =
+  | "primary"
+  | "light"
+  | "ghost"
+  | "gold"
+  | "accent"
+  | "ember"
+  | "dark";
 
 interface LamapButtonProps {
   title: string;
@@ -37,11 +44,13 @@ interface LamapButtonProps {
 }
 
 /**
- * LaMap pill button — ports `tokens.css` btn-primary / btn-light / btn-ghost.
+ * LaMap pill button.
  *
- * Primary variant carries a sweeping shine highlight (`lamap-shine`): a soft
- * white band travels from left to right across the button every 4s with a
- * 1.5s initial delay, mirroring the CSS keyframes in tokens.css:75-78.
+ * `primary` / `light` / `ghost` are the original (legacy) recipes — kept
+ * byte-identical so already-approved screens (welcome) don't shift.
+ * `gold` / `accent` / `ember` / `dark` are the themed Arcade variants pulled
+ * from the active palette via `useTheme()`. Gradient variants (primary, gold,
+ * accent, ember) carry a sweeping shine; gold & primary loop it.
  */
 export function LamapButton({
   title,
@@ -54,22 +63,58 @@ export function LamapButton({
   accessibilityLabel,
   accessibilityHint,
 }: LamapButtonProps) {
-  const isPrimary = variant === "primary";
-  const isLight = variant === "light";
-  const isGhost = variant === "ghost";
+  const theme = useTheme();
 
-  const labelColor = isLight ? COLORS.ink : COLORS.cream;
+  const hasGradient =
+    variant === "primary" ||
+    variant === "gold" ||
+    variant === "accent" ||
+    variant === "ember";
+  const shines = variant === "primary" || variant === "gold";
+
+  const gradientColors: [string, string, ...string[]] =
+    variant === "gold"
+      ? [theme.goldBright, theme.gold, theme.goldDeep]
+      : variant === "accent"
+        ? [theme.accentBright, theme.accent, theme.accentDeep]
+        : variant === "ember"
+          ? [theme.emberBright, theme.ember, theme.emberDeep]
+          : ["#C95048", "#A93934"]; // primary (legacy)
+
+  const labelColor =
+    variant === "gold"
+      ? "#1F1810"
+      : variant === "light"
+        ? COLORS.ink
+        : COLORS.cream;
+
   const wrapStyles: ViewStyle[] = [styles.wrap];
-
-  if (isPrimary) wrapStyles.push(styles.wrapPrimary);
-  if (isLight) wrapStyles.push(styles.wrapLight);
-  if (isGhost) wrapStyles.push(styles.wrapGhost);
+  if (variant === "primary") wrapStyles.push(styles.wrapPrimary);
+  else if (variant === "light") wrapStyles.push(styles.wrapLight);
+  else if (variant === "ghost") wrapStyles.push(styles.wrapGhost);
+  else if (variant === "dark")
+    wrapStyles.push({
+      backgroundColor: theme.surfaceDeep,
+      borderWidth: 1,
+      borderColor: theme.hairline,
+    });
+  else
+    // gold / accent / ember
+    wrapStyles.push({
+      shadowColor: variant === "gold" ? theme.gold : "#000",
+      shadowOpacity: variant === "gold" ? 0.4 : 0.35,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 6,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.1)",
+    });
 
   const [width, setWidth] = useState(0);
   const shineProgress = useSharedValue(0);
 
   useEffect(() => {
-    if (!isPrimary || width === 0) return;
+    if (!shines || width === 0) return;
     shineProgress.value = withDelay(
       1500,
       withRepeat(
@@ -78,10 +123,9 @@ export function LamapButton({
         false,
       ),
     );
-  }, [isPrimary, width, shineProgress]);
+  }, [shines, width, shineProgress]);
 
   const shineStyle = useAnimatedStyle(() => {
-    // 0 → 0.6 of the cycle: sweep from off-left to off-right; remainder holds.
     const tx = interpolate(
       shineProgress.value,
       [0, 0.6, 1],
@@ -99,7 +143,7 @@ export function LamapButton({
   return (
     <Pressable
       onPress={onPress}
-      onLayout={isPrimary ? onLayout : undefined}
+      onLayout={shines ? onLayout : undefined}
       disabled={disabled || loading}
       style={({ pressed }) => [
         ...wrapStyles,
@@ -111,9 +155,9 @@ export function LamapButton({
       accessibilityLabel={accessibilityLabel ?? title}
       accessibilityHint={accessibilityHint}
     >
-      {isPrimary && (
+      {hasGradient && (
         <LinearGradient
-          colors={["#C95048", "#A93934"]}
+          colors={gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={[StyleSheet.absoluteFill, { borderRadius: RADII.pill }]}
@@ -131,17 +175,13 @@ export function LamapButton({
           </>
         )}
       </View>
-      {isPrimary && width > 0 && (
+      {shines && width > 0 && (
         <Animated.View
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, shineStyle]}
         >
           <LinearGradient
-            colors={[
-              "transparent",
-              "rgba(255,255,255,0.35)",
-              "transparent",
-            ]}
+            colors={["transparent", "rgba(255,255,255,0.35)", "transparent"]}
             locations={[0.3, 0.5, 0.7]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}

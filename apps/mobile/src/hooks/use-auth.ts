@@ -13,7 +13,8 @@ export function useAuth() {
 
   const needsOnboarding =
     convexUser === null ? undefined
-    : convexUser !== undefined ? !convexUser.onboardingCompleted
+    : convexUser !== undefined
+      ? !convexUser.metadata?.onboardingCompleted
     : undefined;
 
   const isConvexUserLoaded = !isSignedIn || convexUser !== undefined;
