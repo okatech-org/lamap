@@ -123,6 +123,13 @@ function RootLayoutNav() {
             name="recharge-success"
             options={{ headerShown: false, presentation: "modal" }}
           />
+          <Stack.Screen name="tournaments" options={{ headerShown: false }} />
+          <Stack.Screen name="tournament/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="gift" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="vip"
+            options={{ headerShown: false, presentation: "modal" }}
+          />
           <Stack.Screen
             name="settings/blocked-users"
             options={{
