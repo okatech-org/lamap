@@ -42,10 +42,11 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build static site
+        working-directory: apps/web
         env:
           NEXT_PUBLIC_BASE_PATH: /lamap
           NEXT_PUBLIC_SITE_URL: https://okatech-org.github.io/lamap
-        run: bun --cwd apps/web run build
+        run: bun run build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
