@@ -1,50 +1,37 @@
-# Welcome to your Expo app 👋
+# Lamap
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Lamap est un jeu de cartes camerounais gratuit pour iPhone. Cette version se concentre sur quatre usages : jouer en classé, s’entraîner contre trois niveaux d’IA, consulter le classement mondial et acheter des cosmétiques non consommables.
 
-## Get started
+L’application ne contient ni pari, ni portefeuille, ni monnaie virtuelle, ni gain financier, ni publicité récompensée. La Kora est uniquement un effet de victoire visuel et sonore.
 
-1. Install dependencies
+## Architecture
 
-   ```bash
-   npm install
-   ```
+- `apps/mobile` : application Expo / React Native pour iPhone ;
+- `apps/web` : pages publiques de support, confidentialité et CGU ;
+- `packages/convex` : authentification, données, jeu, classement et validation StoreKit 2.
 
-2. Start the app
+La documentation produit et la liste de contrôle App Store se trouvent dans [`docs`](./docs).
 
-   ```bash
-   npx expo start
-   ```
+## Développement
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Prérequis : Bun, un déploiement Convex et Xcode pour la cible iOS.
 
 ```bash
-npm run reset-project
+bun install
+bun run convex:dev
+bun --cwd apps/mobile start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Les variables locales ne doivent jamais être ajoutées à Git. L’application mobile attend `EXPO_PUBLIC_CONVEX_URL` dans `apps/mobile/.env.local`.
 
-## Learn more
+## Vérification
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+bun run typecheck
+bun run lint
+bun --cwd packages/convex test
+bunx expo-doctor apps/mobile
+bun --cwd apps/mobile expo export --platform ios
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Une version ne passe en « Prêt pour la soumission » qu’après validation de la checklist [`docs/APP_STORE_RELEASE.md`](./docs/APP_STORE_RELEASE.md) sur TestFlight et sur iPhone physique.
