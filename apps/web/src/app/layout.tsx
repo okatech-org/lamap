@@ -9,7 +9,8 @@ import "./globals.css";
 
 const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const publicSiteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://okatech-org.github.io/lamap";
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  "https://lamap-okatechs-projects-f0102678.vercel.app";
 
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
