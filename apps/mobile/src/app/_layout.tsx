@@ -1,5 +1,6 @@
 import { fontAssets, ThemeProvider as LamapThemeProvider } from "@/design";
 import { authStorage } from "@/lib/auth-storage";
+import { IapProvider } from "@/providers/iap-provider";
 import { ConvexAuthProvider, useConvexAuth } from "@convex-dev/auth/react";
 import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { ConvexReactClient } from "convex/react";
@@ -22,30 +23,32 @@ function RootNavigator() {
   if (isLoading || !fontsLoaded) return null;
 
   return (
-    <ThemeProvider value={DarkTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Protected guard={!isAuthenticated}>
-          <Stack.Screen name="welcome" />
-        </Stack.Protected>
-        <Stack.Protected guard={isAuthenticated}>
-          <Stack.Screen name="(onboarding)" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="(lobby)" />
-          <Stack.Screen name="(game)" />
-          <Stack.Screen
-            name="settings/blocked-users"
-            options={{
-              headerShown: true,
-              title: "Utilisateurs bloqués",
-              headerStyle: { backgroundColor: "#16070B" },
-              headerTintColor: "#F1E8D6",
-            }}
-          />
-        </Stack.Protected>
-      </Stack>
-      <StatusBar style="light" />
-    </ThemeProvider>
+    <IapProvider enabled={isAuthenticated}>
+      <ThemeProvider value={DarkTheme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Protected guard={!isAuthenticated}>
+            <Stack.Screen name="welcome" />
+          </Stack.Protected>
+          <Stack.Protected guard={isAuthenticated}>
+            <Stack.Screen name="(onboarding)" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(lobby)" />
+            <Stack.Screen name="(game)" />
+            <Stack.Screen
+              name="settings/blocked-users"
+              options={{
+                headerShown: true,
+                title: "Utilisateurs bloqués",
+                headerStyle: { backgroundColor: "#16070B" },
+                headerTintColor: "#F1E8D6",
+              }}
+            />
+          </Stack.Protected>
+        </Stack>
+        <StatusBar style="light" />
+      </ThemeProvider>
+    </IapProvider>
   );
 }
 
