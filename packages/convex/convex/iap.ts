@@ -1,107 +1,133 @@
 "use node";
 
-import { v } from "convex/values";
-import { action } from "./_generated/server";
+import {
+  Environment,
+  SignedDataVerifier,
+  type JWSTransactionDecodedPayload,
+} from "@apple/app-store-server-library";
+import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
+import { action, internalAction } from "./_generated/server";
+import { requireAuthUserId } from "./authHelpers";
+import { PAID_PRODUCT_IDS } from "./cosmetics";
 
-const KORA_PACKS: Record<string, number> = {
-  kora_pack_small: 500,
-  kora_pack_medium: 1500,
-  kora_pack_large: 5000,
-  kora_pack_xlarge: 15000,
-};
+const BUNDLE_ID = "com.okatech.lamap";
 
-const APPLE_VERIFY_PROD = "https://buy.itunes.apple.com/verifyReceipt";
-const APPLE_VERIFY_SANDBOX = "https://sandbox.itunes.apple.com/verifyReceipt";
-const EXPECTED_BUNDLE_ID = "com.okatech.lamap";
-
-interface AppleVerifyResponse {
-  status: number;
-  environment?: string;
-  receipt?: {
-    bundle_id?: string;
-    in_app?: Array<{
-      product_id: string;
-      transaction_id: string;
-      original_transaction_id?: string;
-    }>;
-  };
-  latest_receipt_info?: Array<{
-    product_id: string;
-    transaction_id: string;
-    original_transaction_id?: string;
-  }>;
+function rootCertificates() {
+  const configured = process.env.APPLE_ROOT_CERTIFICATES_BASE64;
+  if (!configured) throw new ConvexError("APPLE_ROOT_CERTIFICATES_MISSING");
+  let values: string[];
+  try {
+    values = JSON.parse(configured) as string[];
+  } catch {
+    throw new ConvexError("APPLE_ROOT_CERTIFICATES_INVALID");
+  }
+  if (!Array.isArray(values) || values.length === 0) {
+    throw new ConvexError("APPLE_ROOT_CERTIFICATES_INVALID");
+  }
+  return values.map((certificate) => Buffer.from(certificate, "base64"));
 }
 
-async function verifyWithApple(
-  receipt: string,
-  sharedSecret: string,
-): Promise<AppleVerifyResponse> {
-  const body = JSON.stringify({
-    "receipt-data": receipt,
-    password: sharedSecret,
-    "exclude-old-transactions": true,
-  });
-
-  const prodRes = await fetch(APPLE_VERIFY_PROD, { method: "POST", body });
-  const prodJson = (await prodRes.json()) as AppleVerifyResponse;
-
-  // 21007 = sandbox receipt sent to production endpoint -> retry sandbox.
-  if (prodJson.status === 21007) {
-    const sandboxRes = await fetch(APPLE_VERIFY_SANDBOX, {
-      method: "POST",
-      body,
-    });
-    return (await sandboxRes.json()) as AppleVerifyResponse;
+function untrustedEnvironment(jws: string): Environment {
+  try {
+    const payload = JSON.parse(
+      Buffer.from(jws.split(".")[1]!, "base64url").toString(),
+    );
+    if (payload.environment === Environment.PRODUCTION)
+      return Environment.PRODUCTION;
+    if (payload.environment === Environment.XCODE) return Environment.XCODE;
+    if (payload.environment === Environment.LOCAL_TESTING)
+      return Environment.LOCAL_TESTING;
+  } catch {
+    // The full signature verification below remains authoritative.
   }
-  return prodJson;
+  return Environment.SANDBOX;
+}
+
+function verifier(jws: string) {
+  const environment = untrustedEnvironment(jws);
+  const configuredAppId = Number(process.env.APPLE_APP_ID);
+  if (
+    environment === Environment.PRODUCTION &&
+    !Number.isSafeInteger(configuredAppId)
+  ) {
+    throw new ConvexError("APPLE_APP_ID_MISSING");
+  }
+  return new SignedDataVerifier(
+    rootCertificates(),
+    true,
+    environment,
+    BUNDLE_ID,
+    environment === Environment.PRODUCTION ? configuredAppId : undefined,
+  );
+}
+
+function validatedPayload(payload: JWSTransactionDecodedPayload) {
+  if (
+    !payload.transactionId ||
+    !payload.productId ||
+    !payload.purchaseDate ||
+    !payload.signedDate ||
+    !payload.environment
+  ) {
+    throw new ConvexError("APPLE_TRANSACTION_INCOMPLETE");
+  }
+  if (payload.bundleId !== BUNDLE_ID)
+    throw new ConvexError("APPLE_BUNDLE_MISMATCH");
+  if (!PAID_PRODUCT_IDS.has(payload.productId))
+    throw new ConvexError("APPLE_PRODUCT_UNKNOWN");
+  if (
+    !Object.values(Environment).includes(payload.environment as Environment)
+  ) {
+    throw new ConvexError("APPLE_ENVIRONMENT_INVALID");
+  }
+  return {
+    transactionId: payload.transactionId,
+    originalTransactionId: payload.originalTransactionId,
+    productId: payload.productId,
+    environment: payload.environment as Environment,
+    purchaseDate: payload.purchaseDate,
+    signedDate: payload.signedDate,
+    revocationDate: payload.revocationDate,
+  };
 }
 
 export const validateIosPurchase = action({
-  args: {
-    userId: v.id("users"),
-    receipt: v.string(),
-    productId: v.string(),
+  args: { signedTransaction: v.string() },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    granted: boolean;
+    revoked: boolean;
+    cosmeticId?: string;
+  }> => {
+    const userId = await requireAuthUserId(ctx);
+    const decoded = await verifier(
+      args.signedTransaction,
+    ).verifyAndDecodeTransaction(args.signedTransaction);
+    const transaction = validatedPayload(decoded);
+    return await ctx.runMutation(internal.iapMutations.applyTransaction, {
+      userId,
+      ...transaction,
+    });
   },
-  handler: async (ctx, args): Promise<{ success: true; koraCredited: number }> => {
-    const sharedSecret = process.env.IAP_APPLE_SHARED_SECRET;
-    if (!sharedSecret) {
-      throw new Error("IAP_APPLE_SHARED_SECRET is not configured");
-    }
+});
 
-    const koraAmount = KORA_PACKS[args.productId];
-    if (!koraAmount) {
-      throw new Error(`Unknown product id: ${args.productId}`);
-    }
-
-    const verified = await verifyWithApple(args.receipt, sharedSecret);
-    if (verified.status !== 0) {
-      throw new Error(
-        `Apple receipt validation failed (status ${verified.status})`,
+export const processNotification = internalAction({
+  args: { signedPayload: v.string() },
+  handler: async (ctx, args) => {
+    const decodedNotification = await verifier(
+      args.signedPayload,
+    ).verifyAndDecodeNotification(args.signedPayload);
+    const signedTransaction = decodedNotification.data?.signedTransactionInfo;
+    if (!signedTransaction) return { accepted: true, transaction: false };
+    const decoded =
+      await verifier(signedTransaction).verifyAndDecodeTransaction(
+        signedTransaction,
       );
-    }
-    if (verified.receipt?.bundle_id !== EXPECTED_BUNDLE_ID) {
-      throw new Error("Bundle id mismatch");
-    }
-
-    const purchases =
-      verified.latest_receipt_info ?? verified.receipt?.in_app ?? [];
-    const purchase = purchases.find((p) => p.product_id === args.productId);
-    if (!purchase) {
-      throw new Error("Matching purchase not found in receipt");
-    }
-
-    const credited: number = await ctx.runMutation(
-      internal.iapMutations.creditValidatedPurchase,
-      {
-        userId: args.userId,
-        productId: args.productId,
-        transactionId: purchase.transaction_id,
-        originalTransactionId: purchase.original_transaction_id,
-        koraAmount,
-      },
-    );
-
-    return { success: true, koraCredited: credited };
+    const transaction = validatedPayload(decoded);
+    await ctx.runMutation(internal.iapMutations.applyTransaction, transaction);
+    return { accepted: true, transaction: true };
   },
 });

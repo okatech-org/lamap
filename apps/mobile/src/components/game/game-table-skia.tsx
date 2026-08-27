@@ -1,3 +1,4 @@
+import { PAPER_TEXTURE_SOURCE } from "@/components/game/paper-texture";
 import {
   Rank,
   SUIT_COLORS,
@@ -13,6 +14,7 @@ import {
   Canvas,
   Circle,
   Group,
+  Image as SkImage,
   LinearGradient,
   Path,
   RoundedRect,
@@ -21,11 +23,18 @@ import {
   rect,
   rrect,
   useFont,
+  useImage,
   vec,
   type SkFont,
 } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { LayoutChangeEvent, Platform, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import {
@@ -95,7 +104,9 @@ function computeFan(
   const centerIndex = (total - 1) / 2;
   const edgeMargin = 10;
   const fitSpacing =
-    total > 1 ? (opts.availWidth - opts.cardW - edgeMargin * 2) / (total - 1) : 0;
+    total > 1
+      ? (opts.availWidth - opts.cardW - edgeMargin * 2) / (total - 1)
+      : 0;
 
   if (layout === "fan") {
     const desired = opts.cardW * Math.max(0.5, 0.85 - total * 0.05) * 1.2;
@@ -191,10 +202,18 @@ export function GameTableSkia({
   );
   const handFont =
     ttfHand ??
-    matchFont({ fontFamily: SYSTEM_FONT_FAMILY, fontSize: handFontSize, fontWeight: "700" });
+    matchFont({
+      fontFamily: SYSTEM_FONT_FAMILY,
+      fontSize: handFontSize,
+      fontWeight: "700",
+    });
   const battleFont =
     ttfBattle ??
-    matchFont({ fontFamily: SYSTEM_FONT_FAMILY, fontSize: battleFontSize, fontWeight: "700" });
+    matchFont({
+      fontFamily: SYSTEM_FONT_FAMILY,
+      fontSize: battleFontSize,
+      fontWeight: "700",
+    });
 
   const interactive = isMyTurn && !disabled;
 
@@ -212,7 +231,8 @@ export function GameTableSkia({
   const selectedIndex = useSharedValue(-1);
   const selectionLift = useSharedValue(0);
   const selIdx = useMemo(
-    () => (selectedCard ? myHand.findIndex((c) => c.id === selectedCard.id) : -1),
+    () =>
+      selectedCard ? myHand.findIndex((c) => c.id === selectedCard.id) : -1,
     [selectedCard, myHand],
   );
   useEffect(() => {
@@ -238,7 +258,10 @@ export function GameTableSkia({
     burstX.value = slotX;
     burstY.value = trickWinner === "opponent" ? opponentSlotY : playerSlotY;
     burst.value = 0;
-    burst.value = withTiming(1, { duration: 900, easing: Easing.out(Easing.cubic) });
+    burst.value = withTiming(1, {
+      duration: 900,
+      easing: Easing.out(Easing.cubic),
+    });
     if (trickWinner === "me") triggerBurstHaptic();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trickNonce]);
@@ -389,7 +412,12 @@ export function GameTableSkia({
                 )}
 
                 {/* Winner flash (driven by the trick burst) */}
-                <BurstGlow progress={burst} x={burstX} y={burstY} size={battleCardW} />
+                <BurstGlow
+                  progress={burst}
+                  x={burstX}
+                  y={burstY}
+                  size={battleCardW}
+                />
 
                 {/* Opponent stack (drops from top) */}
                 {opponentStack.map((c, i) => (
@@ -431,7 +459,11 @@ export function GameTableSkia({
                   />
                 )}
 
-                <ParticleBurst progress={burst} originX={burstX} originY={burstY} />
+                <ParticleBurst
+                  progress={burst}
+                  originX={burstX}
+                  originY={burstY}
+                />
               </>
             )}
 
@@ -515,6 +547,7 @@ export function CardFaceSkia({
   const centerSuitSize = cardW * 0.46;
   const padding = cardW * 0.07;
   const titleSize = Math.round(cardW * 0.2);
+  const paperTexture = useImage(PAPER_TEXTURE_SOURCE);
 
   return (
     <Group>
@@ -522,11 +555,22 @@ export function CardFaceSkia({
         <LinearGradient
           start={vec(0, 0)}
           end={vec(cardW, cardH)}
-          colors={["#FAF7F1", "#ECE6DA", "#E2DACB"]}
+          colors={[COLORS.cream, COLORS.cream2, "#CBB99F"]}
         />
       </RoundedRect>
 
       <Group clip={rrect(rect(0, 0, cardW, cardH), radius, radius)}>
+        {paperTexture && (
+          <SkImage
+            image={paperTexture}
+            x={0}
+            y={0}
+            width={cardW}
+            height={cardH}
+            fit="cover"
+            opacity={0.32}
+          />
+        )}
         <RoundedRect x={0} y={0} width={cardW} height={cardH} r={radius}>
           <LinearGradient
             start={vec(0, 0)}
@@ -534,7 +578,7 @@ export function CardFaceSkia({
             colors={[
               "rgba(255,255,255,0)",
               "rgba(255,255,255,0.35)",
-              "rgba(201,168,118,0.22)",
+              "rgba(201,165,95,0.22)",
               "rgba(255,255,255,0)",
             ]}
             positions={[0, 0.35, 0.65, 1]}
@@ -548,7 +592,7 @@ export function CardFaceSkia({
         width={cardW - 8}
         height={cardH - 8}
         r={radius - 2}
-        color="rgba(166,130,88,0.45)"
+        color="rgba(201,165,95,0.45)"
         style="stroke"
         strokeWidth={1.2}
       />
@@ -558,14 +602,25 @@ export function CardFaceSkia({
         width={cardW}
         height={cardH}
         r={radius}
-        color="rgba(20,26,34,0.35)"
+        color="rgba(33,23,18,0.35)"
         style="stroke"
         strokeWidth={1.4}
       />
 
       <Group transform={[{ translateX: padding }, { translateY: padding }]}>
-        <SkText x={0} y={titleSize * 0.9} text={rank} font={font} color={suitColor} />
-        <Group transform={[{ translateY: titleSize + 3 }, { scale: cornerSuitSize / 100 }]}>
+        <SkText
+          x={0}
+          y={titleSize * 0.9}
+          text={rank}
+          font={font}
+          color={suitColor}
+        />
+        <Group
+          transform={[
+            { translateY: titleSize + 3 },
+            { scale: cornerSuitSize / 100 },
+          ]}
+        >
           <Path path={suitPath} color={suitColor} />
           <Path path={suitHi} color={suitHiColor} opacity={0.35} />
         </Group>
@@ -578,8 +633,19 @@ export function CardFaceSkia({
           { rotate: Math.PI },
         ]}
       >
-        <SkText x={0} y={titleSize * 0.9} text={rank} font={font} color={suitColor} />
-        <Group transform={[{ translateY: titleSize + 3 }, { scale: cornerSuitSize / 100 }]}>
+        <SkText
+          x={0}
+          y={titleSize * 0.9}
+          text={rank}
+          font={font}
+          color={suitColor}
+        />
+        <Group
+          transform={[
+            { translateY: titleSize + 3 },
+            { scale: cornerSuitSize / 100 },
+          ]}
+        >
           <Path path={suitPath} color={suitColor} />
           <Path path={suitHi} color={suitHiColor} opacity={0.35} />
         </Group>
@@ -634,7 +700,10 @@ function StackCardSkia({
   useEffect(() => {
     t.value = withDelay(
       20,
-      withTiming(1, { duration: TRAVEL_MS, easing: Easing.out(Easing.poly(4)) }),
+      withTiming(1, {
+        duration: TRAVEL_MS,
+        easing: Easing.out(Easing.poly(4)),
+      }),
     );
     land.value = withDelay(
       20 + TRAVEL_MS - 40,
@@ -664,7 +733,9 @@ function StackCardSkia({
 
   // Expanding impact ring at the landing spot.
   const ringR = useDerivedValue(() => cardW * (0.32 + land.value * 0.78));
-  const ringOpacity = useDerivedValue(() => Math.sin(land.value * Math.PI) * 0.45);
+  const ringOpacity = useDerivedValue(
+    () => Math.sin(land.value * Math.PI) * 0.45,
+  );
 
   return (
     <Group>
@@ -688,7 +759,13 @@ function StackCardSkia({
         >
           <BlurMask blur={8} style="normal" />
         </RoundedRect>
-        <CardFaceSkia cardW={cardW} cardH={cardH} font={font} suit={card.suit} rank={card.rank} />
+        <CardFaceSkia
+          cardW={cardW}
+          cardH={cardH}
+          font={font}
+          suit={card.suit}
+          rank={card.rank}
+        />
       </Group>
     </Group>
   );
@@ -713,7 +790,7 @@ function SlotPlaceholder({
       width={w}
       height={h}
       r={w * 0.1}
-      color="rgba(166,130,88,0.3)"
+      color="rgba(201,165,95,0.3)"
       style="stroke"
       strokeWidth={1.5}
     />
@@ -732,8 +809,8 @@ function BurstGlow({
   size: number;
 }) {
   // Flash that peaks early in the burst then fades.
-  const opacity = useDerivedValue(() =>
-    Math.sin(Math.min(progress.value, 1) * Math.PI) * 0.7,
+  const opacity = useDerivedValue(
+    () => Math.sin(Math.min(progress.value, 1) * Math.PI) * 0.7,
   );
   const r = useDerivedValue(() => size * (0.6 + progress.value * 0.6));
   return (
@@ -793,7 +870,13 @@ function ParticleBurst({
   return (
     <Group>
       {particles.map((p, i) => (
-        <ParticleDot key={i} p={p} progress={progress} originX={originX} originY={originY} />
+        <ParticleDot
+          key={i}
+          p={p}
+          progress={progress}
+          originX={originX}
+          originY={originY}
+        />
       ))}
     </Group>
   );
@@ -819,7 +902,9 @@ function ParticleDot({
       Math.sin(p.angle) * p.speed * progress.value +
       90 * progress.value * progress.value,
   );
-  const r = useDerivedValue(() => Math.max(0, p.size * (1 - progress.value * 0.6)));
+  const r = useDerivedValue(() =>
+    Math.max(0, p.size * (1 - progress.value * 0.6)),
+  );
   const opacity = useDerivedValue(() =>
     progress.value > 0 && progress.value < 1 ? 1 - progress.value : 0,
   );
@@ -938,7 +1023,8 @@ function HandCardSkia({
         { translateY: -cardH / 2 },
       ];
     }
-    const selLift = selectedIndex.value === index ? selectionLift.value * -34 : 0;
+    const selLift =
+      selectedIndex.value === index ? selectionLift.value * -34 : 0;
     const enterOffset = (1 - entrance.value) * 70;
     return [
       { translateX: slot.x },
@@ -958,7 +1044,8 @@ function HandCardSkia({
     return 18;
   }, [layer]);
   const glowColor = useDerivedValue(() => {
-    if (layer === "drag") return dropZoneActive.value > 0.5 ? COLORS.or2 : COLORS.terre2;
+    if (layer === "drag")
+      return dropZoneActive.value > 0.5 ? COLORS.or2 : COLORS.terre2;
     return COLORS.or2;
   }, [layer]);
 
@@ -973,7 +1060,14 @@ function HandCardSkia({
   return (
     <Group transform={transform} opacity={opacity}>
       {/* Drop shadow */}
-      <RoundedRect x={0} y={8} width={cardW} height={cardH} r={radius} color="rgba(0,0,0,0.5)">
+      <RoundedRect
+        x={0}
+        y={8}
+        width={cardW}
+        height={cardH}
+        r={radius}
+        color="rgba(0,0,0,0.5)"
+      >
         <BlurMask blur={12} style="normal" />
       </RoundedRect>
       {/* Glow */}

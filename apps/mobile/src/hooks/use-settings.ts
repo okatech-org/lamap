@@ -4,24 +4,13 @@ import { useEffect, useState } from "react";
 const SETTINGS_KEY = "@lamap:settings";
 
 export type CardLayout = "fan" | "linear" | "compact";
-export type PlayAreaMode = "battle" | "history";
-export type BattleLayout = "vertical" | "horizontal";
-export type TimerDuration = 30 | 60 | 120 | 300;
 
 interface Settings {
   cardLayout: CardLayout;
-  playAreaMode: PlayAreaMode;
-  battleLayout: BattleLayout;
-  timerEnabled: boolean;
-  timerDuration: TimerDuration;
 }
 
 const defaultSettings: Settings = {
   cardLayout: "fan",
-  playAreaMode: "battle",
-  battleLayout: "vertical",
-  timerEnabled: true,
-  timerDuration: 300,
 };
 
 export function useSettings() {
@@ -60,33 +49,9 @@ export function useSettings() {
     updateSettings({ cardLayout: layout });
   };
 
-  const setPlayAreaMode = (mode: PlayAreaMode) => {
-    updateSettings({ playAreaMode: mode });
-  };
-
-  const setBattleLayout = (layout: BattleLayout) => {
-    updateSettings({ battleLayout: layout });
-  };
-
-  const setTimerEnabled = (enabled: boolean) => {
-    updateSettings({ timerEnabled: enabled });
-  };
-
-  const setTimerDuration = (duration: TimerDuration) => {
-    updateSettings({ timerDuration: duration });
-  };
-
   return {
     cardLayout: settings.cardLayout,
-    playAreaMode: settings.playAreaMode,
-    battleLayout: settings.battleLayout,
-    timerEnabled: settings.timerEnabled,
-    timerDuration: settings.timerDuration,
     setCardLayout,
-    setPlayAreaMode,
-    setBattleLayout,
-    setTimerEnabled,
-    setTimerDuration,
     isLoading,
   };
 }

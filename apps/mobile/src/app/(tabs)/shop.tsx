@@ -1,18 +1,15 @@
 import { CardBack } from "@/components/game/card-back";
 import {
-  DeepBg,
-  LamapBalanceChip,
+  AppBackdrop,
+  Avatar,
   LamapButton,
-  LamapTabPillRow,
+  PageTitle,
 } from "@/components/lamap";
-import { COLORS, FONT_WEIGHTS, RADII } from "@/design";
-import { useAuth } from "@/hooks/use-auth";
-import { Ionicons } from "@expo/vector-icons";
+import { FONT_WEIGHTS, useTheme, type Theme } from "@/design";
+import { useIap } from "@/hooks/use-iap";
 import { api } from "@lamap/convex/_generated/api";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { useMutation, useQuery } from "convex/react";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -22,237 +19,211 @@ import {
   Text,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const TABS = [
-  { id: "card_backs" as const, label: "Dos de cartes" },
-  { id: "avatars" as const, label: "Avatars", disabled: true },
-  { id: "effects" as const, label: "Effets", disabled: true },
-];
+type ShopTab = "card_back" | "avatar";
+const CARD_THEMES = {
+  bandi_classic: "red",
+  bleu_royal: "blue",
+  or_sable: "gold",
+  ombre_tribale: "dark",
+} as const;
 
 export default function ShopScreen() {
-  const router = useRouter();
-  const headerHeight = useHeaderHeight();
-  const { userId, convexUser } = useAuth();
-  const [tab, setTab] = useState<"card_backs" | "avatars" | "effects">(
-    "card_backs",
+  const theme = useTheme();
+  const s = styles(theme);
+  const [tab, setTab] = useState<ShopTab>("card_back");
+  const catalog = useQuery(api.cosmetics.listCatalog, {});
+  const equip = useMutation(api.cosmetics.equip);
+  const { products, purchasing, buy } = useIap();
+  const storeProducts = useMemo(
+    () => new Map(products.map((product) => [product.id, product])),
+    [products],
   );
-  const [pendingId, setPendingId] = useState<string | null>(null);
-
-  const user = useQuery(
-    api.users.getCurrentUser,
-    userId ? { clerkUserId: userId } : "skip",
-  );
-
-  const cardBacks = useQuery(
-    api.cosmetics.listCardBacks,
-    convexUser?._id ? { userId: convexUser._id } : "skip",
-  );
-  const ensureDefaults = useMutation(api.cosmetics.ensureDefaults);
-  const purchase = useMutation(api.cosmetics.purchaseCardBack);
-  const setActive = useMutation(api.cosmetics.setActiveCardBack);
-
-  // Lazy-grant defaults on first visit so the shop opens with at least one owned skin.
-  React.useEffect(() => {
-    if (
-      convexUser?._id &&
-      user &&
-      user.cosmeticsGrantedDefaults !== true
-    ) {
-      ensureDefaults({ userId: convexUser._id }).catch(() => {});
-    }
-  }, [convexUser?._id, user, ensureDefaults]);
-
-  if (!user || !cardBacks) {
+  if (!catalog)
     return (
-      <View style={styles.root}>
-        <DeepBg />
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={COLORS.or2} />
-        </View>
+      <View style={s.loading}>
+        <ActivityIndicator color={theme.gold} />
       </View>
     );
-  }
+  const items = catalog.filter((item) => item.type === tab);
 
-  const handleAction = async (
-    skin: (typeof cardBacks)[number],
-  ) => {
-    if (!convexUser?._id) return;
-    if (skin.active) return;
-    setPendingId(skin.id);
+  const act = async (item: (typeof catalog)[number]) => {
+    if (item.active) return;
     try {
-      if (skin.owned) {
-        await setActive({ userId: convexUser._id, cardBackId: skin.id });
-      } else {
-        await purchase({ userId: convexUser._id, cardBackId: skin.id });
-      }
-    } catch (e) {
+      if (item.owned) await equip({ cosmeticId: item.id });
+      else if (item.productId) await buy(item.productId);
+    } catch (error) {
       Alert.alert(
-        "Erreur",
-        e instanceof Error ? e.message : "Action impossible",
+        "Action impossible",
+        error instanceof Error ? error.message : "Réessayez.",
       );
-    } finally {
-      setPendingId(null);
     }
   };
 
   return (
-    <View style={styles.root}>
-      <DeepBg />
-      <ScrollView
-        contentContainerStyle={[
-          styles.scroll,
-          { paddingTop: headerHeight + 16 },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>Boutique</Text>
-          <Pressable onPress={() => router.push("/wallet" as any)}>
-            <LamapBalanceChip amount={user.balance ?? 0} />
-          </Pressable>
-        </View>
-
-        <View style={styles.tabRow}>
-          <LamapTabPillRow
-            options={TABS}
-            selected={tab}
-            onSelect={setTab}
-          />
-        </View>
-
-        {tab !== "card_backs" ? (
-          <View style={styles.empty}>
-            <Ionicons name="time-outline" size={28} color={COLORS.or2} />
-            <Text style={styles.emptyText}>Bientôt disponible.</Text>
+    <View style={s.root}>
+      <AppBackdrop dust={8} />
+      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+        <ScrollView
+          contentContainerStyle={s.scroll}
+          showsVerticalScrollIndicator={false}
+        >
+          <PageTitle eyebrow="COSMÉTIQUES" title="Personnalise ton jeu." />
+          <View style={s.tabs}>
+            <Tab
+              label="Dos de cartes"
+              active={tab === "card_back"}
+              onPress={() => setTab("card_back")}
+              theme={theme}
+            />
+            <Tab
+              label="Avatars"
+              active={tab === "avatar"}
+              onPress={() => setTab("avatar")}
+              theme={theme}
+            />
           </View>
-        ) : (
-          <View style={styles.grid}>
-            {cardBacks.map((skin) => {
-              const isPending = pendingId === skin.id;
-              const ctaLabel = skin.active
-                ? "Équipé"
-                : skin.owned
-                  ? "Équiper"
-                  : `${skin.price.toLocaleString("fr-FR")} K`;
-              const ctaVariant: "primary" | "ghost" =
-                skin.active || skin.owned ? "ghost" : "primary";
-              const canAfford = (user.balance ?? 0) >= skin.price;
+          <Text style={s.storeNote}>
+            Les noms et tarifs payants sont fournis par l’App Store.
+          </Text>
+          <View style={s.grid}>
+            {items.map((item) => {
+              const product = item.productId
+                ? storeProducts.get(item.productId)
+                : null;
               const disabled =
-                skin.active ||
-                isPending ||
-                (!skin.owned && !canAfford);
+                item.active ||
+                purchasing === item.productId ||
+                (!item.owned && !product);
+              const title = item.active
+                ? "Équipé"
+                : item.owned
+                  ? "Équiper"
+                  : (product?.displayPrice ?? "Indisponible");
               return (
-                <View key={skin.id} style={styles.tile}>
-                  {skin.rare ? (
-                    <View style={styles.rareChip}>
-                      <Text style={styles.rareText}>RARE</Text>
-                    </View>
-                  ) : null}
-                  <View style={styles.preview}>
-                    <CardBack size="medium" theme={skin.theme} />
+                <View key={item.id} style={s.tile}>
+                  <View style={s.preview}>
+                    {item.type === "card_back" ? (
+                      <CardBack
+                        size="medium"
+                        theme={
+                          CARD_THEMES[item.id as keyof typeof CARD_THEMES] ??
+                          "red"
+                        }
+                      />
+                    ) : (
+                      <Avatar
+                        initials={item.name.slice(0, 2).toUpperCase()}
+                        avatarId={item.id}
+                        size={82}
+                      />
+                    )}
                   </View>
-                  <Text style={styles.tileName} numberOfLines={1}>
-                    {skin.name}
+                  <Text style={s.name} numberOfLines={2}>
+                    {product?.displayName || product?.title || item.name}
                   </Text>
                   <LamapButton
-                    title={isPending ? "…" : ctaLabel}
-                    variant={ctaVariant}
+                    title={purchasing === item.productId ? "Achat…" : title}
+                    variant={item.owned ? "dark" : "gold"}
                     disabled={disabled}
-                    onPress={() => handleAction(skin)}
-                    style={styles.ctaBtn}
+                    onPress={() => act(item)}
+                    style={s.button}
                   />
-                  {!skin.owned && !canAfford ? (
-                    <Text style={styles.afford}>
-                      Solde insuffisant
-                    </Text>
-                  ) : null}
                 </View>
               );
             })}
           </View>
-        )}
-
-        <View style={{ height: 120 }} />
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.bg },
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  scroll: { paddingHorizontal: 20 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  title: {
-    fontFamily: FONT_WEIGHTS.display.bold,
-    fontSize: 24,
-    color: COLORS.cream,
-    letterSpacing: -0.4,
-  },
-  tabRow: { marginBottom: 18 },
-  empty: { alignItems: "center", gap: 10, paddingVertical: 80 },
-  emptyText: {
-    fontFamily: FONT_WEIGHTS.body.regular,
-    fontSize: 14,
-    color: "rgba(245, 242, 237, 0.55)",
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  tile: {
-    flexBasis: "48%",
-    flexGrow: 1,
-    padding: 14,
-    borderRadius: RADII.lg,
-    backgroundColor: "rgba(46, 61, 77, 0.5)",
-    borderWidth: 1,
-    borderColor: COLORS.hairline,
-    position: "relative",
-    alignItems: "center",
-  },
-  rareChip: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 999,
-    backgroundColor: "rgba(157, 91, 210, 0.25)",
-    borderWidth: 1,
-    borderColor: "rgba(157, 91, 210, 0.5)",
-  },
-  rareText: {
-    fontFamily: FONT_WEIGHTS.mono.semibold,
-    fontSize: 9,
-    letterSpacing: 1,
-    color: "#C898E5",
-  },
-  preview: {
-    paddingVertical: 12,
-  },
-  tileName: {
-    fontFamily: FONT_WEIGHTS.display.bold,
-    fontSize: 13,
-    color: COLORS.cream,
-    marginTop: 4,
-    textAlign: "center",
-  },
-  ctaBtn: {
-    marginTop: 10,
-    minHeight: 40,
-    alignSelf: "stretch",
-  },
-  afford: {
-    fontFamily: FONT_WEIGHTS.body.regular,
-    fontSize: 11,
-    color: COLORS.terre2,
-    marginTop: 4,
-  },
-});
+function Tab({
+  label,
+  active,
+  onPress,
+  theme,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+  theme: Theme;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles(theme).tab,
+        {
+          backgroundColor: active ? theme.goldA(0.16) : theme.surfA(0.55),
+          borderColor: active ? theme.goldA(0.5) : theme.goldA(0.12),
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles(theme).tabText,
+          { color: active ? theme.goldBright : theme.creamA(0.55) },
+        ]}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+function styles(theme: Theme) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: theme.abyss },
+    loading: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.abyss,
+    },
+    scroll: { paddingBottom: 120 },
+    tabs: { flexDirection: "row", gap: 8, paddingHorizontal: 20 },
+    tab: {
+      paddingHorizontal: 15,
+      paddingVertical: 9,
+      borderRadius: 999,
+      borderWidth: 1,
+    },
+    tabText: { fontFamily: FONT_WEIGHTS.display.semibold, fontSize: 12 },
+    storeNote: {
+      paddingHorizontal: 20,
+      marginTop: 14,
+      marginBottom: 18,
+      color: theme.creamA(0.46),
+      fontSize: 11,
+    },
+    grid: {
+      paddingHorizontal: 20,
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 12,
+    },
+    tile: {
+      flexBasis: "47%",
+      flexGrow: 1,
+      alignItems: "center",
+      padding: 14,
+      borderRadius: 17,
+      backgroundColor: theme.surface,
+      borderWidth: 1,
+      borderColor: theme.goldA(0.12),
+    },
+    preview: { height: 105, alignItems: "center", justifyContent: "center" },
+    name: {
+      minHeight: 38,
+      textAlign: "center",
+      fontFamily: FONT_WEIGHTS.display.bold,
+      fontSize: 13,
+      lineHeight: 17,
+      color: theme.cream,
+    },
+    button: { alignSelf: "stretch", marginTop: 10, minHeight: 40 },
+  });
+}

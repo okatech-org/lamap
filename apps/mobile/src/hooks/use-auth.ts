@@ -1,31 +1,26 @@
-import { useAuth as useClerkAuth, useUser } from "@clerk/clerk-expo";
+import { useConvexAuth } from "@convex-dev/auth/react";
 import { api } from "@lamap/convex/_generated/api";
 import { useQuery } from "convex/react";
 
 export function useAuth() {
-  const { userId, isLoaded, isSignedIn } = useClerkAuth();
-  const { user: clerkUser } = useUser();
-
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const convexUser = useQuery(
     api.users.getCurrentUser,
-    userId && isLoaded && isSignedIn ? { clerkUserId: userId } : "skip"
+    isAuthenticated ? {} : "skip",
   );
-
+  const isConvexUserLoaded = !isAuthenticated || convexUser !== undefined;
   const needsOnboarding =
-    convexUser === null ? undefined
-    : convexUser !== undefined ? !convexUser.onboardingCompleted
-    : undefined;
-
-  const isConvexUserLoaded = !isSignedIn || convexUser !== undefined;
+    convexUser === undefined
+      ? undefined
+      : convexUser?.onboardingCompleted !== true;
 
   return {
-    userId,
-    isLoaded,
-    isSignedIn,
+    userId: convexUser?._id ?? null,
+    isLoaded: !isLoading,
+    isSignedIn: isAuthenticated,
+    isConvexUserLoaded,
+    needsOnboarding,
     user: convexUser,
     convexUser,
-    clerkUser,
-    needsOnboarding,
-    isConvexUserLoaded,
   };
 }

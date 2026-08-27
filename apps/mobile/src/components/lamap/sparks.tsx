@@ -14,12 +14,7 @@ interface SparksProps {
   trigger?: number;
 }
 
-const DEFAULT_PALETTE = [
-  "#C9A876",
-  "#E8C879",
-  "#B4443E",
-  "#F5F2ED",
-] as const;
+const DEFAULT_PALETTE = ["#C9A55F", "#E3C77E", "#7D1E32", "#F1E8D6"] as const;
 
 interface Item {
   cx: number;

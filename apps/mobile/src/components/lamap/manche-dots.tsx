@@ -25,8 +25,8 @@ export function MancheDots({
           : isCurrent
             ? COLORS.terre
             : isPast
-              ? "rgba(245,242,237,0.5)"
-              : "rgba(245,242,237,0.18)";
+              ? "rgba(241,232,214,0.5)"
+              : "rgba(241,232,214,0.18)";
         return (
           <View
             key={i}
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: FONT_WEIGHTS.mono.semibold,
     fontSize: 10,
-    color: "rgba(245, 242, 237, 0.55)",
+    color: "rgba(241, 232, 214, 0.55)",
     letterSpacing: 1.8,
     marginRight: 6,
   },
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   dotGlow: {
-    shadowColor: "#B4443E",
+    shadowColor: COLORS.terre,
     shadowOpacity: 0.6,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 0 },

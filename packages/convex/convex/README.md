@@ -1,73 +1,20 @@
-# Welcome to your Convex functions directory!
+# Backend Lamap
 
-Write your Convex functions here.
-See https://docs.convex.dev/functions for more.
+Ce dossier contient le backend autoritaire de Lamap : Convex Auth, parties, Elo, matchmaking, catalogue, validation StoreKit et modération minimale.
 
-A query function that takes two arguments looks like:
+Principes obligatoires :
 
-```ts
-import { query } from "./_generated/server";
-import { v } from "convex/values";
+- toute opération du joueur courant utilise `requireAuthUserId`, fondé sur `getAuthUserId` ;
+- une action de partie vérifie toujours que la session appartient à la partie ;
+- le résultat Elo est écrit avec les anciens points, les nouveaux points, les deltas et sa date d’application ;
+- une transaction StoreKit est vérifiée avant l’octroi du droit cosmétique et ne peut pas être rejouée pour un autre compte ;
+- les parties d’entraînement et les fins techniques ne changent jamais le classement.
 
-export const myQueryFunction = query({
-  args: {
-    first: v.number(),
-    second: v.string(),
-  },
+Commandes :
 
-  handler: async (ctx, args) => {
-    const documents = await ctx.db.query("tablename").collect();
-
-    console.log(args.first, args.second);
-
-    return documents;
-  },
-});
+```bash
+bun run typecheck
+bun run test
+bun run codegen
+bun run deploy
 ```
-
-Using this query function in a React component looks like:
-
-```ts
-const data = useQuery(api.functions.myQueryFunction, {
-  first: 10,
-  second: "hello",
-});
-```
-
-A mutation function looks like:
-
-```ts
-import { mutation } from "./_generated/server";
-import { v } from "convex/values";
-
-export const myMutationFunction = mutation({
-  args: {
-    first: v.string(),
-    second: v.string(),
-  },
-
-  handler: async (ctx, args) => {
-    const message = { body: args.first, author: args.second };
-    const id = await ctx.db.insert("messages", message);
-
-    return await ctx.db.get(id);
-  },
-});
-```
-
-Using this mutation function in a React component looks like:
-
-```ts
-const mutation = useMutation(api.functions.myMutationFunction);
-function handleButtonPress() {
-  mutation({ first: "Hello!", second: "me" });
-
-  mutation({ first: "Hello!", second: "me" }).then((result) =>
-    console.log(result)
-  );
-}
-```
-
-Use the Convex CLI to push your functions to a deployment. See everything
-the Convex CLI can do by running `npx convex -h` in your project root
-directory. To learn more, launch the docs with `npx convex docs`.

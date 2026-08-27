@@ -18,10 +18,10 @@ import Animated, {
 } from "react-native-reanimated";
 
 type Suit = "hearts" | "diamonds" | "clubs" | "spades";
-type Rank = "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10";
+type Rank = "3" | "4" | "5" | "6" | "7" | "8" | "9";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
-const RANKS: Rank[] = ["3", "4", "5", "6", "7", "8", "9", "10"];
+const RANKS: Rank[] = ["3", "4", "5", "6", "7", "8", "9"];
 
 const CARD_WIDTH = 140;
 const CARD_HEIGHT = CARD_WIDTH / (5 / 7);

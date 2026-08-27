@@ -8,41 +8,41 @@
 import type { TextStyle, ViewStyle } from "react-native";
 
 export const COLORS = {
-  // Brand — terre (red earth)
-  terre: "#B4443E",
-  terre2: "#D4635D",
-  terreDeep: "#8E2F2A",
+  // Brand — bordeaux (shared with the public landing page)
+  terre: "#5B1525",
+  terre2: "#7D1E32",
+  terreDeep: "#3A0D18",
 
   // Brand — or (gold)
-  or: "#A68258",
-  or2: "#C9A876",
-  orDeep: "#6E5536",
+  or: "#C9A55F",
+  or2: "#E3C77E",
+  orDeep: "#8B6A31",
 
-  // Brand — nuit (night blue)
-  nuit: "#465D74",
-  nuit2: "#5A7A96",
-  nuitDeep: "#2E3D4D",
-  nuitInk: "#1B2733",
+  // Brand — nuit bordeaux (legacy names kept to avoid changing interfaces)
+  nuit: "#3A0D18",
+  nuit2: "#5B1525",
+  nuitDeep: "#24090F",
+  nuitInk: "#16070B",
 
   // Neutrals
-  cream: "#F5F2ED",
-  cream2: "#ECE6DA",
-  ink: "#141A22",
-  ink2: "#1A1A1A",
+  cream: "#F1E8D6",
+  cream2: "#DED0B8",
+  ink: "#211712",
+  ink2: "#211712",
 
   // Surfaces
-  bg: "#0F1620",
-  bg2: "#182230",
-  surface: "#1E2A3A",
-  surface2: "#243245",
+  bg: "#16070B",
+  bg2: "#24090F",
+  surface: "#3A0D18",
+  surface2: "#5B1525",
 
   // Hairlines (gold tinted)
-  hairline: "rgba(166, 130, 88, 0.18)",
-  hairlineStrong: "rgba(166, 130, 88, 0.42)",
+  hairline: "rgba(201, 165, 95, 0.18)",
+  hairlineStrong: "rgba(201, 165, 95, 0.42)",
 
   // Suit colors on card faces
-  suitRed: "#B4443E",
-  suitBlack: "#1A1A1A",
+  suitRed: "#7D1E32",
+  suitBlack: "#211712",
 } as const;
 
 export const FONT = {
@@ -106,14 +106,14 @@ export const SHADOWS: Record<
     elevation: 14,
   },
   glowOr: {
-    shadowColor: "#C9A876",
+    shadowColor: "#E3C77E",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.7,
     shadowRadius: 24,
     elevation: 12,
   },
   glowTerre: {
-    shadowColor: "#D4635D",
+    shadowColor: "#7D1E32",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
     shadowRadius: 24,
@@ -141,12 +141,42 @@ export type RankTier = {
 };
 
 export const RANKS: readonly RankTier[] = [
-  { name: "Apprenti",    short: "A", color: "#8B95A3", glow: "rgba(139,149,163,0.5)" },
-  { name: "Initié",      short: "I", color: "#C9A876", glow: "rgba(201,168,118,0.6)" },
-  { name: "Tacticien",   short: "T", color: "#5AA3C9", glow: "rgba(90,163,201,0.6)" },
-  { name: "Maître",      short: "M", color: "#C95048", glow: "rgba(201,80,72,0.65)" },
-  { name: "Grand Bandi", short: "G", color: "#E8C879", glow: "rgba(232,200,121,0.7)" },
-  { name: "Légende",     short: "L", color: "#9D5BD2", glow: "rgba(157,91,210,0.7)" },
+  {
+    name: "Apprenti",
+    short: "A",
+    color: "#8B95A3",
+    glow: "rgba(139,149,163,0.5)",
+  },
+  {
+    name: "Initié",
+    short: "I",
+    color: "#E3C77E",
+    glow: "rgba(227,199,126,0.6)",
+  },
+  {
+    name: "Tacticien",
+    short: "T",
+    color: "#5AA3C9",
+    glow: "rgba(90,163,201,0.6)",
+  },
+  {
+    name: "Maître",
+    short: "M",
+    color: "#7D1E32",
+    glow: "rgba(125,30,50,0.65)",
+  },
+  {
+    name: "Grand Bandi",
+    short: "G",
+    color: "#E8C879",
+    glow: "rgba(232,200,121,0.7)",
+  },
+  {
+    name: "Légende",
+    short: "L",
+    color: "#9D5BD2",
+    glow: "rgba(157,91,210,0.7)",
+  },
 ] as const;
 
 /**

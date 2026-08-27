@@ -4,12 +4,12 @@ import { useColors } from "@/hooks/use-colors";
 import { getButtonShadow, getButtonShadowHover } from "@/utils/shadows";
 import React, { useState } from "react";
 import {
-    ActivityIndicator,
-    Text,
-    TextStyle,
-    TouchableOpacity,
-    View,
-    ViewStyle,
+  ActivityIndicator,
+  Text,
+  TextStyle,
+  TouchableOpacity,
+  View,
+  ViewStyle,
 } from "react-native";
 
 interface ButtonProps {
@@ -46,9 +46,9 @@ const BUTTON_SIZES = {
     fontSize: 16,
   },
   lg: {
-    paddingVertical: 16,  // Reference: Welcome screen buttons
+    paddingVertical: 16, // Reference: Welcome screen buttons
     paddingHorizontal: 24,
-    minHeight: 56,        // Reference: 56px height
+    minHeight: 56, // Reference: 56px height
     fontSize: 16,
   },
 };
@@ -75,25 +75,25 @@ export function Button({
     const baseStyle: ViewStyle = {
       paddingVertical: BUTTON_SIZES[size].paddingVertical,
       paddingHorizontal: BUTTON_SIZES[size].paddingHorizontal,
-      borderRadius: Spacing.radius.pill,  // Pill-shaped (999)
+      borderRadius: Spacing.radius.pill, // Pill-shaped (999)
       alignItems: "center",
       justifyContent: "center",
       minHeight: BUTTON_SIZES[size].minHeight,
-      ...typography.button,  // Use button typography
+      ...typography.button, // Use button typography
       ...(shouldHaveShadow ? getButtonShadow() : {}),
     };
 
     const variantStyles: Record<string, ViewStyle> = {
       primary: {
-        backgroundColor: '#E86C5D',  // Red coral (reference: Facebook button)
+        backgroundColor: colors.primary,
       },
       secondary: {
-        backgroundColor: '#FFFFFF',  // White (reference: Google button)
+        backgroundColor: colors.foreground,
       },
       outline: {
         backgroundColor: "transparent",
-        borderWidth: 2,              // Thicker border
-        borderColor: '#E86C5D',      // Red coral border
+        borderWidth: 2, // Thicker border
+        borderColor: colors.secondary,
       },
       ghost: {
         backgroundColor: "transparent",
@@ -102,7 +102,7 @@ export function Button({
         backgroundColor: colors.destructive,
       },
       oauth: {
-        backgroundColor: "#FFFFFF",
+        backgroundColor: colors.foreground,
       },
     };
 
@@ -116,18 +116,18 @@ export function Button({
 
   const getTextStyles = (): TextStyle[] => {
     const baseStyle: TextStyle = {
-      ...typography.button,  // Use button typography
+      ...typography.button, // Use button typography
     };
 
     const variantTextStyles: Record<string, TextStyle> = {
       primary: {
-        color: '#FFFFFF',  // White text on red button
+        color: colors.primaryForeground,
       },
       secondary: {
-        color: '#1C2A3A',  // Dark text on white button
+        color: "#211712",
       },
       outline: {
-        color: '#E86C5D',  // Red text for outline button
+        color: colors.secondary,
       },
       ghost: {
         color: colors.foreground,
@@ -136,7 +136,7 @@ export function Button({
         color: colors.destructiveForeground,
       },
       oauth: {
-        color: "#1A1A1A",
+        color: "#211712",
       },
     };
 
@@ -149,16 +149,16 @@ export function Button({
 
   const buttonStyle = [
     ...getButtonStyles(),
-    ...(Array.isArray(style) ? style
-    : style ? [style]
-    : []),
+    ...(Array.isArray(style) ? style : style ? [style] : []),
   ];
 
   const textStyle = [
     ...getTextStyles(),
-    ...(Array.isArray(customTextStyle) ? customTextStyle
-    : customTextStyle ? [customTextStyle]
-    : []),
+    ...(Array.isArray(customTextStyle)
+      ? customTextStyle
+      : customTextStyle
+        ? [customTextStyle]
+        : []),
   ];
 
   return (
@@ -173,23 +173,22 @@ export function Button({
       accessibilityHint={accessibilityHint}
       accessibilityRole="button"
     >
-      {loading ?
+      {loading ? (
         <ActivityIndicator
           color={
-            (
-              variant === "primary" ||
-              variant === "destructive" ||
-              variant === "secondary"
-            ) ?
-              colors.primaryForeground
-            : colors.primary
+            variant === "primary" ||
+            variant === "destructive" ||
+            variant === "secondary"
+              ? colors.primaryForeground
+              : colors.primary
           }
         />
-      : <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+      ) : (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           {icon}
           <Text style={textStyle}>{title}</Text>
         </View>
-      }
+      )}
     </TouchableOpacity>
   );
 }

@@ -1,158 +1,105 @@
-import { v } from "convex/values";
-import { Id } from "./_generated/dataModel";
-import { mutation, query, QueryCtx } from "./_generated/server";
+import { ConvexError, v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
+import type { QueryCtx } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
+import { requireAuthUserId } from "./authHelpers";
 
 const reasonValidator = v.union(
-  v.literal("spam"),
+  v.literal("inappropriate_username"),
   v.literal("harassment"),
-  v.literal("sexual"),
-  v.literal("other")
+  v.literal("cheating"),
+  v.literal("other"),
 );
 
-const targetTypeValidator = v.union(
-  v.literal("message"),
-  v.literal("user")
-);
-
-export const reportContent = mutation({
+export const reportUser = mutation({
   args: {
-    reporterId: v.id("users"),
-    targetType: targetTypeValidator,
-    targetId: v.string(),
+    targetUserId: v.id("users"),
     reason: reasonValidator,
     note: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const reporter = await ctx.db.get(args.reporterId);
-    if (!reporter) {
-      throw new Error("Reporter not found");
-    }
-
+    const reporterId = await requireAuthUserId(ctx);
+    if (reporterId === args.targetUserId)
+      throw new ConvexError("CANNOT_REPORT_SELF");
+    if (!(await ctx.db.get(args.targetUserId)))
+      throw new ConvexError("USER_NOT_FOUND");
     const reportId = await ctx.db.insert("reports", {
-      reporterId: args.reporterId,
-      targetType: args.targetType,
-      targetId: args.targetId,
+      reporterId,
+      targetUserId: args.targetUserId,
       reason: args.reason,
-      note: args.note,
+      note: args.note?.trim().slice(0, 500) || undefined,
       status: "open",
       createdAt: Date.now(),
     });
-
-    return { success: true, reportId };
+    return { reportId };
   },
 });
 
 export const blockUser = mutation({
-  args: {
-    blockerId: v.id("users"),
-    blockedId: v.id("users"),
-  },
+  args: { blockedId: v.id("users") },
   handler: async (ctx, args) => {
-    if (args.blockerId === args.blockedId) {
-      throw new Error("Cannot block yourself");
-    }
-
+    const blockerId = await requireAuthUserId(ctx);
+    if (blockerId === args.blockedId)
+      throw new ConvexError("CANNOT_BLOCK_SELF");
     const existing = await ctx.db
       .query("blocks")
       .withIndex("by_pair", (q) =>
-        q.eq("blockerId", args.blockerId).eq("blockedId", args.blockedId)
+        q.eq("blockerId", blockerId).eq("blockedId", args.blockedId),
       )
       .first();
-
-    if (existing) {
-      return { success: true, blockId: existing._id, alreadyBlocked: true };
-    }
-
-    const blockId = await ctx.db.insert("blocks", {
-      blockerId: args.blockerId,
-      blockedId: args.blockedId,
-      createdAt: Date.now(),
-    });
-
-    return { success: true, blockId, alreadyBlocked: false };
+    if (existing) return { blockId: existing._id };
+    return {
+      blockId: await ctx.db.insert("blocks", {
+        blockerId,
+        blockedId: args.blockedId,
+        createdAt: Date.now(),
+      }),
+    };
   },
 });
 
 export const unblockUser = mutation({
-  args: {
-    blockerId: v.id("users"),
-    blockedId: v.id("users"),
-  },
+  args: { blockedId: v.id("users") },
   handler: async (ctx, args) => {
-    const existing = await ctx.db
+    const blockerId = await requireAuthUserId(ctx);
+    const block = await ctx.db
       .query("blocks")
       .withIndex("by_pair", (q) =>
-        q.eq("blockerId", args.blockerId).eq("blockedId", args.blockedId)
+        q.eq("blockerId", blockerId).eq("blockedId", args.blockedId),
       )
       .first();
-
-    if (existing) {
-      await ctx.db.delete(existing._id);
-    }
-
+    if (block) await ctx.db.delete(block._id);
     return { success: true };
   },
 });
 
 export const listBlockedUsers = query({
-  args: {
-    userId: v.id("users"),
-  },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
+    const blockerId = await requireAuthUserId(ctx);
     const blocks = await ctx.db
       .query("blocks")
-      .withIndex("by_blocker", (q) => q.eq("blockerId", args.userId))
+      .withIndex("by_blocker", (q) => q.eq("blockerId", blockerId))
       .collect();
-
-    const users = await Promise.all(
-      blocks.map(async (block) => {
-        const user = await ctx.db.get(block.blockedId);
-        if (!user) return null;
-        return {
-          _id: user._id,
-          username: user.username,
-          avatarUrl: user.avatarUrl,
-          blockedAt: block.createdAt,
-        };
-      })
-    );
-
-    return users.filter((u): u is NonNullable<typeof u> => u !== null);
+    return (
+      await Promise.all(
+        blocks.map(async (block) => {
+          const user = await ctx.db.get(block.blockedId);
+          return user?.username
+            ? {
+                userId: user._id,
+                username: user.username,
+                avatarId: user.activeAvatarId ?? "initials",
+                blockedAt: block.createdAt,
+              }
+            : null;
+        }),
+      )
+    ).filter((user) => user !== null);
   },
 });
 
-export const isBlocked = query({
-  args: {
-    userA: v.id("users"),
-    userB: v.id("users"),
-  },
-  handler: async (ctx, args) => {
-    const aBlockedB = await ctx.db
-      .query("blocks")
-      .withIndex("by_pair", (q) =>
-        q.eq("blockerId", args.userA).eq("blockedId", args.userB)
-      )
-      .first();
-
-    const bBlockedA = await ctx.db
-      .query("blocks")
-      .withIndex("by_pair", (q) =>
-        q.eq("blockerId", args.userB).eq("blockedId", args.userA)
-      )
-      .first();
-
-    return {
-      aBlockedB: !!aBlockedB,
-      bBlockedA: !!bBlockedA,
-      anyBlock: !!aBlockedB || !!bBlockedA,
-    };
-  },
-});
-
-export async function getBlockedIdsByUser(
-  ctx: QueryCtx,
-  userId: Id<"users">
-): Promise<Set<string>> {
+export async function getBlockedIdsByUser(ctx: QueryCtx, userId: Id<"users">) {
   const outgoing = await ctx.db
     .query("blocks")
     .withIndex("by_blocker", (q) => q.eq("blockerId", userId))
@@ -161,9 +108,8 @@ export async function getBlockedIdsByUser(
     .query("blocks")
     .withIndex("by_blocked", (q) => q.eq("blockedId", userId))
     .collect();
-
-  const ids = new Set<string>();
-  for (const b of outgoing) ids.add(b.blockedId);
-  for (const b of incoming) ids.add(b.blockerId);
-  return ids;
+  return new Set<Id<"users">>([
+    ...outgoing.map((block) => block.blockedId),
+    ...incoming.map((block) => block.blockerId),
+  ]);
 }

@@ -1,18 +1,10 @@
-import {
-  Avatar,
-  DeepBg,
-  LamapSectionLabel,
-  LamapTabPillRow,
-} from "@/components/lamap";
-import { COLORS, FONT_WEIGHTS, prToDesignRank, RADII } from "@/design";
-import { useAuth } from "@/hooks/use-auth";
-import { Ionicons } from "@expo/vector-icons";
+import { AppBackdrop, Avatar, PageTitle } from "@/components/lamap";
+import { FONT_WEIGHTS, useTheme, type Theme } from "@/design";
 import { api } from "@lamap/convex/_generated/api";
-import { useHeaderHeight } from "@react-navigation/elements";
-import { useQuery } from "convex/react";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import type { Id } from "@lamap/convex/_generated/dataModel";
+import { useMutation, useQuery } from "convex/react";
 import {
+  Alert,
   ActivityIndicator,
   Pressable,
   ScrollView,
@@ -20,325 +12,192 @@ import {
   Text,
   View,
 } from "react-native";
-
-const FILTERS = [
-  { id: "global" as const, label: "Mondial" },
-  { id: "country" as const, label: "Cameroun", disabled: true },
-  { id: "friends" as const, label: "Amis", disabled: true },
-];
-
-const PODIUM_COLORS = ["#E8C879", "#C0C0C0", "#C9722F"];
-const PODIUM_HEIGHTS = [165, 130, 110];
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LeaderboardScreen() {
-  const router = useRouter();
-  const headerHeight = useHeaderHeight();
-  const { convexUser } = useAuth();
-  const [filter, setFilter] = useState<"global" | "country" | "friends">(
-    "global",
-  );
-
-  const board = useQuery(api.leaderboard.getGlobalLeaderboard, { limit: 100 });
-
-  if (!board) {
+  const theme = useTheme();
+  const s = styles(theme);
+  const result = useQuery(api.ranking.getGlobalLeaderboard, { limit: 100 });
+  const report = useMutation(api.moderation.reportUser);
+  const block = useMutation(api.moderation.blockUser);
+  if (!result) {
     return (
-      <View style={styles.root}>
-        <DeepBg />
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={COLORS.or2} />
-        </View>
+      <View style={s.loading}>
+        <ActivityIndicator color={theme.gold} />
       </View>
     );
   }
 
-  const top3 = board.slice(0, 3);
-  const rest = board.slice(3, 30);
-  const myEntry = convexUser?._id
-    ? board.find((p) => p.userId === convexUser._id)
-    : null;
+  const moderate = (
+    userId: Id<"users">,
+    username: string,
+    isCurrentUser: boolean,
+  ) => {
+    if (isCurrentUser) return;
+    Alert.alert(username, "Que souhaitez-vous faire ?", [
+      { text: "Annuler", style: "cancel" },
+      {
+        text: "Signaler le pseudo",
+        onPress: () =>
+          void report({
+            targetUserId: userId,
+            reason: "inappropriate_username",
+          }).then(() => Alert.alert("Signalement envoyé")),
+      },
+      {
+        text: "Bloquer",
+        style: "destructive",
+        onPress: () =>
+          void block({ blockedId: userId }).then(() =>
+            Alert.alert("Joueur bloqué"),
+          ),
+      },
+    ]);
+  };
 
   return (
-    <View style={styles.root}>
-      <DeepBg />
-      <ScrollView
-        contentContainerStyle={[
-          styles.scroll,
-          { paddingTop: headerHeight + 16 },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.header}>
-          <LamapSectionLabel>Classement</LamapSectionLabel>
-          <Text style={styles.title}>Le tableau d&apos;honneur</Text>
-          <Pressable
-            onPress={() => router.push("/leaderboard/ranks" as any)}
-          >
-            <Text style={styles.linkRight}>Voir l&apos;échelle des rangs →</Text>
-          </Pressable>
-        </View>
-
-        <View style={styles.filterRow}>
-          <LamapTabPillRow
-            options={FILTERS}
-            selected={filter}
-            onSelect={setFilter}
+    <View style={s.root}>
+      <AppBackdrop dust={8} />
+      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+        <ScrollView
+          contentContainerStyle={s.scroll}
+          showsVerticalScrollIndicator={false}
+        >
+          <PageTitle
+            eyebrow="CLASSEMENT MONDIAL"
+            title="Les meilleurs joueurs."
           />
-        </View>
-
-        {filter !== "global" ? (
-          <View style={styles.empty}>
-            <Ionicons name="time-outline" size={28} color={COLORS.or2} />
-            <Text style={styles.emptyText}>Bientôt disponible.</Text>
-          </View>
-        ) : (
-          <>
-            {/* Podium */}
-            {top3.length > 0 ? (
-              <View style={styles.podium}>
-                {[
-                  top3[1] ?? null,
-                  top3[0] ?? null,
-                  top3[2] ?? null,
-                ].map((entry, i) => {
-                  if (!entry) {
-                    return <View key={`empty-${i}`} style={styles.podiumCol} />;
-                  }
-                  const rank = i === 0 ? 2 : i === 1 ? 1 : 3;
-                  const color = PODIUM_COLORS[rank - 1];
-                  const height = PODIUM_HEIGHTS[rank - 1];
-                  return (
-                    <Pressable
-                      key={entry.userId}
-                      style={styles.podiumCol}
-                      onPress={() => router.push(`/user/${entry.userId}`)}
-                    >
-                      <Avatar
-                        initials={initialsOf(entry.username)}
-                        size={48}
-                      />
-                      <Text style={styles.podiumName} numberOfLines={1}>
-                        {entry.username}
-                      </Text>
-                      <Text style={[styles.podiumPr, { color }]}>
-                        {entry.pr} PR
-                      </Text>
-                      <View
-                        style={[
-                          styles.podiumBar,
-                          {
-                            height,
-                            borderColor: color + "80",
-                            backgroundColor: color + "30",
-                            shadowColor: rank === 1 ? color : undefined,
-                            shadowOpacity: rank === 1 ? 0.5 : 0,
-                            shadowRadius: rank === 1 ? 18 : 0,
-                          },
-                        ]}
-                      >
-                        <Text style={[styles.podiumRank, { color }]}>
-                          {rank}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            ) : null}
-
-            {/* List */}
-            <View style={styles.list}>
-              {rest.map((entry) => {
-                const tier = prToDesignRank(entry.pr);
-                return (
-                  <Pressable
-                    key={entry.userId}
-                    style={styles.row}
-                    onPress={() => router.push(`/user/${entry.userId}`)}
-                  >
-                    <Text style={styles.rowRank}>{entry.rank}</Text>
-                    <Avatar
-                      initials={initialsOf(entry.username)}
-                      size={32}
-                    />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.rowName}>{entry.username}</Text>
-                      <Text style={styles.rowTier}>{tier.name}</Text>
-                    </View>
-                    <Text style={styles.rowPr}>{entry.pr}</Text>
-                  </Pressable>
-                );
-              })}
+          <Text style={s.hint}>
+            Maintenez un joueur pour le signaler ou le bloquer.
+          </Text>
+          {result.page.length === 0 ? (
+            <View style={s.empty}>
+              <Text style={s.emptyTitle}>Le classement est encore vide.</Text>
+              <Text style={s.emptyBody}>
+                Il apparaîtra après les premières parties classées.
+              </Text>
             </View>
-
-            {/* You */}
-            {myEntry ? (
-              <View style={styles.youRow}>
-                <Text style={styles.youRank}>{myEntry.rank}</Text>
-                <Avatar
-                  initials={initialsOf(myEntry.username)}
-                  size={32}
-                />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.youName}>Toi</Text>
-                  <Text style={styles.youTier}>
-                    {prToDesignRank(myEntry.pr).name}
+          ) : (
+            <View style={s.list}>
+              {result.page.map((entry) => (
+                <Pressable
+                  key={entry.userId}
+                  onLongPress={() =>
+                    moderate(entry.userId, entry.username, entry.isCurrentUser)
+                  }
+                  style={[s.row, entry.isCurrentUser && s.me]}
+                >
+                  <Text
+                    style={[
+                      s.position,
+                      entry.position <= 3 && { color: theme.goldBright },
+                    ]}
+                  >
+                    #{entry.position}
                   </Text>
-                </View>
-                <Text style={styles.youPr}>{myEntry.pr}</Text>
-              </View>
-            ) : null}
-          </>
-        )}
-
-        <View style={{ height: 120 }} />
-      </ScrollView>
+                  <Avatar
+                    initials={entry.username.slice(0, 2).toUpperCase()}
+                    avatarId={entry.avatarId}
+                    size={40}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.name}>
+                      {entry.isCurrentUser
+                        ? `${entry.username} · vous`
+                        : entry.username}
+                    </Text>
+                    <Text style={s.world}>MONDIAL</Text>
+                  </View>
+                  <View style={s.points}>
+                    <Text style={s.pointsValue}>{entry.points}</Text>
+                    <Text style={s.pointsLabel}>PTS</Text>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      </SafeAreaView>
     </View>
   );
 }
 
-function initialsOf(name: string): string {
-  return (
-    (name.match(/\b[A-ZÉÈÀÂÊÎÔÛ0-9]/giu) || [name[0] ?? "L"])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase()
-  );
+function styles(theme: Theme) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: theme.abyss },
+    loading: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.abyss,
+    },
+    scroll: { paddingBottom: 120 },
+    hint: {
+      paddingHorizontal: 20,
+      marginTop: -10,
+      marginBottom: 18,
+      color: theme.creamA(0.48),
+      fontSize: 12,
+    },
+    list: { paddingHorizontal: 20, gap: 8 },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      padding: 13,
+      borderRadius: 15,
+      backgroundColor: theme.surface,
+      borderWidth: 1,
+      borderColor: theme.goldA(0.1),
+    },
+    me: { backgroundColor: theme.goldA(0.11), borderColor: theme.goldA(0.38) },
+    position: {
+      width: 38,
+      fontFamily: FONT_WEIGHTS.mono.bold,
+      color: theme.creamA(0.52),
+      fontSize: 12,
+    },
+    name: {
+      fontFamily: FONT_WEIGHTS.display.bold,
+      color: theme.cream,
+      fontSize: 14,
+    },
+    world: {
+      marginTop: 3,
+      fontFamily: FONT_WEIGHTS.mono.medium,
+      fontSize: 8,
+      letterSpacing: 1.2,
+      color: theme.creamA(0.4),
+    },
+    points: { alignItems: "flex-end" },
+    pointsValue: {
+      fontFamily: FONT_WEIGHTS.display.extrabold,
+      color: theme.goldBright,
+      fontSize: 17,
+    },
+    pointsLabel: {
+      fontFamily: FONT_WEIGHTS.mono.medium,
+      color: theme.creamA(0.4),
+      fontSize: 7,
+      letterSpacing: 1,
+    },
+    empty: {
+      margin: 20,
+      padding: 28,
+      borderRadius: 18,
+      backgroundColor: theme.surface,
+      alignItems: "center",
+    },
+    emptyTitle: {
+      fontFamily: FONT_WEIGHTS.display.bold,
+      fontSize: 18,
+      color: theme.cream,
+    },
+    emptyBody: {
+      marginTop: 8,
+      textAlign: "center",
+      color: theme.creamA(0.55),
+      fontSize: 13,
+    },
+  });
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.bg },
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  scroll: { paddingHorizontal: 20 },
-  header: { gap: 6, marginBottom: 16 },
-  title: {
-    fontFamily: FONT_WEIGHTS.display.bold,
-    fontSize: 28,
-    color: COLORS.cream,
-    letterSpacing: -0.6,
-    marginTop: 4,
-  },
-  linkRight: {
-    fontFamily: FONT_WEIGHTS.body.medium,
-    fontSize: 12,
-    color: COLORS.or2,
-    marginTop: 4,
-  },
-  filterRow: { marginBottom: 18 },
-  empty: {
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 80,
-  },
-  emptyText: {
-    fontFamily: FONT_WEIGHTS.body.regular,
-    fontSize: 14,
-    color: "rgba(245, 242, 237, 0.55)",
-  },
-  podium: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "center",
-    gap: 8,
-    height: 240,
-    marginBottom: 24,
-  },
-  podiumCol: {
-    flex: 1,
-    alignItems: "center",
-  },
-  podiumName: {
-    fontFamily: FONT_WEIGHTS.display.bold,
-    fontSize: 12,
-    color: COLORS.cream,
-    marginTop: 6,
-  },
-  podiumPr: {
-    fontFamily: FONT_WEIGHTS.mono.medium,
-    fontSize: 10,
-    marginTop: 2,
-  },
-  podiumBar: {
-    marginTop: 6,
-    width: "100%",
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
-    borderWidth: 1,
-    borderBottomWidth: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 10,
-  },
-  podiumRank: {
-    fontFamily: FONT_WEIGHTS.display.extrabold,
-    fontSize: 32,
-    letterSpacing: -0.8,
-  },
-  list: { gap: 6 },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: RADII.md,
-    backgroundColor: "rgba(46, 61, 77, 0.5)",
-    borderWidth: 1,
-    borderColor: "rgba(201, 168, 118, 0.12)",
-  },
-  rowRank: {
-    width: 26,
-    fontFamily: FONT_WEIGHTS.display.bold,
-    fontSize: 16,
-    color: "rgba(245, 242, 237, 0.4)",
-    textAlign: "center",
-  },
-  rowName: {
-    fontFamily: FONT_WEIGHTS.body.semibold,
-    fontSize: 13,
-    color: COLORS.cream,
-  },
-  rowTier: {
-    fontFamily: FONT_WEIGHTS.mono.medium,
-    fontSize: 10,
-    color: COLORS.or2,
-  },
-  rowPr: {
-    fontFamily: FONT_WEIGHTS.display.bold,
-    fontSize: 14,
-    color: COLORS.cream,
-  },
-  youRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginTop: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: RADII.md,
-    backgroundColor: "rgba(180, 68, 62, 0.18)",
-    borderWidth: 1.5,
-    borderColor: COLORS.terre2,
-  },
-  youRank: {
-    width: 26,
-    fontFamily: FONT_WEIGHTS.display.bold,
-    fontSize: 16,
-    color: COLORS.terre2,
-    textAlign: "center",
-  },
-  youName: {
-    fontFamily: FONT_WEIGHTS.body.semibold,
-    fontSize: 13,
-    color: COLORS.cream,
-  },
-  youTier: {
-    fontFamily: FONT_WEIGHTS.mono.medium,
-    fontSize: 10,
-    color: COLORS.or2,
-  },
-  youPr: {
-    fontFamily: FONT_WEIGHTS.display.bold,
-    fontSize: 14,
-    color: COLORS.cream,
-  },
-});

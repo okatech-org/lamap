@@ -1,197 +1,74 @@
 import { setAudioModeAsync, useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-type SoundType =
- 
-  | "cardPlay"
-  | "victory"
-  | "kora"
-  | "defeat"
- 
-  | "cardSelect"
-  | "gameStart"
-  | "gameEnd"
-  | "turnChange"
-  | "koraDouble"
-  | "koraTriple"
-  | "autoVictory"
-  | "buttonClick"
-  | "confirmation"
-  | "winMoney";
+type SoundType = "cardPlay" | "cardSelect" | "victory" | "kora" | "defeat";
 
-const cardPlaySound = require("@assets/sounds/game/card-play.mp3");
-const cardSelectSound = require("@assets/sounds/game/card-select.mp3");
-const victorySound = require("@assets/sounds/special/victory.mp3");
-const defeatSound = require("@assets/sounds/special/defeat.mp3");
-const koraSound = require("@assets/sounds/special/kora-simple.mp3");
-const koraDoubleSound = require("@assets/sounds/special/kora-double.mp3");
-const koraTripleSound = require("@assets/sounds/special/kora-triple.mp3");
-const autoVictorySound = require("@assets/sounds/special/auto-victory.mp3");
-const gameStartSound = require("@assets/sounds/game/game-start.mp3");
-const gameEndSound = require("@assets/sounds/game/game-end.mp3");
-const turnChangeSound = require("@assets/sounds/game/turn-change.mp3");
-const buttonClickSound = require("@assets/sounds/ui/click.mp3");
-const confirmationSound = require("@assets/sounds/ui/confirmation.mp3");
-const winMoneySound = require("@assets/sounds/ui/win-money.mp3");
+const sounds = {
+  cardPlay: require("@assets/sounds/game/card-play.mp3"),
+  cardSelect: require("@assets/sounds/game/card-select.mp3"),
+  victory: require("@assets/sounds/special/victory.mp3"),
+  kora: require("@assets/sounds/special/kora-simple.mp3"),
+  defeat: require("@assets/sounds/special/defeat.mp3"),
+} as const;
 
 export function useSound() {
   const [isLoaded, setIsLoaded] = useState(false);
-
-  const cardPlayPlayer = useAudioPlayer(cardPlaySound);
-  const cardSelectPlayer = useAudioPlayer(cardSelectSound);
-  const victoryPlayer = useAudioPlayer(victorySound);
-  const defeatPlayer = useAudioPlayer(defeatSound);
-  const koraPlayer = useAudioPlayer(koraSound);
-  const koraDoublePlayer = useAudioPlayer(koraDoubleSound);
-  const koraTriplePlayer = useAudioPlayer(koraTripleSound);
-  const autoVictoryPlayer = useAudioPlayer(autoVictorySound);
-  const gameStartPlayer = useAudioPlayer(gameStartSound);
-  const gameEndPlayer = useAudioPlayer(gameEndSound);
-  const turnChangePlayer = useAudioPlayer(turnChangeSound);
-  const buttonClickPlayer = useAudioPlayer(buttonClickSound);
-  const confirmationPlayer = useAudioPlayer(confirmationSound);
-  const winMoneyPlayer = useAudioPlayer(winMoneySound);
-
-  const players = {
-    cardPlay: cardPlayPlayer,
-    cardSelect: cardSelectPlayer,
-    victory: victoryPlayer,
-    defeat: defeatPlayer,
-    kora: koraPlayer,
-    koraDouble: koraDoublePlayer,
-    koraTriple: koraTriplePlayer,
-    autoVictory: autoVictoryPlayer,
-    gameStart: gameStartPlayer,
-    gameEnd: gameEndPlayer,
-    turnChange: turnChangePlayer,
-    buttonClick: buttonClickPlayer,
-    confirmation: confirmationPlayer,
-    winMoney: winMoneyPlayer,
-  };
+  const cardPlay = useAudioPlayer(sounds.cardPlay);
+  const cardSelect = useAudioPlayer(sounds.cardSelect);
+  const victory = useAudioPlayer(sounds.victory);
+  const kora = useAudioPlayer(sounds.kora);
+  const defeat = useAudioPlayer(sounds.defeat);
+  const players = useMemo(
+    () => ({ cardPlay, cardSelect, victory, kora, defeat }),
+    [cardPlay, cardSelect, victory, kora, defeat],
+  );
 
   useEffect(() => {
-    const initializeAudio = async () => {
+    async function initializeAudio() {
       try {
         await setAudioModeAsync({
           playsInSilentMode: true,
-          shouldPlayInBackground: true,
+          shouldPlayInBackground: false,
           interruptionMode: "mixWithOthers",
           interruptionModeAndroid: "duckOthers",
         });
-
-        cardPlayPlayer.volume = 0.7;
-        cardSelectPlayer.volume = 0.7;
-        victoryPlayer.volume = 0.7;
-        defeatPlayer.volume = 0.7;
-        koraPlayer.volume = 0.7;
-        koraDoublePlayer.volume = 0.7;
-        koraTriplePlayer.volume = 0.7;
-        autoVictoryPlayer.volume = 0.7;
-        gameStartPlayer.volume = 0.7;
-        gameEndPlayer.volume = 0.7;
-        turnChangePlayer.volume = 0.7;
-        buttonClickPlayer.volume = 0.7;
-        confirmationPlayer.volume = 0.7;
-        winMoneyPlayer.volume = 0.7;
-
+        Object.values(players).forEach((player) => {
+          player.volume = 0.7;
+        });
         setIsLoaded(true);
       } catch (error) {
-        console.warn("Failed to initialize audio:", error);
+        console.warn("Impossible d’initialiser l’audio", error);
         setIsLoaded(false);
       }
-    };
-
-    initializeAudio();
-  }, [
-    cardPlayPlayer,
-    cardSelectPlayer,
-    victoryPlayer,
-    defeatPlayer,
-    koraPlayer,
-    koraDoublePlayer,
-    koraTriplePlayer,
-    autoVictoryPlayer,
-    gameStartPlayer,
-    gameEndPlayer,
-    turnChangePlayer,
-    buttonClickPlayer,
-    confirmationPlayer,
-    winMoneyPlayer,
-  ]);
+    }
+    void initializeAudio();
+  }, [players]);
 
   const playSound = async (type: SoundType) => {
     try {
       const player = players[type];
-      if (player && isLoaded) {
-        try {
-          if (player.playing) {
-            await player.pause();
-          }
-          await player.seekTo(0);
-          player.play();
-        } catch (error: any) {
-          if (
-            !error?.message?.includes("Seeking interrupted") &&
-            !error?.message?.includes("shared object") &&
-            !error?.message?.includes("already released")
-          ) {
-            console.warn(`Failed to play sound ${type}:`, error);
-          }
-        }
+      if (isLoaded) {
+        if (player.playing) await player.pause();
+        await player.seekTo(0);
+        player.play();
       }
 
-     
-      switch (type) {
-        case "cardPlay":
-        case "cardSelect":
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          break;
-        case "victory":
-        case "autoVictory":
-        case "gameStart":
-        case "gameEnd":
-        case "confirmation":
-          await Haptics.notificationAsync(
-            Haptics.NotificationFeedbackType.Success
-          );
-          break;
-        case "kora":
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          break;
-        case "koraDouble":
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          break;
-        case "koraTriple":
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          break;
-        case "defeat":
-          await Haptics.notificationAsync(
-            Haptics.NotificationFeedbackType.Error
-          );
-          break;
-        case "turnChange":
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          break;
-        case "winMoney":
-          await Haptics.notificationAsync(
-            Haptics.NotificationFeedbackType.Success
-          );
-          break;
-        case "buttonClick":
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          break;
-        default:
-          break;
+      if (type === "defeat") {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      } else if (type === "victory") {
+        await Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success,
+        );
+      } else {
+        await Haptics.impactAsync(
+          type === "kora"
+            ? Haptics.ImpactFeedbackStyle.Heavy
+            : Haptics.ImpactFeedbackStyle.Light,
+        );
       }
     } catch (error) {
-      console.warn(`Failed to play sound/haptic ${type}:`, error);
+      console.warn(`Impossible de jouer le son ${type}`, error);
     }
   };
 

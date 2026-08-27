@@ -1,6 +1,6 @@
 import { CardBack } from "@/components/game/card-back";
 import { COLORS, FONT_WEIGHTS } from "@/design";
-import { useActiveCardBackTheme } from "@/hooks/use-active-card-back";
+import { CARD_BACK_THEMES } from "@/hooks/use-active-card-back";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Avatar } from "./avatar";
@@ -10,6 +10,7 @@ interface LamapOpponentBarProps {
   cardsRemaining: number;
   hasHand?: boolean;
   initials?: string;
+  cardBackId?: string;
 }
 
 /**
@@ -21,6 +22,7 @@ export function LamapOpponentBar({
   cardsRemaining,
   hasHand = false,
   initials,
+  cardBackId,
 }: LamapOpponentBarProps) {
   const computedInitials =
     initials ??
@@ -32,7 +34,7 @@ export function LamapOpponentBar({
       .slice(0, 2);
 
   const cards = Math.max(0, Math.min(cardsRemaining, 5));
-  const theme = useActiveCardBackTheme();
+  const theme = CARD_BACK_THEMES[cardBackId ?? "bandi_classic"] ?? "red";
 
   return (
     <View style={styles.row}>
@@ -99,9 +101,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 999,
-    backgroundColor: "rgba(166, 130, 88, 0.18)",
+    backgroundColor: "rgba(201, 165, 95, 0.18)",
     borderWidth: 1,
-    borderColor: "rgba(201, 168, 118, 0.35)",
+    borderColor: "rgba(201, 165, 95, 0.35)",
   },
   chipGlyph: {
     fontSize: 10,

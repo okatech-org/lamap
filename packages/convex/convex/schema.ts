@@ -1,9 +1,8 @@
+import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import {
   aiDifficultyValidator,
-  betValidator,
-  gameChatMessageValidator,
   gameHistoryValidator,
   gameModeValidator,
   gameStatusValidator,
@@ -12,214 +11,136 @@ import {
   victoryTypeValidator,
 } from "./validators";
 
-const usersTable = defineTable({
-  firstName: v.optional(v.string()),
-  lastName: v.optional(v.string()),
-  email: v.string(),
-  bio: v.optional(v.string()),
-  avatarUrl: v.optional(v.string()),
-  createdAt: v.number(),
-  isActive: v.boolean(),
-  username: v.string(),
-  clerkUserId: v.string(),
-  balance: v.optional(v.number()),
-  currency: v.optional(v.string()),
-  country: v.optional(v.string()),
-  onboardingCompleted: v.boolean(),
-  tutorialCompleted: v.optional(v.boolean()),
-  pr: v.optional(v.number()),
-  kora: v.optional(v.number()),
-  rankHistory: v.optional(v.array(v.string())),
-  // Cosmetics — purchased and equipped card-back skins.
-  ownedCardBacks: v.optional(v.array(v.string())),
-  activeCardBack: v.optional(v.string()),
-  cosmeticsGrantedDefaults: v.optional(v.boolean()),
+const users = defineTable({
+  name: v.optional(v.string()),
+  image: v.optional(v.string()),
+  email: v.optional(v.string()),
+  emailVerificationTime: v.optional(v.number()),
+  phone: v.optional(v.string()),
+  phoneVerificationTime: v.optional(v.number()),
+  isAnonymous: v.optional(v.boolean()),
+  username: v.optional(v.string()),
+  usernameKey: v.optional(v.string()),
+  rankingPoints: v.optional(v.number()),
+  rankedGames: v.optional(v.number()),
+  rankedWins: v.optional(v.number()),
+  activeCardBackId: v.optional(v.string()),
+  activeAvatarId: v.optional(v.string()),
+  onboardingCompleted: v.optional(v.boolean()),
 })
-  .index("by_clerk_id", ["clerkUserId"])
-  .index("by_username", ["username"])
-  .index("by_pr", ["pr"]);
+  .index("email", ["email"])
+  .index("phone", ["phone"])
+  .index("by_username_key", ["usernameKey"])
+  .index("by_ranking_points", ["rankingPoints"]);
 
-const prHistoryTable = defineTable({
+const ratingPlayerValidator = v.object({
   userId: v.id("users"),
-  oldPR: v.number(),
-  newPR: v.number(),
-  change: v.number(),
-  opponentId: v.id("users"),
-  opponentPR: v.number(),
-  won: v.boolean(),
-  gameId: v.optional(v.string()),
-  timestamp: v.number(),
-})
-  .index("by_user", ["userId"])
-  .index("by_user_timestamp", ["userId", "timestamp"]);
+  oldPoints: v.number(),
+  newPoints: v.number(),
+  delta: v.number(),
+});
 
-const gamesTable = defineTable({
+const games = defineTable({
   gameId: v.string(),
   seed: v.string(),
   version: v.number(),
   status: gameStatusValidator,
+  mode: gameModeValidator,
   currentRound: v.number(),
   maxRounds: v.number(),
   hasHandPlayerId: v.union(v.id("users"), v.string(), v.null()),
   currentTurnPlayerId: v.union(v.id("users"), v.string(), v.null()),
   players: v.array(playerValidator),
   playedCards: v.array(playedCardValidator),
-  bet: betValidator,
+  history: v.array(gameHistoryValidator),
   winnerId: v.union(v.id("users"), v.string(), v.null()),
   endReason: v.union(v.string(), v.null()),
-  history: v.array(gameHistoryValidator),
-  mode: gameModeValidator,
-  competitive: v.optional(v.boolean()),
-  maxPlayers: v.number(),
+  victoryType: v.union(victoryTypeValidator, v.null()),
   aiDifficulty: v.union(aiDifficultyValidator, v.null()),
-  roomName: v.optional(v.string()),
-  isPrivate: v.optional(v.boolean()),
   hostId: v.id("users"),
-  joinCode: v.optional(v.string()),
   startedAt: v.number(),
   endedAt: v.union(v.number(), v.null()),
   lastUpdatedAt: v.number(),
-  victoryType: v.union(victoryTypeValidator, v.null()),
-  rematchGameId: v.optional(v.union(v.string(), v.null())),
-  timerEnabled: v.optional(v.boolean()),
-  timerDuration: v.optional(v.number()),
-  playerTimers: v.optional(
-    v.array(
-      v.object({
-        playerId: v.union(v.id("users"), v.string()),
-        timeRemaining: v.number(),
-        lastUpdated: v.number(),
-      })
-    )
+  ratingResult: v.optional(
+    v.object({
+      winner: ratingPlayerValidator,
+      loser: ratingPlayerValidator,
+      appliedAt: v.number(),
+    }),
   ),
 })
   .index("by_game_id", ["gameId"])
   .index("by_host", ["hostId"])
-  .index("by_join_code", ["joinCode"])
   .index("by_status", ["status"]);
 
-const gameMessagesTable = defineTable(gameChatMessageValidator)
-  .index("by_game_id", ["gameId"])
-  .index("by_game_id_and_timestamp", ["gameId", "timestamp"]);
-
-const transactionsTable = defineTable({
+const matchmakingQueue = defineTable({
   userId: v.id("users"),
-  type: v.string(),
-  amount: v.number(),
-  currency: v.string(),
-  gameId: v.optional(v.string()),
-  description: v.string(),
-  createdAt: v.number(),
-})
-  .index("by_user", ["userId"])
-  .index("by_user_currency", ["userId", "currency"]);
-
-const matchmakingQueueTable = defineTable({
-  userId: v.id("users"),
-  betAmount: v.number(),
-  currency: v.string(),
-  status: v.string(),
+  status: v.union(
+    v.literal("searching"),
+    v.literal("matched"),
+    v.literal("cancelled"),
+  ),
   matchedWith: v.optional(v.id("users")),
   gameId: v.optional(v.string()),
   joinedAt: v.number(),
 })
-  .index("by_status_bet", ["status", "betAmount"])
-  .index("by_status_bet_currency", ["status", "betAmount", "currency"]);
+  .index("by_user", ["userId"])
+  .index("by_status", ["status"]);
 
-const conversationsTable = defineTable({
-  participants: v.array(v.id("users")),
-  lastMessageAt: v.number(),
-  createdAt: v.number(),
-}).index("by_last_message", ["lastMessageAt"]);
-
-const messagesTable = defineTable({
-  conversationId: v.id("conversations"),
-  senderId: v.id("users"),
-  content: v.string(),
-  timestamp: v.number(),
-  read: v.boolean(),
-})
-  .index("by_conversation", ["conversationId", "timestamp"])
-  .index("by_sender", ["senderId"]);
-
-const rechargeCodesTable = defineTable({
-  code: v.string(),
-  amount: v.number(),
-  currency: v.string(),
-  createdAt: v.number(),
-  expiresAt: v.optional(v.number()),
-  isActive: v.boolean(),
-  maxUses: v.optional(v.number()),
-  useCount: v.number(),
-  usedByUserIds: v.array(v.id("users")),
-}).index("by_code", ["code"]);
-
-const friendshipsTable = defineTable({
-  user1Id: v.id("users"),
-  user2Id: v.id("users"),
-  createdAt: v.number(),
-})
-  .index("by_user1", ["user1Id"])
-  .index("by_user2", ["user2Id"])
-  .index("by_users", ["user1Id", "user2Id"]);
-
-const friendRequestsTable = defineTable({
-  senderId: v.id("users"),
-  receiverId: v.id("users"),
-  status: v.union(
-    v.literal("pending"),
-    v.literal("accepted"),
-    v.literal("rejected")
-  ),
-  createdAt: v.number(),
-  respondedAt: v.optional(v.number()),
-})
-  .index("by_sender", ["senderId"])
-  .index("by_receiver", ["receiverId"])
-  .index("by_status", ["status"])
-  .index("by_sender_receiver", ["senderId", "receiverId"]);
-
-const iapTransactionsTable = defineTable({
+const cosmeticEntitlements = defineTable({
   userId: v.id("users"),
-  platform: v.union(v.literal("ios"), v.literal("android")),
-  productId: v.string(),
-  transactionId: v.string(),
-  originalTransactionId: v.optional(v.string()),
-  koraCredited: v.number(),
-  status: v.union(
-    v.literal("pending"),
-    v.literal("validated"),
-    v.literal("failed"),
-    v.literal("refunded")
-  ),
-  rawReceiptHash: v.optional(v.string()),
-  createdAt: v.number(),
-  validatedAt: v.optional(v.number()),
+  cosmeticId: v.string(),
+  productId: v.optional(v.string()),
+  source: v.union(v.literal("default"), v.literal("app_store")),
+  grantedAt: v.number(),
+  revokedAt: v.optional(v.number()),
 })
   .index("by_user", ["userId"])
-  .index("by_transaction", ["platform", "transactionId"])
-  .index("by_original_transaction", ["platform", "originalTransactionId"]);
+  .index("by_user_cosmetic", ["userId", "cosmeticId"])
+  .index("by_product", ["productId"]);
 
-const reportsTable = defineTable({
+const storeTransactions = defineTable({
+  userId: v.optional(v.id("users")),
+  antiFraudKey: v.string(),
+  transactionId: v.string(),
+  originalTransactionId: v.optional(v.string()),
+  productId: v.string(),
+  environment: v.union(
+    v.literal("Sandbox"),
+    v.literal("Production"),
+    v.literal("Xcode"),
+    v.literal("LocalTesting"),
+  ),
+  status: v.union(v.literal("verified"), v.literal("revoked")),
+  purchaseDate: v.number(),
+  signedDate: v.number(),
+  revokedAt: v.optional(v.number()),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+})
+  .index("by_transaction", ["transactionId"])
+  .index("by_original_transaction", ["originalTransactionId"])
+  .index("by_user", ["userId"]);
+
+const reports = defineTable({
   reporterId: v.id("users"),
-  targetType: v.union(v.literal("message"), v.literal("user")),
-  targetId: v.string(),
+  targetUserId: v.id("users"),
   reason: v.union(
-    v.literal("spam"),
+    v.literal("inappropriate_username"),
     v.literal("harassment"),
-    v.literal("sexual"),
-    v.literal("other")
+    v.literal("cheating"),
+    v.literal("other"),
   ),
   note: v.optional(v.string()),
   status: v.union(v.literal("open"), v.literal("resolved")),
   createdAt: v.number(),
   resolvedAt: v.optional(v.number()),
-  resolvedBy: v.optional(v.id("users")),
 })
-  .index("by_status", ["status"])
-  .index("by_target", ["targetType", "targetId"]);
+  .index("by_reporter", ["reporterId"])
+  .index("by_target", ["targetUserId"])
+  .index("by_status", ["status"]);
 
-const blocksTable = defineTable({
+const blocks = defineTable({
   blockerId: v.id("users"),
   blockedId: v.id("users"),
   createdAt: v.number(),
@@ -228,42 +149,13 @@ const blocksTable = defineTable({
   .index("by_blocked", ["blockedId"])
   .index("by_pair", ["blockerId", "blockedId"]);
 
-const challengesTable = defineTable({
-  challengerId: v.id("users"),
-  challengedId: v.id("users"),
-  mode: v.union(v.literal("RANKED"), v.literal("CASH")),
-  betAmount: v.optional(v.number()),
-  currency: v.optional(v.string()),
-  competitive: v.optional(v.boolean()),
-  status: v.union(
-    v.literal("pending"),
-    v.literal("accepted"),
-    v.literal("rejected"),
-    v.literal("expired")
-  ),
-  createdAt: v.number(),
-  expiresAt: v.number(),
-  respondedAt: v.optional(v.number()),
-  gameId: v.optional(v.string()),
-})
-  .index("by_challenger", ["challengerId"])
-  .index("by_challenged", ["challengedId"])
-  .index("by_status", ["status"]);
-
 export default defineSchema({
-  users: usersTable,
-  games: gamesTable,
-  gameMessages: gameMessagesTable,
-  transactions: transactionsTable,
-  matchmakingQueue: matchmakingQueueTable,
-  conversations: conversationsTable,
-  messages: messagesTable,
-  rechargeCodes: rechargeCodesTable,
-  prHistory: prHistoryTable,
-  friendships: friendshipsTable,
-  friendRequests: friendRequestsTable,
-  challenges: challengesTable,
-  iapTransactions: iapTransactionsTable,
-  reports: reportsTable,
-  blocks: blocksTable,
+  ...authTables,
+  users,
+  games,
+  matchmakingQueue,
+  cosmeticEntitlements,
+  storeTransactions,
+  reports,
+  blocks,
 });

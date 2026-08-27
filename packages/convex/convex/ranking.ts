@@ -1,446 +1,128 @@
 import { v } from "convex/values";
-import { Id } from "./_generated/dataModel";
-import { internalMutation, mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { requireAuthUserId } from "./authHelpers";
+import { query, type QueryCtx } from "./_generated/server";
 
-export type RankTier =
-  | "BRONZE"
-  | "SILVER"
-  | "GOLD"
-  | "PLATINUM"
-  | "DIAMOND"
-  | "MASTER"
-  | "LEGEND";
+export const INITIAL_RANKING_POINTS = 500;
+export const ELO_K_FACTOR = 32;
+export const MIN_RANKING_POINTS = 0;
 
-export interface RankInfo {
-  tier: RankTier;
-  name: string;
-  minPR: number;
-  maxPR: number;
-  color: string;
-  icon: string;
-  koraReward: number;
-}
-
-export const RANK_TIERS: Record<RankTier, RankInfo> = {
-  BRONZE: {
-    tier: "BRONZE",
-    name: "Bronze",
-    minPR: 0,
-    maxPR: 999,
-    color: "#CD7F32",
-    icon: "🥉",
-    koraReward: 0,
-  },
-  SILVER: {
-    tier: "SILVER",
-    name: "Argent",
-    minPR: 1000,
-    maxPR: 1199,
-    color: "#C0C0C0",
-    icon: "🥈",
-    koraReward: 500,
-  },
-  GOLD: {
-    tier: "GOLD",
-    name: "Or",
-    minPR: 1200,
-    maxPR: 1399,
-    color: "#FFD700",
-    icon: "🥇",
-    koraReward: 1000,
-  },
-  PLATINUM: {
-    tier: "PLATINUM",
-    name: "Platine",
-    minPR: 1400,
-    maxPR: 1599,
-    color: "#E5E4E2",
-    icon: "💎",
-    koraReward: 2000,
-  },
-  DIAMOND: {
-    tier: "DIAMOND",
-    name: "Diamant",
-    minPR: 1600,
-    maxPR: 1799,
-    color: "#B9F2FF",
-    icon: "💠",
-    koraReward: 5000,
-  },
-  MASTER: {
-    tier: "MASTER",
-    name: "Maître",
-    minPR: 1800,
-    maxPR: 1999,
-    color: "#9B59B6",
-    icon: "👑",
-    koraReward: 10000,
-  },
-  LEGEND: {
-    tier: "LEGEND",
-    name: "Légende",
-    minPR: 2000,
-    maxPR: Infinity,
-    color: "#E74C3C",
-    icon: "⭐",
-    koraReward: 20000,
-  },
+export type EloResult = {
+  winner: { oldPoints: number; newPoints: number; delta: number };
+  loser: { oldPoints: number; newPoints: number; delta: number };
 };
 
-export const INITIAL_PR = 500;
+export function calculateEloResult(
+  winnerPoints: number,
+  loserPoints: number,
+): EloResult {
+  const winnerExpected = 1 / (1 + 10 ** ((loserPoints - winnerPoints) / 400));
+  const loserExpected = 1 - winnerExpected;
+  const winnerNew = Math.max(
+    MIN_RANKING_POINTS,
+    Math.round(winnerPoints + ELO_K_FACTOR * (1 - winnerExpected)),
+  );
+  const loserNew = Math.max(
+    MIN_RANKING_POINTS,
+    Math.round(loserPoints + ELO_K_FACTOR * (0 - loserExpected)),
+  );
 
-export const K_FACTOR = 32;
-export const MIN_PR = 0;
-
-/**
- * Détermine le palier de rang en fonction des PR
- */
-export function getRankFromPR(pr: number): RankInfo {
-  if (pr < 1000) return RANK_TIERS.BRONZE;
-  if (pr < 1200) return RANK_TIERS.SILVER;
-  if (pr < 1400) return RANK_TIERS.GOLD;
-  if (pr < 1600) return RANK_TIERS.PLATINUM;
-  if (pr < 1800) return RANK_TIERS.DIAMOND;
-  if (pr < 2000) return RANK_TIERS.MASTER;
-  return RANK_TIERS.LEGEND;
+  return {
+    winner: {
+      oldPoints: winnerPoints,
+      newPoints: winnerNew,
+      delta: winnerNew - winnerPoints,
+    },
+    loser: {
+      oldPoints: loserPoints,
+      newPoints: loserNew,
+      delta: loserNew - loserPoints,
+    },
+  };
 }
 
-/**
- * Calcule la probabilité de victoire attendue (formule ELO)
- */
-function getExpectedScore(playerPR: number, opponentPR: number): number {
-  return 1 / (1 + Math.pow(10, (opponentPR - playerPR) / 400));
+export function calculateGameRating(
+  mode: "RANKED" | "AI",
+  alreadyApplied: boolean,
+  winnerPoints: number,
+  loserPoints: number,
+) {
+  if (mode !== "RANKED" || alreadyApplied) return null;
+  return calculateEloResult(winnerPoints, loserPoints);
 }
 
-/**
- * Calcule le changement de PR après une partie
- * @param playerPR PR actuel du joueur
- * @param opponentPR PR de l'adversaire
- * @param actualScore 1 pour victoire, 0 pour défaite
- * @returns Changement de PR (peut être négatif)
- */
-export function calculatePRChange(
-  playerPR: number,
-  opponentPR: number,
-  actualScore: number
-): number {
-  const expectedScore = getExpectedScore(playerPR, opponentPR);
-  const change = Math.round(K_FACTOR * (actualScore - expectedScore));
-  return change;
+async function blockedUserIds(ctx: QueryCtx, userId: Id<"users">) {
+  const outgoing = await ctx.db
+    .query("blocks")
+    .withIndex("by_blocker", (q) => q.eq("blockerId", userId))
+    .collect();
+  const incoming = await ctx.db
+    .query("blocks")
+    .withIndex("by_blocked", (q) => q.eq("blockedId", userId))
+    .collect();
+  return new Set([
+    ...outgoing.map((block) => String(block.blockedId)),
+    ...incoming.map((block) => String(block.blockerId)),
+  ]);
 }
 
-/**
- * Applique un changement de PR en respectant les limites
- */
-export function applyPRChange(currentPR: number, change: number): number {
-  const newPR = currentPR + change;
-  return Math.max(MIN_PR, newPR);
-}
-
-/**
- * Vérifie si un joueur a changé de rang
- */
-export function hasRankChanged(oldPR: number, newPR: number): boolean {
-  const oldRank = getRankFromPR(oldPR);
-  const newRank = getRankFromPR(newPR);
-  return oldRank.tier !== newRank.tier;
-}
-
-/**
- * Vérifie si c'est une montée de rang (et non une descente)
- */
-export function isRankUp(oldPR: number, newPR: number): boolean {
-  if (!hasRankChanged(oldPR, newPR)) return false;
-  return newPR > oldPR;
-}
-
-/**
- * Récupère les informations de rang d'un joueur
- */
-export const getUserRank = query({
-  args: {
-    userId: v.id("users"),
-  },
-  handler: async (ctx, args) => {
-    const user = await ctx.db.get(args.userId);
-    if (!user) return null;
-
-    const pr = user.pr || INITIAL_PR;
-    const rank = getRankFromPR(pr);
-
-    return {
-      pr,
-      rank,
-      progress:
-        rank.maxPR === Infinity ?
-          100
-        : ((pr - rank.minPR) / (rank.maxPR - rank.minPR)) * 100,
-    };
-  },
-});
-
-/**
- * Récupère le classement global (top 100)
- */
 export const getGlobalLeaderboard = query({
   args: {
+    cursor: v.optional(v.string()),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const limit = args.limit || 100;
+    const currentUserId = await requireAuthUserId(ctx);
+    const hidden = await blockedUserIds(ctx, currentUserId);
+    const users = (await ctx.db.query("users").collect())
+      .filter((user) => (user.rankedGames ?? 0) > 0 && user.username)
+      .sort(
+        (a, b) =>
+          (b.rankingPoints ?? INITIAL_RANKING_POINTS) -
+            (a.rankingPoints ?? INITIAL_RANKING_POINTS) ||
+          a._creationTime - b._creationTime,
+      );
 
-    const users = await ctx.db.query("users").order("desc").collect();
-
-    const sortedUsers = users
-      .filter((u) => u.pr !== undefined)
-      .sort((a, b) => (b.pr || 0) - (a.pr || 0))
-      .slice(0, limit);
-
-    return sortedUsers.map((user, index) => ({
-      position: index + 1,
-      userId: user._id,
-      username: user.username,
-      pr: user.pr || INITIAL_PR,
-      rank: getRankFromPR(user.pr || INITIAL_PR),
-    }));
-  },
-});
-
-/**
- * Met à jour le PR d'un joueur après une partie classée (internal pour être appelée depuis games.ts)
- */
-export const updatePlayerPRInternal = internalMutation({
-  args: {
-    playerId: v.id("users"),
-    opponentId: v.union(v.id("users"), v.string()),
-    playerPR: v.number(),
-    opponentPR: v.number(),
-    playerWon: v.boolean(),
-    gameId: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const player = await ctx.db.get(args.playerId);
-    if (!player) {
-      throw new Error("Joueur non trouvé");
-    }
-
-    const playerPR = args.playerPR;
-    const opponentPR = args.opponentPR;
-
-    const prChange = calculatePRChange(
-      playerPR,
-      opponentPR,
-      args.playerWon ? 1 : 0
-    );
-    const newPR = applyPRChange(playerPR, prChange);
-
-    const rankUp = isRankUp(playerPR, newPR);
-    let koraReward = 0;
-
-    if (rankUp) {
-      const newRank = getRankFromPR(newPR);
-
-      const rankHistory = player.rankHistory || [];
-      const hasReachedBefore = rankHistory.includes(newRank.tier);
-
-      if (!hasReachedBefore) {
-        koraReward = newRank.koraReward;
-
-        await ctx.db.patch(args.playerId, {
-          kora: (player.kora || 0) + koraReward,
-        });
-
-        await ctx.db.patch(args.playerId, {
-          rankHistory: [...rankHistory, newRank.tier],
-        });
-      }
-    }
-
-    await ctx.db.patch(args.playerId, {
-      pr: newPR,
-    });
-
-    if (
-      typeof args.opponentId === "string" &&
-      args.opponentId.startsWith("ai-")
-    ) {
+    let previousPoints: number | undefined;
+    let sharedPosition = 0;
+    const ranked = users.map((user, index) => {
+      const points = user.rankingPoints ?? INITIAL_RANKING_POINTS;
+      if (points !== previousPoints) sharedPosition = index + 1;
+      previousPoints = points;
       return {
-        oldPR: playerPR,
-        newPR,
-        prChange,
-        rankUp,
-        koraReward,
-        newRank: rankUp ? getRankFromPR(newPR) : null,
+        userId: user._id,
+        username: user.username!,
+        avatarId: user.activeAvatarId ?? "initials",
+        points,
+        position: sharedPosition,
+        isCurrentUser: user._id === currentUserId,
       };
-    }
-
-    // Enregistrer dans l'historique seulement si l'adversaire est un utilisateur (pas un bot)
-    if (
-      typeof args.opponentId !== "string" ||
-      !args.opponentId.startsWith("ai-")
-    ) {
-      await ctx.db.insert("prHistory", {
-        userId: args.playerId,
-        oldPR: playerPR,
-        newPR,
-        change: prChange,
-        opponentId: args.opponentId as Id<"users">,
-        opponentPR,
-        won: args.playerWon,
-        gameId: args.gameId,
-        timestamp: Date.now(),
-      });
-    }
-
-    return {
-      oldPR: playerPR,
-      newPR,
-      prChange,
-      rankUp,
-      koraReward,
-      newRank: rankUp ? getRankFromPR(newPR) : null,
-    };
-  },
-});
-
-/**
- * Initialise le PR d'un joueur (appelé lors de la création du compte)
- */
-export const initializePlayerPR = mutation({
-  args: {
-    userId: v.id("users"),
-  },
-  handler: async (ctx, args) => {
-    const user = await ctx.db.get(args.userId);
-    if (!user) {
-      throw new Error("Utilisateur non trouvé");
-    }
-
-    await ctx.db.patch(args.userId, {
-      pr: INITIAL_PR,
-      rankHistory: ["SILVER"],
     });
 
-    return { pr: INITIAL_PR };
-  },
-});
-
-/**
- * Récupère l'historique des changements de PR d'un joueur
- */
-export const getPRHistory = query({
-  args: {
-    userId: v.id("users"),
-    limit: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const limit = args.limit || 50;
-
-    const history = await ctx.db
-      .query("prHistory")
-      .withIndex("by_user_timestamp", (q) => q.eq("userId", args.userId))
-      .order("desc")
-      .take(limit);
-
-    return await Promise.all(
-      history.map(async (entry) => {
-        const opponent = await ctx.db.get(entry.opponentId);
-        return {
-          ...entry,
-          opponentUsername: opponent?.username || "Joueur",
-          opponentRank: getRankFromPR(entry.opponentPR),
-        };
-      })
-    );
-  },
-});
-
-/**
- * Récupère les statistiques de PR d'un joueur
- */
-export const getPRChangeForGame = query({
-  args: {
-    gameId: v.string(),
-    userId: v.id("users"),
-  },
-  handler: async (ctx, args) => {
-    const prHistory = await ctx.db
-      .query("prHistory")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .filter((q) => q.eq(q.field("gameId"), args.gameId))
-      .first();
-
-    return prHistory ?
-        {
-          change: prHistory.change,
-          oldPR: prHistory.oldPR,
-          newPR: prHistory.newPR,
-          won: prHistory.won,
-        }
-      : null;
-  },
-});
-
-export const getPRStats = query({
-  args: {
-    userId: v.id("users"),
-  },
-  handler: async (ctx, args) => {
-    const user = await ctx.db.get(args.userId);
-    if (!user) return null;
-
-    const currentPR = user.pr || INITIAL_PR;
-    const currentRank = getRankFromPR(currentPR);
-
-    const history = await ctx.db
-      .query("prHistory")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .collect();
-
-    const totalGames = history.length;
-    const wins = history.filter((h) => h.won).length;
-    const losses = totalGames - wins;
-    const winRate = totalGames > 0 ? (wins / totalGames) * 100 : 0;
-
-    const maxPR =
-      history.length > 0 ? Math.max(...history.map((h) => h.newPR)) : currentPR;
-    const minPR =
-      history.length > 0 ? Math.min(...history.map((h) => h.newPR)) : currentPR;
-
-    const totalPRGained = history
-      .filter((h) => h.change > 0)
-      .reduce((sum, h) => sum + h.change, 0);
-    const totalPRLost = history
-      .filter((h) => h.change < 0)
-      .reduce((sum, h) => sum + Math.abs(h.change), 0);
-
-    let currentStreak = 0;
-    for (let i = 0; i < history.length; i++) {
-      if (i === 0) {
-        currentStreak = history[i].won ? 1 : -1;
-      } else if (
-        (history[i].won && currentStreak > 0) ||
-        (!history[i].won && currentStreak < 0)
-      ) {
-        currentStreak += history[i].won ? 1 : -1;
-      } else {
-        break;
-      }
-    }
-
+    const visible = ranked.filter((entry) => !hidden.has(String(entry.userId)));
+    const start = Math.max(0, Number.parseInt(args.cursor ?? "0", 10) || 0);
+    const limit = Math.min(100, Math.max(1, args.limit ?? 50));
+    const page = visible.slice(start, start + limit);
     return {
-      currentPR,
-      currentRank,
-      totalGames,
-      wins,
-      losses,
-      winRate: Math.round(winRate * 10) / 10,
-      maxPR,
-      minPR,
-      totalPRGained,
-      totalPRLost,
-      currentStreak: Math.abs(currentStreak),
-      streakType: currentStreak >= 0 ? ("win" as const) : ("loss" as const),
+      page,
+      nextCursor: start + limit < visible.length ? String(start + limit) : null,
+      isDone: start + limit >= visible.length,
     };
+  },
+});
+
+export const getMyPosition = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuthUserId(ctx);
+    const user = await ctx.db.get(userId);
+    if (!user || (user.rankedGames ?? 0) === 0) return null;
+    const points = user.rankingPoints ?? INITIAL_RANKING_POINTS;
+    const higherPlayers = (await ctx.db.query("users").collect()).filter(
+      (candidate) =>
+        (candidate.rankedGames ?? 0) > 0 &&
+        (candidate.rankingPoints ?? INITIAL_RANKING_POINTS) > points,
+    );
+    return { points, position: higherPlayers.length + 1 };
   },
 });

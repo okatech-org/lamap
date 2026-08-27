@@ -1,6 +1,6 @@
 /**
  * Design Tokens - Lamap App
- * 
+ *
  * Extracted from reference screens (Welcome & Playing Board)
  * All values should be used throughout the app for consistency
  */
@@ -12,41 +12,41 @@
 export const DesignColors = {
   // Backgrounds
   background: {
-    primary: '#1C2A3A',      // Bleu-gris foncé principal
-    secondary: '#243447',    // Bleu-gris légèrement plus clair
-    tertiary: '#2D3E50',     // Surfaces élevées (cards)
+    primary: "#16070B", // Bordeaux nuit principal
+    secondary: "#24090F", // Bordeaux légèrement plus clair
+    tertiary: "#3A0D18", // Surfaces élevées (cards)
   },
 
   // Accents
   primary: {
-    DEFAULT: '#E86C5D',      // Rouge/corail principal
-    hover: '#D45A4D',        // État hover
-    pressed: '#C24A3D',      // État pressed
+    DEFAULT: "#7D1E32", // Bordeaux principal
+    hover: "#5B1525", // État hover
+    pressed: "#3A0D18", // État pressed
   },
 
   // Texte
   text: {
-    primary: '#FFFFFF',      // Blanc pur pour titres
-    secondary: '#A0AEC0',    // Gris clair pour texte secondaire
-    muted: '#718096',        // Gris moyen pour texte tertiaire
-    inverse: '#1C2A3A',      // Texte sur fond clair
+    primary: "#F1E8D6", // Ivoire papier pour titres
+    secondary: "#DED0B8", // Ivoire atténué pour texte secondaire
+    muted: "#A98E75", // Encre claire pour texte tertiaire
+    inverse: "#211712", // Encre sur fond clair
   },
 
   // Bordures
   border: {
-    DEFAULT: '#374151',      // Bordures subtiles
-    light: '#4A5568',        // Bordures légèrement visibles
-    strong: '#E86C5D',       // Bordures accentuées
+    DEFAULT: "#5B1525", // Bordures subtiles
+    light: "#C9A55F", // Bordures légèrement visibles
+    strong: "#E3C77E", // Bordures accentuées
   },
 
   // États
-  success: '#48BB78',        // Vert
-  warning: '#F6AD55',        // Orange (badges Kora)
-  error: '#FC8181',          // Rouge erreur
-  info: '#63B3ED',           // Bleu info
+  success: "#48BB78", // Vert
+  warning: "#F6AD55", // Orange (badges Kora)
+  error: "#FC8181", // Rouge erreur
+  info: "#63B3ED", // Bleu info
 
   // Overlay
-  overlay: 'rgba(0, 0, 0, 0.5)',
+  overlay: "rgba(0, 0, 0, 0.5)",
 } as const;
 
 // ============================================
@@ -56,29 +56,29 @@ export const DesignColors = {
 export const Designtypography = {
   // Font Sizes
   fontSize: {
-    xxxl: 48,      // "Lamap" - Titres ultra-large
-    xxl: 32,       // Titres de page
-    xl: 24,        // Titres de section
-    lg: 20,        // Sous-titres importants
-    md: 16,        // Texte normal
-    sm: 14,        // Texte secondaire
-    xs: 12,        // Très petit texte
+    xxxl: 48, // "Lamap" - Titres ultra-large
+    xxl: 32, // Titres de page
+    xl: 24, // Titres de section
+    lg: 20, // Sous-titres importants
+    md: 16, // Texte normal
+    sm: 14, // Texte secondaire
+    xs: 12, // Très petit texte
   },
 
   // Font Weights
   fontWeight: {
-    black: '900' as const,
-    bold: '700' as const,
-    semibold: '600' as const,
-    medium: '500' as const,
-    regular: '400' as const,
+    black: "900" as const,
+    bold: "700" as const,
+    semibold: "600" as const,
+    medium: "500" as const,
+    regular: "400" as const,
   },
 
   // Line Heights
   lineHeight: {
-    tight: 1.2,      // Titres
-    normal: 1.5,     // Texte normal
-    relaxed: 1.75,   // Texte aéré
+    tight: 1.2, // Titres
+    normal: 1.5, // Texte normal
+    relaxed: 1.75, // Texte aéré
   },
 } as const;
 
@@ -97,10 +97,10 @@ export const DesignSpacing = {
   xxxl: 64,
 
   // Paddings spécifiques
-  container: 24,     // Padding horizontal des écrans
-  card: 20,          // Padding interne des cartes
-  button: 16,        // Padding vertical des boutons
-  input: 16,         // Padding des inputs
+  container: 24, // Padding horizontal des écrans
+  card: 20, // Padding interne des cartes
+  button: 16, // Padding vertical des boutons
+  input: 16, // Padding des inputs
 } as const;
 
 // ============================================
@@ -108,11 +108,11 @@ export const DesignSpacing = {
 // ============================================
 
 export const DesignBorderRadius = {
-  sm: 8,       // Petits éléments
-  md: 12,      // Cartes standard
-  lg: 16,      // Grandes cartes
-  xl: 20,      // Modaux
-  pill: 999,   // Boutons pill-shaped (comme Welcome)
+  sm: 8, // Petits éléments
+  md: 12, // Cartes standard
+  lg: 16, // Grandes cartes
+  xl: 20, // Modaux
+  pill: 999, // Boutons pill-shaped (comme Welcome)
 } as const;
 
 // ============================================
@@ -121,21 +121,21 @@ export const DesignBorderRadius = {
 
 export const DesignShadows = {
   sm: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
   md: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
   },
   lg: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -154,9 +154,9 @@ export const DesignAnimations = {
     slow: 300,
   },
   easing: {
-    easeInOut: 'ease-in-out',
-    easeOut: 'ease-out',
-    easeIn: 'ease-in',
+    easeInOut: "ease-in-out",
+    easeOut: "ease-out",
+    easeIn: "ease-in",
   },
 } as const;
 

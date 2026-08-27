@@ -1,0 +1,116 @@
+.page {
+  min-height: 100vh;
+  padding: 32px 20px 80px;
+  color: #f5f2ed;
+  background:
+    radial-gradient(
+      circle at 85% 0%,
+      rgba(180, 68, 62, 0.24),
+      transparent 34rem
+    ),
+    #0f1620;
+}
+
+.shell {
+  width: min(100%, 780px);
+  margin: 0 auto;
+}
+
+.back {
+  color: #c9a876;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.header {
+  margin: 64px 0 44px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid rgba(201, 168, 118, 0.25);
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: #c9a876;
+  font:
+    600 11px/1.4 var(--font-mono-loaded),
+    monospace;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.header h1 {
+  margin: 0;
+  font:
+    600 clamp(42px, 7vw, 70px)/0.95 var(--font-card-loaded),
+    Georgia,
+    serif;
+  letter-spacing: -0.04em;
+}
+
+.updated {
+  margin: 18px 0 0;
+  color: rgba(245, 242, 237, 0.55);
+  font-size: 13px;
+}
+
+.content {
+  color: rgba(245, 242, 237, 0.76);
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.content section + section {
+  margin-top: 38px;
+}
+
+.content h2 {
+  margin: 0 0 12px;
+  color: #f5f2ed;
+  font:
+    600 27px/1.15 var(--font-card-loaded),
+    Georgia,
+    serif;
+}
+
+.content p,
+.content ul {
+  margin: 0;
+}
+
+.content p + p,
+.content p + ul,
+.content ul + p {
+  margin-top: 12px;
+}
+
+.content li + li {
+  margin-top: 7px;
+}
+
+.content a {
+  color: #d9bb86;
+}
+
+.contact {
+  display: inline-flex;
+  margin-top: 14px;
+  padding: 12px 16px;
+  border: 1px solid rgba(201, 168, 118, 0.55);
+  color: #f5f2ed;
+  text-decoration: none;
+}
+
+.cards {
+  display: grid;
+  gap: 14px;
+}
+
+.card {
+  padding: 20px;
+  border: 1px solid rgba(201, 168, 118, 0.2);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.card h2 {
+  font-size: 22px;
+}

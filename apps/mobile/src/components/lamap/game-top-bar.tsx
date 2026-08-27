@@ -15,9 +15,8 @@ interface LamapGameTopBarProps {
 }
 
 /**
- * In-game top bar — manche pips on the left, optional concede flag (or a
- * caller-supplied right slot for chat/timer) on the right. Sits flush with
- * the safe-area top inset over the table backdrop.
+ * In-game top bar — manche pips on the left and an optional concede flag on
+ * the right. Sits flush with the safe-area top inset over the table backdrop.
  */
 export function LamapGameTopBar({
   current,
@@ -30,7 +29,7 @@ export function LamapGameTopBar({
   return (
     <View style={[styles.wrap, { paddingTop: insets.top + 8 }]}>
       <LinearGradient
-        colors={["rgba(15,22,32,0.9)", "rgba(15,22,32,0.5)"]}
+        colors={["rgba(22,7,11,0.9)", "rgba(22,7,11,0.5)"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -48,7 +47,10 @@ export function LamapGameTopBar({
               hitSlop={6}
             >
               <Svg width={14} height={16} viewBox="0 0 14 16">
-                <Path d="M2 1 V 15 H 3 V 9 L 12 9 L 10 5 L 12 1 Z" fill={COLORS.cream} />
+                <Path
+                  d="M2 1 V 15 H 3 V 9 L 12 9 L 10 5 L 12 1 Z"
+                  fill={COLORS.cream}
+                />
               </Svg>
             </Pressable>
           ) : null}
@@ -61,7 +63,7 @@ export function LamapGameTopBar({
 const styles = StyleSheet.create({
   wrap: {
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(201, 168, 118, 0.12)",
+    borderBottomColor: "rgba(201, 165, 95, 0.12)",
   },
   row: {
     flexDirection: "row",
@@ -81,8 +83,8 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#8E2F2A",
+    backgroundColor: COLORS.terre,
     borderWidth: 1,
-    borderColor: "rgba(201, 168, 118, 0.3)",
+    borderColor: "rgba(201, 165, 95, 0.3)",
   },
 });

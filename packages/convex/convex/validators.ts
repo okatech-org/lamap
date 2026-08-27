@@ -3,7 +3,7 @@ import { Infer, v } from "convex/values";
 export const gameStatusValidator = v.union(
   v.literal("WAITING"),
   v.literal("PLAYING"),
-  v.literal("ENDED")
+  v.literal("ENDED"),
 );
 
 export const playerTypeValidator = v.union(v.literal("user"), v.literal("ai"));
@@ -11,28 +11,16 @@ export const playerTypeValidator = v.union(v.literal("user"), v.literal("ai"));
 export const aiDifficultyValidator = v.union(
   v.literal("easy"),
   v.literal("medium"),
-  v.literal("hard")
+  v.literal("hard"),
 );
 
-export const gameModeValidator = v.union(
-  v.literal("AI"),
-  v.literal("RANKED"),
-  v.literal("CASH"),
-  v.literal("ONLINE"),
-  v.literal("LOCAL")
-);
-
-export const currencyValidator = v.union(
-  v.literal("XAF"),
-  v.literal("EUR"),
-  v.literal("USD")
-);
+export const gameModeValidator = v.union(v.literal("AI"), v.literal("RANKED"));
 
 export const suitValidator = v.union(
   v.literal("hearts"),
   v.literal("diamonds"),
   v.literal("clubs"),
-  v.literal("spades")
+  v.literal("spades"),
 );
 
 export const rankValidator = v.union(
@@ -43,18 +31,15 @@ export const rankValidator = v.union(
   v.literal("7"),
   v.literal("8"),
   v.literal("9"),
-  v.literal("10")
 );
 
 export const victoryTypeValidator = v.union(
   v.literal("normal"),
-  v.literal("auto_sum"),
-  v.literal("auto_sevens"),
   v.literal("simple_kora"),
   v.literal("double_kora"),
   v.literal("triple_kora"),
-  v.literal("on_time"),
-  v.literal("forfeit")
+  v.literal("forfeit"),
+  v.literal("technical"),
 );
 
 export const gameHistoryActionValidator = v.union(
@@ -64,8 +49,6 @@ export const gameHistoryActionValidator = v.union(
   v.literal("round_won"),
   v.literal("kora_achieved"),
   v.literal("game_ended"),
-  v.literal("player_joined"),
-  v.literal("player_left")
 );
 
 export const cardValidator = v.object({
@@ -75,20 +58,15 @@ export const cardValidator = v.object({
   playable: v.boolean(),
 });
 
-export const betValidator = v.object({
-  amount: v.number(),
-  currency: currencyValidator,
-});
-
 export const playerValidator = v.object({
   userId: v.union(v.id("users"), v.null()),
   botId: v.optional(v.string()),
   username: v.string(),
   type: playerTypeValidator,
   isConnected: v.boolean(),
-  avatar: v.optional(v.string()),
+  avatarId: v.optional(v.string()),
+  cardBackId: v.optional(v.string()),
   hand: v.optional(v.array(cardValidator)),
-  balance: v.number(),
   aiDifficulty: v.optional(aiDifficultyValidator),
   isThinking: v.optional(v.boolean()),
 });
@@ -112,27 +90,15 @@ export const gameHistoryValidator = v.object({
       round: v.optional(v.number()),
       winnerId: v.optional(v.union(v.id("users"), v.string())),
       koraType: v.optional(v.string()),
-      multiplier: v.optional(v.number()),
       message: v.optional(v.string()),
-    })
+    }),
   ),
-});
-
-export const gameChatMessageValidator = v.object({
-  gameId: v.string(),
-  playerId: v.union(v.id("users"), v.string()),
-  playerUsername: v.string(),
-  message: v.string(),
-  timestamp: v.number(),
 });
 
 export type Rank = Infer<typeof rankValidator>;
 export type Suit = Infer<typeof suitValidator>;
 export type VictoryType = Infer<typeof victoryTypeValidator>;
-export type GameHistoryAction = Infer<typeof gameHistoryActionValidator>;
 export type Card = Infer<typeof cardValidator>;
-export type Bet = Infer<typeof betValidator>;
 export type Player = Infer<typeof playerValidator>;
 export type PlayedCard = Infer<typeof playedCardValidator>;
 export type GameHistory = Infer<typeof gameHistoryValidator>;
-export type GameChatMessage = Infer<typeof gameChatMessageValidator>;

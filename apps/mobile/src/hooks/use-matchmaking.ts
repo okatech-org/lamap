@@ -1,92 +1,28 @@
 import { api } from "@lamap/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
-import { useAuth } from "./use-auth";
+import { useCallback } from "react";
 
 export function useMatchmaking() {
-  const { userId } = useAuth();
-  const user = useQuery(
-    api.users.getCurrentUser,
-    userId ? { clerkUserId: userId } : "skip"
+  const queue = useQuery(api.matchmaking.getMyStatus, {});
+  const join = useMutation(api.matchmaking.joinQueue);
+  const leave = useMutation(api.matchmaking.leaveQueue);
+  const createTrainingMutation = useMutation(api.games.createTraining);
+  const joinQueue = useCallback(() => join({}), [join]);
+  const leaveQueue = useCallback(() => leave({}), [leave]);
+  const createTraining = useCallback(
+    async (difficulty: "easy" | "medium" | "hard") => {
+      const result = await createTrainingMutation({ difficulty });
+      return result.gameId;
+    },
+    [createTrainingMutation],
   );
-  const myUserId = user?._id;
-
-  const queueStatus = useQuery(
-    api.matchmaking.getMyStatus,
-    myUserId ? { userId: myUserId } : "skip"
-  );
-
-  const joinQueue = useMutation(api.matchmaking.joinQueue);
-  const leaveQueue = useMutation(api.matchmaking.leaveQueue);
-  const createMatchVsAI = useMutation(api.matchmaking.createMatchVsAI);
-  const setMatchReady = useMutation(api.matchmaking.setMatchReady);
-
-  const handleJoinQueue = async (
-    betAmount: number,
-    currency: "EUR" | "XAF" | "USD" = "XAF",
-    mode?: "RANKED" | "CASH",
-    competitive?: boolean,
-    timerEnabled?: boolean,
-    timerDuration?: number
-  ) => {
-    if (!myUserId) {
-      throw new Error("User not authenticated");
-    }
-
-    const gameMode = mode || (betAmount === 0 ? "RANKED" : "CASH");
-    const isCompetitive = competitive !== undefined ? competitive : true;
-
-    return await joinQueue({
-      userId: myUserId,
-      betAmount,
-      currency,
-      mode: gameMode,
-      competitive: isCompetitive,
-      timerEnabled,
-      timerDuration,
-    });
-  };
-
-  const handleLeaveQueue = async () => {
-    if (!myUserId) {
-      throw new Error("User not authenticated");
-    }
-    return await leaveQueue({ userId: myUserId });
-  };
-
-  const handleCreateMatchVsAI = async (
-    betAmount: number,
-    difficulty: "easy" | "medium" | "hard",
-    currency: "EUR" | "XAF" = "XAF"
-  ) => {
-    if (!myUserId) {
-      throw new Error("User not authenticated");
-    }
-    return await createMatchVsAI({
-      playerId: myUserId,
-      betAmount,
-      difficulty,
-      currency,
-    });
-  };
-
-  const handleSetMatchReady = async (gameId: string) => {
-    if (!myUserId) {
-      throw new Error("User not authenticated");
-    }
-    return await setMatchReady({ gameId, playerId: myUserId });
-  };
-
   return {
-    status: queueStatus?.status || "idle",
-    opponent: queueStatus?.opponent,
-    gameId: queueStatus?.gameId,
-    match: queueStatus?.game,
-    betAmount: queueStatus?.betAmount,
-    joinedAt: queueStatus?.joinedAt,
-    joinQueue: handleJoinQueue,
-    leaveQueue: handleLeaveQueue,
-    createMatchVsAI: handleCreateMatchVsAI,
-    setMatchReady: handleSetMatchReady,
-    timeInQueue: queueStatus?.joinedAt ? Date.now() - queueStatus.joinedAt : 0,
+    status: queue?.status ?? "idle",
+    gameId: queue?.status === "matched" ? queue.gameId : undefined,
+    opponent: queue?.status === "matched" ? queue.opponent : undefined,
+    joinedAt: queue && queue.status !== "idle" ? queue.joinedAt : undefined,
+    joinQueue,
+    leaveQueue,
+    createTraining,
   };
 }

@@ -24,7 +24,7 @@ export default function NotFound() {
         </View>
         <Button
           title="Retour à l'accueil"
-          onPress={() => router.push("/(tabs)/index")}
+          onPress={() => router.push("/(tabs)")}
           variant="primary"
           style={styles.button}
         />

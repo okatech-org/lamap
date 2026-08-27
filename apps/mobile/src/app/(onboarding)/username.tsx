@@ -1,157 +1,88 @@
 import { UsernameInput } from "@/components/onboarding/username-input";
 import { Button } from "@/components/ui/button";
-import { Spacing } from "@/constants/spacing";
-import { typography } from "@/constants/typography";
-import { api } from "@lamap/convex/_generated/api";
-import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/use-colors";
-import { getAutoDetectedCountry } from "@/utils/localization";
+import { api } from "@lamap/convex/_generated/api";
 import { useMutation } from "convex/react";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
-import Animated, {
-    FadeInDown,
-    FadeInUp,
-} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function UsernameScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { convexUser } = useAuth();
+  const finalize = useMutation(api.onboarding.finalizeUsername);
   const [username, setUsername] = useState("");
-  const [isValid, setIsValid] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const setUsernameMutation = useMutation(api.onboarding.setUsername);
-  const setCountryMutation = useMutation(api.onboarding.setCountry);
-  const completeOnboardingMutation = useMutation(api.onboarding.completeOnboarding);
-  
-  const handleContinue = async () => {
-    if (!convexUser?._id || !isValid) return;
-    
+  const [valid, setValid] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async () => {
+    if (!valid) return;
+    setSubmitting(true);
     try {
-      setIsSubmitting(true);
-      
-      // Set username
-      await setUsernameMutation({
-        userId: convexUser._id,
-        username: username.toLowerCase().trim(),
-      });
-      
-      // Auto-detect and set country
-      const detectedCountry = getAutoDetectedCountry();
-      await setCountryMutation({
-        userId: convexUser._id,
-        countryCode: detectedCountry,
-      });
-      
-      // Complete onboarding
-      await completeOnboardingMutation({ userId: convexUser._id });
-      
-      // Go to tutorial or main app
+      await finalize({ username });
       router.replace("/(tabs)");
     } catch (error) {
-      console.error("Erreur lors de l'onboarding:", error);
+      Alert.alert(
+        "Pseudo indisponible",
+        error instanceof Error ? error.message : "Choisissez un autre pseudo.",
+      );
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
-  
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    content: {
-      flex: 1,
-      padding: Spacing.container.horizontal,  // 24px
-      justifyContent: "center",
-    },
-    header: {
-      marginBottom: Spacing.xxl,  // 48px
-    },
-    step: {
-      fontSize: typography.caption.fontSize,  // 14px
-      color: colors.mutedForeground,
-      fontWeight: typography.captionBold.fontWeight,  // 600
-      marginBottom: Spacing.sm,  // 8px
-      textTransform: "uppercase",
-      letterSpacing: 1,
-    },
-    title: {
-      fontSize: typography.display.fontSize,  // 48px - wow factor!
-      fontWeight: typography.display.fontWeight,  // 900
-      color: colors.foreground,
-      marginBottom: Spacing.md,  // 16px
-      lineHeight: typography.display.lineHeight,
-    },
-    subtitle: {
-      fontSize: typography.body.fontSize,  // 16px
-      color: colors.mutedForeground,
-      lineHeight: typography.body.lineHeight,
-    },
-    inputSection: {
-      marginBottom: Spacing.xl,  // 32px
-    },
-    footer: {
-      padding: Spacing.container.horizontal,  // 24px
-      paddingBottom: Spacing.xl,  // 32px
-    },
-  });
-  
+
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={styles.content}>
-          <Animated.View
-            entering={FadeInUp.duration(600).delay(100)}
-            style={styles.header}
-          >
-            <Text style={styles.step}>Configuration</Text>
-            <Text style={styles.title}>Choisissez votre nom</Text>
-            <Text style={styles.subtitle}>
-              Ce sera votre identité dans le jeu. Choisissez quelque chose de mémorable !
-            </Text>
-          </Animated.View>
-          
-          <Animated.View
-            entering={FadeInDown.duration(600).delay(200)}
-            style={styles.inputSection}
-          >
+          <Text style={[styles.eyebrow, { color: colors.primary }]}>
+            BIENVENUE
+          </Text>
+          <Text style={[styles.title, { color: colors.foreground }]}>
+            Choisissez votre pseudo.
+          </Text>
+          <Text style={[styles.body, { color: colors.mutedForeground }]}>
+            Il sera visible dans les parties et le classement mondial.
+          </Text>
+          <View style={styles.input}>
             <UsernameInput
               value={username}
               onChangeText={setUsername}
-              userId={convexUser?._id}
-              onValidationChange={setIsValid}
+              onValidationChange={setValid}
             />
-          </Animated.View>
+          </View>
         </View>
-        
-        <Animated.View
-          entering={FadeInUp.duration(600).delay(300)}
-          style={styles.footer}
-        >
+        <View style={styles.footer}>
           <Button
-            title="Continuer"
-            onPress={handleContinue}
-            disabled={!isValid || isSubmitting}
-            loading={isSubmitting}
+            title="Commencer"
             variant="primary"
+            onPress={submit}
+            disabled={!valid || submitting}
+            loading={submitting}
           />
-        </Animated.View>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  content: { flex: 1, justifyContent: "center", padding: 24 },
+  eyebrow: { fontSize: 12, fontWeight: "800", letterSpacing: 2 },
+  title: { fontSize: 38, lineHeight: 42, fontWeight: "900", marginTop: 12 },
+  body: { fontSize: 16, lineHeight: 23, marginTop: 12 },
+  input: { marginTop: 32 },
+  footer: { padding: 24 },
+});

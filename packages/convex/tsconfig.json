@@ -6,5 +6,10 @@
     "types": ["node"]
   },
   "include": ["convex/**/*.ts"],
-  "exclude": ["dist", "node_modules", "convex/_generated"]
+  "exclude": [
+    "dist",
+    "node_modules",
+    "convex/_generated",
+    "convex/**/*.test.ts"
+  ]
 }
