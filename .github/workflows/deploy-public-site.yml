@@ -6,6 +6,7 @@ on:
       - main
       - feat/redesign-front
     paths:
+      - "README.md"
       - "apps/web/**"
       - "packages/convex/**"
       - "bun.lock"
