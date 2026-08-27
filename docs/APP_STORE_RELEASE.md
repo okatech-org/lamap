@@ -38,7 +38,7 @@ Lamap ne doit pas être marqué « Prêt pour la soumission » tant que chaque c
 - [x] renseigner l’App Store Connect ID `6756675386` et le Team ID `5Y39TTNCM7` dans `apps/mobile/eas.json` ;
 - [x] configurer les environnements EAS et les identifiants de signature iOS ;
 - [ ] vérifier les informations juridiques exactes de l’éditeur et rendre `support@lamap.gg` opérationnel ;
-- [ ] déployer et vérifier l’accueil, le support, la confidentialité et les CGU sur `https://lamap-okatechs-projects-f0102678.vercel.app/` ;
+- [x] déployer et vérifier l’accueil, le support, la confidentialité et les CGU sur `https://lamap-okatechs-projects-f0102678.vercel.app/` ;
 - [ ] ajouter le secret GitHub `EXPO_TOKEN` du compte Expo OkaTech ;
 - [ ] attendre le renouvellement du quota iOS EAS le 1er septembre 2026, ou utiliser un forfait disposant d’une build.
 
