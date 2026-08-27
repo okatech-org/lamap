@@ -82,7 +82,7 @@ set_env APPLE_APP_ID "$APPLE_APP_ID"
 set_env APPLE_ROOT_CERTIFICATES_BASE64 "$APPLE_ROOT_CERTIFICATES_BASE64"
 
 color_green "Déploiement du schéma et des fonctions Convex"
-"${LAMAP_CONVEX[@]}" deploy --prod
+"${LAMAP_CONVEX[@]}" deploy
 
 color_green "Backend de production déployé."
 printf '%s\n' "Configure maintenant EXPO_PUBLIC_CONVEX_URL dans EAS, puis exécute le codegen contre ce déploiement."
