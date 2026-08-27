@@ -1,7 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Inter, JetBrains_Mono, Crimson_Pro } from "next/font/google";
-import { ConvexClerkProvider } from "@/components/providers/ConvexClerkProvider";
+import {
+  Bricolage_Grotesque,
+  Inter,
+  JetBrains_Mono,
+  Crimson_Pro,
+} from "next/font/google";
 import "./globals.css";
+
+const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const publicSiteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://okatech-org.github.io/lamap";
 
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -34,8 +42,8 @@ const crimson = Crimson_Pro({
 export const metadata: Metadata = {
   title: "LaMap — Le jeu de cartes du Cameroun",
   description:
-    "Joue. Domine. Devenu Légende. Matchmaking instantané, mises en Kora, classement Elo officiel.",
-  metadataBase: new URL("https://lamap.gg"),
+    "La Map en ligne. Entre à table, trouve un adversaire et joue le jeu de cartes du Cameroun.",
+  metadataBase: new URL(publicSiteUrl),
   openGraph: {
     title: "LaMap",
     description: "Le jeu de cartes du Cameroun, en ligne.",
@@ -44,19 +52,29 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0A0E14",
+  themeColor: "#16070B",
   width: "device-width",
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html
       lang="fr"
       className={`${bricolage.variable} ${inter.variable} ${jetbrains.variable} ${crimson.variable}`}
     >
-      <body>
-        <ConvexClerkProvider>{children}</ConvexClerkProvider>
+      <body
+        style={
+          {
+            "--paper-image": `url("${publicBasePath}/images/paper-cotton.jpg")`,
+          } as React.CSSProperties
+        }
+      >
+        {children}
       </body>
     </html>
   );

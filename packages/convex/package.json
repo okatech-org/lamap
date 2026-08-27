@@ -7,14 +7,19 @@
     "deploy": "convex deploy",
     "codegen": "convex codegen",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "lint": "echo \"(convex package: no lint configured yet)\""
   },
   "dependencies": {
-    "@convex-dev/expo-push-notifications": "^0.3.0",
-    "convex": "^1.31.0",
-    "svix": "^1.82.0"
+    "@apple/app-store-server-library": "3.1.0",
+    "@auth/core": "0.41.1",
+    "@convex-dev/auth": "0.0.95",
+    "convex": "^1.32.0"
   },
   "devDependencies": {
-    "typescript": "~5.9.2"
+    "@edge-runtime/vm": "^5.0.0",
+    "convex-test": "0.0.44",
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.11"
   }
 }

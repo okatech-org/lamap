@@ -1,8 +1,10 @@
 import { COLORS } from "@/design";
+import { PAPER_TEXTURE_SOURCE } from "./paper-texture";
 import {
   BlurMask,
   Canvas,
   Group,
+  Image as SkImage,
   LinearGradient,
   Path,
   RoundedRect,
@@ -12,6 +14,7 @@ import {
   rect,
   rrect,
   useFont,
+  useImage,
   vec,
 } from "@shopify/react-native-skia";
 import React, { useEffect, useMemo } from "react";
@@ -30,7 +33,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 export type Suit = "hearts" | "diamonds" | "clubs" | "spades";
-export type Rank = "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10";
+export type Rank = "3" | "4" | "5" | "6" | "7" | "8" | "9";
 type CardState = "playable" | "disabled" | "selected" | "played";
 type CardFace = "front" | "back";
 
@@ -55,17 +58,17 @@ const CARD_WIDTHS: Record<NonNullable<PlayingCardSkiaProps["size"]>, number> = {
 };
 
 export const SUIT_COLORS: Record<Suit, string> = {
-  spades: "#1A1A1A",
-  clubs: "#1A1A1A",
-  hearts: "#B4443E",
-  diamonds: "#B4443E",
+  spades: COLORS.ink,
+  clubs: COLORS.ink,
+  hearts: COLORS.terre2,
+  diamonds: COLORS.terre2,
 };
 
 export const SUIT_HIGHLIGHT: Record<Suit, string> = {
   spades: "#3A3A3A",
   clubs: "#3A3A3A",
-  hearts: "#D4635D",
-  diamonds: "#D4635D",
+  hearts: "#9A314A",
+  diamonds: "#9A314A",
 };
 
 // Suit paths normalized to a 100×100 viewBox (origin top-left, matches the
@@ -93,9 +96,7 @@ export function makeSuitPath(suit: Suit) {
       p.addCircle(50, 25, 18);
       p.addCircle(33, 49, 18);
       p.addCircle(67, 49, 18);
-      const tail = Skia.Path.MakeFromSVGString(
-        "M50 60 L38 93 Q50 83 62 93 Z",
-      );
+      const tail = Skia.Path.MakeFromSVGString("M50 60 L38 93 Q50 83 62 93 Z");
       if (tail) p.addPath(tail);
       return p;
     }
@@ -171,6 +172,7 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
     [titleFontSize],
   );
   const font = titleFont ?? fallbackFont;
+  const paperTexture = useImage(PAPER_TEXTURE_SOURCE);
 
   // --- Animated values ---
   const tiltX = useSharedValue(0); // −1 .. 1 (touch X normalized)
@@ -203,7 +205,10 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
       // breathing pulse on glow
       glowOpacity.value = withRepeat(
         withSequence(
-          withTiming(0.55, { duration: 1100, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.55, {
+            duration: 1100,
+            easing: Easing.inOut(Easing.ease),
+          }),
           withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.ease) }),
         ),
         -1,
@@ -232,7 +237,7 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
 
   // --- 3D wrapper transform ---
   const wrapperStyle = useAnimatedStyle(() => {
-    const rotY = (tiltX.value * 12) + flipProgress.value;
+    const rotY = tiltX.value * 12 + flipProgress.value;
     const rotX = -tiltY.value * 12;
     return {
       opacity: entranceOpacity.value,
@@ -362,11 +367,11 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
             <LinearGradient
               start={vec(bodyX, bodyY)}
               end={vec(bodyX + cardWidth, bodyY + cardHeight)}
-              colors={["#FAF7F1", "#ECE6DA", "#E2DACB"]}
+              colors={[COLORS.cream, COLORS.cream2, "#CBB99F"]}
             />
           </RoundedRect>
 
-          {/* Holographic sheen (moves with tilt) */}
+          {/* Cotton-paper grain + holographic sheen (moves with tilt) */}
           <Group
             clip={rrect(
               rect(bodyX, bodyY, cardWidth, cardHeight),
@@ -374,6 +379,17 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
               radius,
             )}
           >
+            {paperTexture && (
+              <SkImage
+                image={paperTexture}
+                x={bodyX}
+                y={bodyY}
+                width={cardWidth}
+                height={cardHeight}
+                fit="cover"
+                opacity={0.32}
+              />
+            )}
             <RoundedRect
               x={bodyX}
               y={bodyY}
@@ -387,8 +403,8 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
                 colors={[
                   "rgba(255,255,255,0)",
                   "rgba(255,255,255,0.45)",
-                  "rgba(212,99,93,0.18)",
-                  "rgba(201,168,118,0.32)",
+                  "rgba(125,30,50,0.18)",
+                  "rgba(201,165,95,0.32)",
                   "rgba(255,255,255,0)",
                 ]}
                 positions={[0, 0.35, 0.5, 0.65, 1]}
@@ -403,7 +419,7 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
             width={cardWidth - 6}
             height={cardHeight - 6}
             r={radius - 2}
-            color="rgba(166,130,88,0.45)"
+            color="rgba(201,165,95,0.45)"
             style="stroke"
             strokeWidth={1}
           />
@@ -415,13 +431,18 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
             width={cardWidth}
             height={cardHeight}
             r={radius}
-            color={isSelected ? COLORS.or2 : "rgba(20,26,34,0.35)"}
+            color={isSelected ? COLORS.or2 : "rgba(33,23,18,0.35)"}
             style="stroke"
             strokeWidth={isSelected ? 2.5 : 1.2}
           />
 
           {/* TOP-LEFT corner */}
-          <Group transform={[{ translateX: bodyX + padding }, { translateY: bodyY + padding }]}>
+          <Group
+            transform={[
+              { translateX: bodyX + padding },
+              { translateY: bodyY + padding },
+            ]}
+          >
             <SkText
               x={0}
               y={titleFontSize * 0.9}
@@ -436,7 +457,11 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
               ]}
             >
               <Path path={suitPath} color={suitColor} />
-              <Path path={suitHighlightPath} color={suitHighlight} opacity={0.35} />
+              <Path
+                path={suitHighlightPath}
+                color={suitHighlight}
+                opacity={0.35}
+              />
             </Group>
           </Group>
 
@@ -462,7 +487,11 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
               ]}
             >
               <Path path={suitPath} color={suitColor} />
-              <Path path={suitHighlightPath} color={suitHighlight} opacity={0.35} />
+              <Path
+                path={suitHighlightPath}
+                color={suitHighlight}
+                opacity={0.35}
+              />
             </Group>
           </Group>
 
@@ -475,7 +504,11 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
             ]}
           >
             <Path path={suitPath} color={suitColor} />
-            <Path path={suitHighlightPath} color={suitHighlight} opacity={0.4} />
+            <Path
+              path={suitHighlightPath}
+              color={suitHighlight}
+              opacity={0.4}
+            />
           </Group>
         </Canvas>
       </Animated.View>
@@ -507,7 +540,7 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
             <BlurMask blur={14} style="normal" />
           </RoundedRect>
 
-          {/* Deep red body */}
+          {/* Deep burgundy body */}
           <RoundedRect
             x={bodyX}
             y={bodyY}
@@ -518,7 +551,7 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
             <LinearGradient
               start={vec(bodyX, bodyY)}
               end={vec(bodyX + cardWidth, bodyY + cardHeight)}
-              colors={["#B4443E", "#8E2F2A", "#6E2520"]}
+              colors={["#7D1E32", "#5B1525", "#3A0D18"]}
             />
           </RoundedRect>
 
@@ -530,6 +563,17 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
               radius,
             )}
           >
+            {paperTexture && (
+              <SkImage
+                image={paperTexture}
+                x={bodyX}
+                y={bodyY}
+                width={cardWidth}
+                height={cardHeight}
+                fit="cover"
+                opacity={0.12}
+              />
+            )}
             <RoundedRect
               x={bodyX}
               y={bodyY}
@@ -542,7 +586,7 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
                 end={sheenEnd}
                 colors={[
                   "rgba(255,255,255,0)",
-                  "rgba(201,168,118,0.4)",
+                  "rgba(201,165,95,0.4)",
                   "rgba(255,255,255,0)",
                 ]}
               />
@@ -556,7 +600,7 @@ export const PlayingCardSkia = React.memo(function PlayingCardSkia({
             width={cardWidth - 8}
             height={cardHeight - 8}
             r={radius - 3}
-            color="rgba(201,168,118,0.6)"
+            color="rgba(201,165,95,0.6)"
             style="stroke"
             strokeWidth={1.5}
           />

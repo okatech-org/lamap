@@ -1,8 +1,10 @@
 import { FONT_WEIGHTS } from "@/design";
 import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
 import React from "react";
 import { StyleSheet, Text, View, ViewStyle } from "react-native";
 import Svg, { Defs, Line, Pattern, Rect } from "react-native-svg";
+import { PAPER_TEXTURE_SOURCE } from "./paper-texture";
 
 export type CardBackTheme = "red" | "blue" | "gold" | "dark";
 
@@ -54,36 +56,40 @@ interface ThemeSpec {
 
 const THEMES: Record<CardBackTheme, ThemeSpec> = {
   red: {
-    bg: ["#B4443E", "#8E2F2A", "#6E2520"],
-    accent: "rgba(201, 168, 118, 0.6)",
-    diamondFill: "rgba(201, 168, 118, 0.2)",
-    monogram: "#C9A876",
+    bg: ["#7D1E32", "#5B1525", "#3A0D18"],
+    accent: "rgba(201, 165, 95, 0.6)",
+    diamondFill: "rgba(201, 165, 95, 0.2)",
+    monogram: "#E3C77E",
     border: "rgba(0, 0, 0, 0.4)",
   },
   blue: {
-    bg: ["#5A7A96", "#465D74", "#1F2C3B"],
-    accent: "rgba(201, 168, 118, 0.55)",
-    diamondFill: "rgba(201, 168, 118, 0.18)",
-    monogram: "#C9A876",
+    bg: ["#5B1525", "#3A0D18", "#16070B"],
+    accent: "rgba(201, 165, 95, 0.55)",
+    diamondFill: "rgba(201, 165, 95, 0.18)",
+    monogram: "#E3C77E",
     border: "rgba(0, 0, 0, 0.45)",
   },
   gold: {
-    bg: ["#D9B780", "#A68258", "#6E5536"],
+    bg: ["#E3C77E", "#C9A55F", "#8B6A31"],
     accent: "rgba(31, 24, 16, 0.55)",
     diamondFill: "rgba(31, 24, 16, 0.25)",
     monogram: "#1F1810",
     border: "rgba(0, 0, 0, 0.5)",
   },
   dark: {
-    bg: ["#2A1F1A", "#150D0B", "#0A0807"],
-    accent: "rgba(157, 91, 210, 0.55)",
-    diamondFill: "rgba(157, 91, 210, 0.18)",
-    monogram: "#C898E5",
+    bg: ["#3A0D18", "#24090F", "#16070B"],
+    accent: "rgba(201, 165, 95, 0.55)",
+    diamondFill: "rgba(201, 165, 95, 0.18)",
+    monogram: "#E3C77E",
     border: "rgba(0, 0, 0, 0.55)",
   },
 };
 
-export function CardBack({ size = "medium", theme = "red", style }: CardBackProps) {
+export function CardBack({
+  size = "medium",
+  theme = "red",
+  style,
+}: CardBackProps) {
   const cardWidth = CARD_WIDTHS[size];
   const cardHeight = cardWidth / CARD_ASPECT_RATIO;
   const inset = INSET[size];
@@ -112,6 +118,12 @@ export function CardBack({ size = "medium", theme = "red", style }: CardBackProp
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[StyleSheet.absoluteFill, { borderRadius: outerRadius }]}
+      />
+      <Image
+        source={PAPER_TEXTURE_SOURCE}
+        contentFit="cover"
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { opacity: 0.12 }]}
       />
 
       <View
@@ -200,7 +212,7 @@ const styles = StyleSheet.create({
   card: {
     overflow: "hidden",
     borderWidth: 1.5,
-    backgroundColor: "#8E2F2A",
+    backgroundColor: "#5B1525",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,

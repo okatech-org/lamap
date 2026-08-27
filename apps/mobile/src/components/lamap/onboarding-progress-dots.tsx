@@ -41,6 +41,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.terre,
   },
   barEmpty: {
-    backgroundColor: "rgba(245, 242, 237, 0.2)",
+    backgroundColor: "rgba(241, 232, 214, 0.2)",
   },
 });

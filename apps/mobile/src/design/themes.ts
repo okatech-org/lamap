@@ -16,7 +16,8 @@ export type ThemeId = "esmeralda" | "ember-royal" | "onyx" | "amethyste";
 
 type RGB = readonly [number, number, number];
 
-const rgba = (rgb: RGB, a: number) => `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
+const rgba = (rgb: RGB, a: number) =>
+  `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
 
 /** Compact per-theme declaration — everything else is derived in buildTheme(). */
 interface ThemeSpec {
@@ -99,33 +100,33 @@ const SPECS: Record<ThemeId, ThemeSpec> = {
   },
 
   "ember-royal": {
-    abyss: "#0A0F1A",
-    night: "#10182A",
-    night2: "#1A2438",
-    night3: "#243245",
-    velvet: "#2A1014",
-    accent: "#8E2F2A",
-    accentBright: "#C04A44",
-    accentGlow: "#D4574F",
-    accentDeep: "#4F1814",
-    accentText: "#FFB39F",
-    accentBase: [180, 68, 62],
-    gold: "#E8C879",
-    goldBright: "#F5D88B",
-    goldDeep: "#8B6E40",
-    goldBase: [232, 200, 121],
-    ember: "#D4574F",
-    emberBright: "#E8765C",
-    emberDeep: "#7B2520",
-    cream: "#F5F2ED",
-    creamBase: [245, 242, 237],
-    surfaceBase: [26, 36, 56],
-    bgAppStops: ["#1A2438", "#10182A", "#0A0F1A"],
-    bgAppGlowTop: "rgba(180,68,62,0.20)",
-    bgAppGlowBottom: "rgba(70,93,116,0.22)",
-    bgTableStops: ["#3A1D1F", "#1E1018", "#0B0710"],
-    bgTableGlow: "rgba(180,68,62,0.35)",
-    bgVelvetStops: ["#1A1014", "#0E0A0F"],
+    abyss: "#16070B",
+    night: "#24090F",
+    night2: "#3A0D18",
+    night3: "#5B1525",
+    velvet: "#24090F",
+    accent: "#5B1525",
+    accentBright: "#7D1E32",
+    accentGlow: "#9A314A",
+    accentDeep: "#3A0D18",
+    accentText: "#E3C77E",
+    accentBase: [125, 30, 50],
+    gold: "#C9A55F",
+    goldBright: "#E3C77E",
+    goldDeep: "#8B6A31",
+    goldBase: [201, 165, 95],
+    ember: "#7D1E32",
+    emberBright: "#9A314A",
+    emberDeep: "#3A0D18",
+    cream: "#F1E8D6",
+    creamBase: [241, 232, 214],
+    surfaceBase: [58, 13, 24],
+    bgAppStops: ["#3A0D18", "#24090F", "#16070B"],
+    bgAppGlowTop: "rgba(125,30,50,0.28)",
+    bgAppGlowBottom: "rgba(201,165,95,0.08)",
+    bgTableStops: ["#5B1525", "#24090F", "#16070B"],
+    bgTableGlow: "rgba(125,30,50,0.35)",
+    bgVelvetStops: ["#3A0D18", "#16070B"],
   },
 
   onyx: {
@@ -248,7 +249,11 @@ export interface Theme {
   creamA: (a: number) => string;
 
   // Background gradient inputs (consumed by DeepBg / TableBg / velvet bg)
-  bgApp: { stops: [string, string, string]; glowTop: string; glowBottom: string };
+  bgApp: {
+    stops: [string, string, string];
+    glowTop: string;
+    glowBottom: string;
+  };
   bgTable: { stops: [string, string, string]; glow: string };
   bgVelvet: { stops: [string, string] };
 
@@ -313,7 +318,11 @@ function buildTheme(id: ThemeId, s: ThemeSpec): Theme {
     surfA,
     creamA,
 
-    bgApp: { stops: s.bgAppStops, glowTop: s.bgAppGlowTop, glowBottom: s.bgAppGlowBottom },
+    bgApp: {
+      stops: s.bgAppStops,
+      glowTop: s.bgAppGlowTop,
+      glowBottom: s.bgAppGlowBottom,
+    },
     bgTable: { stops: s.bgTableStops, glow: s.bgTableGlow },
     bgVelvet: { stops: s.bgVelvetStops },
 
@@ -338,8 +347,28 @@ export const THEME_META: {
   sub: string;
   swatches: [string, string, string];
 }[] = [
-  { id: "esmeralda", label: "Esmeralda", sub: "émeraude + or", swatches: ["#1B4A3A", "#E8C879", "#F6EFDF"] },
-  { id: "ember-royal", label: "Ember Royal", sub: "rouge + or + bleu nuit", swatches: ["#B4443E", "#E8C879", "#465D74"] },
-  { id: "onyx", label: "Onyx Noir", sub: "charbon + champagne", swatches: ["#1A1A1A", "#D4AF5E", "#F6EFDF"] },
-  { id: "amethyste", label: "Améthyste", sub: "aubergine + or rose", swatches: ["#3A2A6B", "#E5B5C0", "#F6EFDF"] },
+  {
+    id: "esmeralda",
+    label: "Esmeralda",
+    sub: "émeraude + or",
+    swatches: ["#1B4A3A", "#E8C879", "#F6EFDF"],
+  },
+  {
+    id: "ember-royal",
+    label: "Ember Royal",
+    sub: "bordeaux + or + ivoire",
+    swatches: ["#5B1525", "#C9A55F", "#F1E8D6"],
+  },
+  {
+    id: "onyx",
+    label: "Onyx Noir",
+    sub: "charbon + champagne",
+    swatches: ["#1A1A1A", "#D4AF5E", "#F6EFDF"],
+  },
+  {
+    id: "amethyste",
+    label: "Améthyste",
+    sub: "aubergine + or rose",
+    swatches: ["#3A2A6B", "#E5B5C0", "#F6EFDF"],
+  },
 ];

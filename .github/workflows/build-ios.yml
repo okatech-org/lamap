@@ -5,8 +5,8 @@ name: Build iOS (IPA) + App Store
 #
 # Triggers
 #   • Manual: pick a profile + opt-in App Store submission.
-#   • Tag push: pushing a `v*` tag automatically builds the production IPA,
-#     creates the matching release and submits it to App Store Connect.
+#   • Tag push: pushing a `v*` tag builds the production IPA and creates the
+#     matching release. App Store submission remains manual after TestFlight.
 
 on:
   workflow_dispatch:
@@ -69,7 +69,7 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
             echo "profile=production" >> "$GITHUB_OUTPUT"
-            echo "submit=true" >> "$GITHUB_OUTPUT"
+            echo "submit=false" >> "$GITHUB_OUTPUT"
           else
             echo "profile=${{ inputs.profile }}" >> "$GITHUB_OUTPUT"
             echo "submit=${{ inputs.submit_to_app_store }}" >> "$GITHUB_OUTPUT"
@@ -122,7 +122,7 @@ jobs:
           body: |
             ## iOS IPA
             - Profile: `${{ steps.opts.outputs.profile }}`
-            - EAS build: https://expo.dev/accounts/kamau_it/projects/lamap/builds/${{ steps.eas.outputs.build_id }}
+            - EAS build: https://expo.dev/accounts/okatechs-organization/projects/lamap/builds/${{ steps.eas.outputs.build_id }}
             - Commit: `${{ github.sha }}`
             - App Store submission: `${{ steps.opts.outputs.submit }}`
           files: lamap-ios.ipa

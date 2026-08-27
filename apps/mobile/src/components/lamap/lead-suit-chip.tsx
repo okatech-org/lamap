@@ -77,14 +77,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: "rgba(15, 22, 32, 0.85)",
+    backgroundColor: "rgba(22, 7, 11, 0.85)",
     borderWidth: 1,
-    borderColor: "rgba(201, 168, 118, 0.25)",
+    borderColor: "rgba(201, 165, 95, 0.25)",
   },
   label: {
     fontFamily: FONT_WEIGHTS.body.regular,
     fontSize: 12,
-    color: "rgba(245, 242, 237, 0.85)",
+    color: "rgba(241, 232, 214, 0.85)",
   },
   glyph: {
     fontSize: 14,

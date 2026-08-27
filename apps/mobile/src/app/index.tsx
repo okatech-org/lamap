@@ -25,10 +25,10 @@ export default function Index() {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#141923",
+          backgroundColor: "#16070B",
         }}
       >
-        <ActivityIndicator size="large" color="#A68258" />
+        <ActivityIndicator size="large" color="#C9A55F" />
       </View>
     );
   }

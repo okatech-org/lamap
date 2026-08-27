@@ -1,159 +1,128 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
+import { requireAuthUserId } from "./authHelpers";
 import { mutation, query } from "./_generated/server";
 
-export type CardBackTheme = "red" | "blue" | "gold" | "dark";
+export const COSMETICS = [
+  {
+    id: "bandi_classic",
+    type: "card_back",
+    name: "Bandi Classique",
+    productId: null,
+  },
+  {
+    id: "bleu_royal",
+    type: "card_back",
+    name: "Dos Bleu Royal",
+    productId: "com.okatech.lamap.cosmetic.cardback.bleu_royal",
+  },
+  {
+    id: "or_sable",
+    type: "card_back",
+    name: "Dos Or Sable",
+    productId: "com.okatech.lamap.cosmetic.cardback.or_sable",
+  },
+  {
+    id: "ombre_tribale",
+    type: "card_back",
+    name: "Dos Ombre Tribale",
+    productId: "com.okatech.lamap.cosmetic.cardback.ombre_tribale",
+  },
+  { id: "initials", type: "avatar", name: "Initiales", productId: null },
+  {
+    id: "la_stratege",
+    type: "avatar",
+    name: "La Stratège",
+    productId: "com.okatech.lamap.cosmetic.avatar.la_stratege",
+  },
+  {
+    id: "le_bandi",
+    type: "avatar",
+    name: "Le Bandi",
+    productId: "com.okatech.lamap.cosmetic.avatar.le_bandi",
+  },
+  {
+    id: "la_gardienne",
+    type: "avatar",
+    name: "La Gardienne",
+    productId: "com.okatech.lamap.cosmetic.avatar.la_gardienne",
+  },
+  {
+    id: "le_tacticien",
+    type: "avatar",
+    name: "Le Tacticien",
+    productId: "com.okatech.lamap.cosmetic.avatar.le_tacticien",
+  },
+  {
+    id: "maitresse_cartes",
+    type: "avatar",
+    name: "La Maîtresse des cartes",
+    productId: "com.okatech.lamap.cosmetic.avatar.maitresse_cartes",
+  },
+  {
+    id: "la_legende",
+    type: "avatar",
+    name: "La Légende",
+    productId: "com.okatech.lamap.cosmetic.avatar.la_legende",
+  },
+] as const;
 
-export interface CardBackSkin {
-  id: string;
-  name: string;
-  theme: CardBackTheme;
-  price: number; // in Kora; 0 = default grant
-  rare?: boolean;
-  defaultGrant?: true;
+export const PAID_PRODUCT_IDS: ReadonlySet<string> = new Set(
+  COSMETICS.flatMap((item) => (item.productId ? [item.productId] : [])),
+);
+
+export function cosmeticForProduct(productId: string) {
+  return COSMETICS.find((item) => item.productId === productId);
 }
 
-/**
- * Static catalogue of card-back skins. Adding a new skin = one entry here +
- * one new theme key in `src/components/lamap/card-back-themed.tsx`.
- */
-export const CARD_BACK_SKINS: Record<string, CardBackSkin> = {
-  bandi_classic: {
-    id: "bandi_classic",
-    name: "Bandi Classique",
-    theme: "red",
-    price: 0,
-    defaultGrant: true,
-  },
-  bleu_royal: {
-    id: "bleu_royal",
-    name: "Bleu Royal",
-    theme: "blue",
-    price: 500,
-  },
-  or_sable: {
-    id: "or_sable",
-    name: "Or Sable",
-    theme: "gold",
-    price: 850,
-    rare: true,
-  },
-  ombre_tribale: {
-    id: "ombre_tribale",
-    name: "Ombre Tribale",
-    theme: "dark",
-    price: 1200,
-    rare: true,
-  },
-};
-
-const DEFAULT_GRANTS: string[] = Object.values(CARD_BACK_SKINS)
-  .filter((s) => s.defaultGrant)
-  .map((s) => s.id);
-
-/**
- * List card-backs for a given user, with `owned` and `active` flags. Lazily
- * grants the default skins (and equips the first one) on the user's first
- * read, so existing accounts get the free starter set without a migration.
- */
-export const listCardBacks = query({
-  args: { userId: v.id("users") },
-  handler: async (ctx, { userId }) => {
+export const listCatalog = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuthUserId(ctx);
     const user = await ctx.db.get(userId);
-    const owned = new Set(user?.ownedCardBacks ?? []);
-    DEFAULT_GRANTS.forEach((id) => owned.add(id));
-    const active = user?.activeCardBack ?? DEFAULT_GRANTS[0] ?? null;
-
-    return Object.values(CARD_BACK_SKINS).map((skin) => ({
-      ...skin,
-      owned: owned.has(skin.id),
-      active: active === skin.id,
+    const entitlements = await ctx.db
+      .query("cosmeticEntitlements")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    const owned = new Set(
+      entitlements
+        .filter((entitlement) => entitlement.revokedAt === undefined)
+        .map((entitlement) => entitlement.cosmeticId),
+    );
+    owned.add("bandi_classic");
+    owned.add("initials");
+    return COSMETICS.map((item) => ({
+      ...item,
+      owned: owned.has(item.id),
+      active:
+        item.type === "card_back"
+          ? (user?.activeCardBackId ?? "bandi_classic") === item.id
+          : (user?.activeAvatarId ?? "initials") === item.id,
     }));
   },
 });
 
-/**
- * Default-grant + active-equip seeding. Idempotent — safe to call from any
- * client read path. Returns the active card-back id.
- */
-export const ensureDefaults = mutation({
-  args: { userId: v.id("users") },
-  handler: async (ctx, { userId }) => {
-    const user = await ctx.db.get(userId);
-    if (!user) throw new Error("Utilisateur introuvable");
-    if (user.cosmeticsGrantedDefaults) {
-      return { activeCardBack: user.activeCardBack ?? DEFAULT_GRANTS[0] };
+export const equip = mutation({
+  args: { cosmeticId: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await requireAuthUserId(ctx);
+    const cosmetic = COSMETICS.find((item) => item.id === args.cosmeticId);
+    if (!cosmetic) throw new ConvexError("COSMETIC_NOT_FOUND");
+    if (cosmetic.productId) {
+      const entitlement = await ctx.db
+        .query("cosmeticEntitlements")
+        .withIndex("by_user_cosmetic", (q) =>
+          q.eq("userId", userId).eq("cosmeticId", cosmetic.id),
+        )
+        .first();
+      if (!entitlement || entitlement.revokedAt !== undefined) {
+        throw new ConvexError("COSMETIC_NOT_OWNED");
+      }
     }
-    const owned = new Set(user.ownedCardBacks ?? []);
-    DEFAULT_GRANTS.forEach((id) => owned.add(id));
-    const active = user.activeCardBack ?? DEFAULT_GRANTS[0];
-    await ctx.db.patch(userId, {
-      ownedCardBacks: Array.from(owned),
-      activeCardBack: active,
-      cosmeticsGrantedDefaults: true,
-    });
-    return { activeCardBack: active };
-  },
-});
-
-export const purchaseCardBack = mutation({
-  args: { userId: v.id("users"), cardBackId: v.string() },
-  handler: async (ctx, { userId, cardBackId }) => {
-    const skin = CARD_BACK_SKINS[cardBackId];
-    if (!skin) throw new Error("Skin introuvable");
-    const user = await ctx.db.get(userId);
-    if (!user) throw new Error("Utilisateur introuvable");
-
-    const owned = new Set(user.ownedCardBacks ?? []);
-    DEFAULT_GRANTS.forEach((id) => owned.add(id));
-    if (owned.has(cardBackId)) {
-      throw new Error("Skin déjà acquis");
+    if (cosmetic.type === "card_back") {
+      await ctx.db.patch(userId, { activeCardBackId: cosmetic.id });
+    } else {
+      await ctx.db.patch(userId, { activeAvatarId: cosmetic.id });
     }
-
-    const balance = user.balance ?? 0;
-    if (balance < skin.price) {
-      throw new Error("Solde insuffisant");
-    }
-
-    owned.add(cardBackId);
-    await ctx.db.patch(userId, {
-      balance: balance - skin.price,
-      ownedCardBacks: Array.from(owned),
-      // Equip the new skin immediately for a one-tap UX.
-      activeCardBack: cardBackId,
-      cosmeticsGrantedDefaults: true,
-    });
-    await ctx.db.insert("transactions", {
-      userId,
-      type: "shop_purchase",
-      amount: -skin.price,
-      currency: user.currency ?? "XAF",
-      description: `Achat — ${skin.name}`,
-      createdAt: Date.now(),
-    });
-
-    return { activeCardBack: cardBackId, balance: balance - skin.price };
-  },
-});
-
-export const setActiveCardBack = mutation({
-  args: { userId: v.id("users"), cardBackId: v.string() },
-  handler: async (ctx, { userId, cardBackId }) => {
-    const skin = CARD_BACK_SKINS[cardBackId];
-    if (!skin) throw new Error("Skin introuvable");
-    const user = await ctx.db.get(userId);
-    if (!user) throw new Error("Utilisateur introuvable");
-
-    const owned = new Set(user.ownedCardBacks ?? []);
-    DEFAULT_GRANTS.forEach((id) => owned.add(id));
-    if (!owned.has(cardBackId)) {
-      throw new Error("Skin non possédé");
-    }
-
-    await ctx.db.patch(userId, {
-      activeCardBack: cardBackId,
-      ownedCardBacks: Array.from(owned),
-      cosmeticsGrantedDefaults: true,
-    });
-    return { activeCardBack: cardBackId };
+    return { success: true };
   },
 });

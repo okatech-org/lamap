@@ -10,7 +10,6 @@
   "scripts": {
     "mobile": "bun run --filter @lamap/mobile start",
     "mobile:ios": "bun run --filter @lamap/mobile ios",
-    "mobile:android": "bun run --filter @lamap/mobile android",
     "convex:dev": "bun run --filter @lamap/convex dev",
     "convex:deploy": "bun run --filter @lamap/convex deploy",
     "web": "bun run --filter @lamap/web dev",

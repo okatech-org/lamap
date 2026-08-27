@@ -1,146 +1,168 @@
-import { useCallback, useState } from "react";
-import { Alert, Platform } from "react-native";
-import { useAction } from "convex/react";
 import { api } from "@lamap/convex/_generated/api";
-import { useAuth } from "@/hooks/use-auth";
-import type { KoraPackId } from "@/config/kora-packs";
+import { useAction } from "convex/react";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, Platform } from "react-native";
+import type { Product, Purchase } from "react-native-iap";
 
-// react-native-iap is loaded lazily so the JS bundle still works in Expo Go
-// where the native module isn't linked. The actual binding is resolved by
-// the dev-client / EAS build that includes the native module.
-type RnIap = typeof import("react-native-iap");
-let rnIap: RnIap | null = null;
+export const PRODUCT_IDS = [
+  "com.okatech.lamap.cosmetic.cardback.bleu_royal",
+  "com.okatech.lamap.cosmetic.cardback.or_sable",
+  "com.okatech.lamap.cosmetic.cardback.ombre_tribale",
+  "com.okatech.lamap.cosmetic.avatar.la_stratege",
+  "com.okatech.lamap.cosmetic.avatar.le_bandi",
+  "com.okatech.lamap.cosmetic.avatar.la_gardienne",
+  "com.okatech.lamap.cosmetic.avatar.le_tacticien",
+  "com.okatech.lamap.cosmetic.avatar.maitresse_cartes",
+  "com.okatech.lamap.cosmetic.avatar.la_legende",
+] as const;
 
-function loadRnIap(): RnIap | null {
-  if (rnIap) return rnIap;
+type IapModule = typeof import("react-native-iap");
+let cachedModule: IapModule | null = null;
+function iapModule() {
+  if (cachedModule) return cachedModule;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    rnIap = require("react-native-iap") as RnIap;
-    return rnIap;
+    cachedModule = require("react-native-iap") as IapModule;
   } catch {
-    return null;
+    cachedModule = null;
   }
+  return cachedModule;
 }
 
 export function useIap() {
-  const { convexUser } = useAuth();
-  const validatePurchase = useAction(api.iap.validateIosPurchase);
-  const [purchasing, setPurchasing] = useState<KoraPackId | null>(null);
+  const validate = useAction(api.iap.validateIosPurchase);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
+
+  const validateAndFinish = useCallback(
+    async (purchase: Purchase) => {
+      const iap = iapModule();
+      if (!iap) throw new Error("StoreKit indisponible");
+      const signedTransaction =
+        purchase.purchaseToken ??
+        (await iap.getTransactionJwsIOS(purchase.productId));
+      if (!signedTransaction) throw new Error("Transaction Apple non signée");
+      await validate({ signedTransaction });
+      await iap.finishTransaction({ purchase, isConsumable: false });
+    },
+    [validate],
+  );
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+    const iap = iapModule();
+    if (!iap) return;
+    let active = true;
+    let purchaseSubscription: { remove(): void } | undefined;
+    let errorSubscription: { remove(): void } | undefined;
+    void iap
+      .initConnection()
+      .then(async () => {
+        if (!active) return;
+        const fetched = await iap.fetchProducts({
+          skus: [...PRODUCT_IDS],
+          type: "in-app",
+        });
+        if (active) {
+          setProducts((fetched ?? []) as Product[]);
+          setReady(true);
+        }
+        purchaseSubscription = iap.purchaseUpdatedListener((purchase) => {
+          void validateAndFinish(purchase)
+            .then(() =>
+              Alert.alert(
+                "Achat confirmé",
+                "Le cosmétique est maintenant disponible.",
+              ),
+            )
+            .catch((error) =>
+              Alert.alert(
+                "Validation impossible",
+                error instanceof Error ? error.message : "Réessayez.",
+              ),
+            )
+            .finally(() => setPurchasing(null));
+        });
+        errorSubscription = iap.purchaseErrorListener((error) => {
+          setPurchasing(null);
+          if (error.code !== "user-cancelled")
+            Alert.alert("Achat impossible", error.message);
+        });
+      })
+      .catch(() => setReady(false));
+    return () => {
+      active = false;
+      purchaseSubscription?.remove();
+      errorSubscription?.remove();
+      void iap.endConnection();
+    };
+  }, [validateAndFinish]);
 
   const buy = useCallback(
-    async (sku: KoraPackId) => {
-      if (Platform.OS !== "ios") {
-        Alert.alert(
-          "Bientôt disponible",
-          "Les achats Kora ne sont pour l'instant disponibles que sur iOS.",
-        );
+    async (productId: string) => {
+      if (Platform.OS !== "ios") return;
+      const iap = iapModule();
+      if (!iap || !ready) {
+        Alert.alert("Achat indisponible", "La boutique Apple n’est pas prête.");
         return;
       }
-      const iap = loadRnIap();
-      if (!iap) {
-        Alert.alert(
-          "Achat indisponible",
-          "Le module d'achat n'est pas chargé. Réessayez après mise à jour de l'app.",
-        );
-        return;
-      }
-      if (!convexUser?._id) {
-        Alert.alert("Erreur", "Vous devez être connecté pour acheter du Kora.");
-        return;
-      }
-
-      setPurchasing(sku);
+      setPurchasing(productId);
       try {
-        await iap.initConnection();
-        const result = await iap.requestPurchase({
+        await iap.requestPurchase({
           type: "in-app",
           request: {
-            ios: {
-              sku,
+            apple: {
+              sku: productId,
               andDangerouslyFinishTransactionAutomatically: false,
             },
           },
         });
-        const purchase = Array.isArray(result) ? result[0] : result;
-        if (!purchase) throw new Error("Achat non finalisé");
-
-        // Backend uses Apple's legacy /verifyReceipt endpoint, which expects the
-        // base64 App Store receipt — not StoreKit 2's JWS. getReceiptIOS returns
-        // the legacy receipt for the device.
-        const receipt = await iap.getReceiptIOS();
-        if (!receipt) throw new Error("Reçu Apple introuvable");
-
-        const validation = await validatePurchase({
-          userId: convexUser._id,
-          receipt,
-          productId: sku,
-        });
-
-        await iap.finishTransaction({
-          purchase,
-          isConsumable: true,
-        });
-
-        Alert.alert(
-          "Achat confirmé",
-          `+${validation.koraCredited.toLocaleString("fr-FR")} Kora ajoutés à votre solde.`,
-        );
-      } catch (err: unknown) {
-        const code = (err as { code?: string } | null)?.code;
-        if (code === "user-cancelled" || code === "E_USER_CANCELLED") return;
-        console.error("IAP purchase failed:", err);
-        const message =
-          err instanceof Error ? err.message : "Une erreur est survenue. Réessayez.";
-        Alert.alert("Achat échoué", message);
-      } finally {
+      } catch (error) {
         setPurchasing(null);
+        const code = (error as { code?: string }).code;
+        if (code !== "user-cancelled") {
+          Alert.alert(
+            "Achat impossible",
+            error instanceof Error ? error.message : "Réessayez.",
+          );
+        }
       }
     },
-    [convexUser?._id, validatePurchase],
+    [ready],
   );
 
   const restore = useCallback(async () => {
-    if (Platform.OS !== "ios") return;
-    const iap = loadRnIap();
-    if (!iap || !convexUser?._id) return;
+    const iap = iapModule();
+    if (Platform.OS !== "ios" || !iap) return;
     try {
-      await iap.initConnection();
-      const purchases = await iap.getAvailablePurchases();
-      // The legacy receipt covers all of the user's non-finished transactions
-      // for this app on this device, so we validate it once per matching SKU.
-      const receipt = await iap.getReceiptIOS();
-      if (!receipt) {
-        Alert.alert("Achats restaurés", "Aucun achat à restaurer.");
-        return;
-      }
+      const purchases = await iap.getAvailablePurchases({
+        onlyIncludeActiveItemsIOS: true,
+      });
       let restored = 0;
       for (const purchase of purchases) {
-        const productId = purchase?.productId;
-        if (!productId) continue;
-        try {
-          await validatePurchase({
-            userId: convexUser._id,
-            receipt,
-            productId,
-          });
-          restored += 1;
-        } catch {
-          // ignore individual failures, continue with the rest
-        }
+        if (
+          !PRODUCT_IDS.includes(
+            purchase.productId as (typeof PRODUCT_IDS)[number],
+          )
+        )
+          continue;
+        await validateAndFinish(purchase);
+        restored += 1;
       }
       Alert.alert(
-        "Achats restaurés",
-        restored > 0
-          ? `${restored} achat(s) re-validé(s).`
+        "Restauration terminée",
+        restored
+          ? `${restored} achat(s) restauré(s).`
           : "Aucun achat à restaurer.",
       );
-    } catch (err: unknown) {
-      console.error("IAP restore failed:", err);
-      const message =
-        err instanceof Error ? err.message : "Une erreur est survenue.";
-      Alert.alert("Restauration échouée", message);
+    } catch (error) {
+      Alert.alert(
+        "Restauration impossible",
+        error instanceof Error ? error.message : "Réessayez.",
+      );
     }
-  }, [convexUser?._id, validatePurchase]);
+  }, [validateAndFinish]);
 
-  return { buy, restore, purchasing };
+  return { products, purchasing, ready, buy, restore };
 }

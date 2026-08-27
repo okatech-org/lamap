@@ -31,8 +31,6 @@ function Particle({ index, color, victoryType }: ParticleProps) {
     if (victoryType === "triple_kora") return 16 + Math.random() * 12;
     if (victoryType === "double_kora") return 12 + Math.random() * 8;
     if (victoryType === "simple_kora") return 8 + Math.random() * 6;
-    if (victoryType === "auto_sum") return 4 + Math.random() * 3;
-    if (victoryType === "auto_sevens") return 4 + Math.random() * 3;
     return 8 + Math.random() * 6;
   }, [victoryType]);
 
@@ -51,9 +49,9 @@ function Particle({ index, color, victoryType }: ParticleProps) {
         withTiming(1, { duration: 200 }),
         withDelay(
           1500,
-          withTiming(0, { duration: 800, easing: Easing.out(Easing.ease) })
-        )
-      )
+          withTiming(0, { duration: 800, easing: Easing.out(Easing.ease) }),
+        ),
+      ),
     );
 
     scale.value = withDelay(
@@ -61,7 +59,7 @@ function Particle({ index, color, victoryType }: ParticleProps) {
       withSpring(1, {
         damping: 8,
         stiffness: 100,
-      })
+      }),
     );
 
     translateX.value = withDelay(
@@ -69,7 +67,7 @@ function Particle({ index, color, victoryType }: ParticleProps) {
       withTiming(endX, {
         duration: 2500,
         easing: Easing.out(Easing.cubic),
-      })
+      }),
     );
 
     translateY.value = withDelay(
@@ -82,8 +80,8 @@ function Particle({ index, color, victoryType }: ParticleProps) {
         withTiming(endY, {
           duration: 1700,
           easing: Easing.in(Easing.quad),
-        })
-      )
+        }),
+      ),
     );
 
     rotate.value = withDelay(
@@ -94,8 +92,8 @@ function Particle({ index, color, victoryType }: ParticleProps) {
           easing: Easing.linear,
         }),
         1,
-        false
-      )
+        false,
+      ),
     );
   }, [
     animationDelay,
@@ -149,21 +147,20 @@ export function ResultAnimation({
     if (victoryType === "triple_kora") return 60;
     if (victoryType === "double_kora") return 40;
     if (victoryType === "simple_kora") return 25;
-    if (victoryType === "auto_sum" || victoryType === "auto_sevens") return 25;
     return 0;
   }, [victoryType]);
 
   const particleColors = useMemo(() => {
     if (victoryType === "triple_kora") {
-      return ["#FFD700", "#FFA500", "#FF8C00", "#FFE55C", "#FFC700"];
+      return ["#E3C77E", "#C9A55F", "#F0D98B", "#7D1E32", "#F1E8D6"];
     }
     if (victoryType === "double_kora") {
-      return ["#A68258", "#C9A56B", "#8B6F47", "#D4AF7A"];
+      return ["#C9A55F", "#E3C77E", "#8B6A31", "#F1E8D6"];
     }
     if (victoryType === "simple_kora") {
-      return ["#A3D977", "#8BC34A", "#7CB342", "#CDDC39"];
+      return ["#7D1E32", "#C9A55F", "#E3C77E", "#F1E8D6"];
     }
-    return ["#A3D977", "#8BC34A", "#7CB342", "#CDDC39"];
+    return ["#7D1E32", "#C9A55F", "#E3C77E", "#F1E8D6"];
   }, [victoryType]);
 
   if (!visible || !isWinner || particleCount === 0) return null;

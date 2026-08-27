@@ -101,7 +101,7 @@ export function getModalShadow(color: string = "#000000"): ShadowStyle {
 /**
  * Ombre pour les cartes jouables (avec effet pulse)
  */
-export function getPlayableCardShadow(color: string = "#B4443E"): ShadowStyle {
+export function getPlayableCardShadow(color: string = "#7D1E32"): ShadowStyle {
   if (Platform.OS === "android") {
     return {
       elevation: 6,

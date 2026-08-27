@@ -79,11 +79,11 @@ export function LamapButton({
         ? [theme.accentBright, theme.accent, theme.accentDeep]
         : variant === "ember"
           ? [theme.emberBright, theme.ember, theme.emberDeep]
-          : ["#C95048", "#A93934"]; // primary (legacy)
+          : [COLORS.terre2, COLORS.terre];
 
   const labelColor =
     variant === "gold"
-      ? "#1F1810"
+      ? COLORS.ink
       : variant === "light"
         ? COLORS.ink
         : COLORS.cream;
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   wrapGhost: {
     backgroundColor: "transparent",
     borderWidth: 1.5,
-    borderColor: "rgba(201, 168, 118, 0.4)",
+    borderColor: "rgba(201, 165, 95, 0.4)",
   },
   inner: {
     flexDirection: "row",

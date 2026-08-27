@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 1,
-    backgroundColor: "rgba(201,168,118,0.25)",
+    backgroundColor: "rgba(201,165,95,0.25)",
   },
   diamond: {
     width: 6,

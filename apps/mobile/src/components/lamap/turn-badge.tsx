@@ -58,7 +58,7 @@ export function LamapTurnBadge({
   return (
     <Animated.View style={[styles.wrap, wrapStyle]}>
       <LinearGradient
-        colors={["#C95048", "#A93934"]}
+        colors={[COLORS.terre2, COLORS.terre]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={[StyleSheet.absoluteFill, { borderRadius: 999 }]}

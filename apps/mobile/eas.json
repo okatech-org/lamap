@@ -14,34 +14,27 @@
       "distribution": "internal",
       "ios": {
         "simulator": false
-      },
-      "android": {
-        "buildType": "apk"
       }
     },
     "production": {
       "autoIncrement": true,
       "ios": {
         "simulator": false
-      },
-      "android": {
-        "buildType": "app-bundle"
       }
     }
   },
   "submit": {
     "production": {
       "ios": {
-        "ascAppId": "REPLACE_WITH_APP_STORE_CONNECT_APP_ID",
-        "appleTeamId": "REPLACE_WITH_APPLE_TEAM_ID"
+        "ascAppId": "6756675386",
+        "appleTeamId": "5Y39TTNCM7"
       }
     },
     "preview": {
       "ios": {
-        "ascAppId": "REPLACE_WITH_APP_STORE_CONNECT_APP_ID",
-        "appleTeamId": "REPLACE_WITH_APPLE_TEAM_ID"
+        "ascAppId": "6756675386",
+        "appleTeamId": "5Y39TTNCM7"
       }
     }
   }
 }
-

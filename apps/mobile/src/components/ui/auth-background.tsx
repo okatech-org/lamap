@@ -57,7 +57,11 @@ function AnimatedSuit({
   }, [delay, dur, t]);
 
   const style = useAnimatedStyle(() => ({
-    opacity: interpolate(t.value, [0, 1], [baseOpacity * 0.7, baseOpacity * 1.2]),
+    opacity: interpolate(
+      t.value,
+      [0, 1],
+      [baseOpacity * 0.7, baseOpacity * 1.2],
+    ),
     transform: [
       { translateY: interpolate(t.value, [0, 1], [amp, -amp]) },
       { rotate: `${interpolate(t.value, [0, 1], [-rot, rot])}deg` },
@@ -70,7 +74,7 @@ function AnimatedSuit({
         source={source}
         style={{ width: size, height: size }}
         contentFit="contain"
-        tintColor="#F5F2ED"
+        tintColor={COLORS.cream}
       />
     </Animated.View>
   );

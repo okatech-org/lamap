@@ -6,29 +6,17 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "lamap",
+    "platforms": ["ios"],
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "buildNumber": "1",
       "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.okatech.lamap"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#465D74"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "package": "com.kamau_it.lamap"
-    },
-    "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
@@ -44,20 +32,23 @@
           }
         }
       ],
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/icon.png",
-          "color": "#B4443E",
-          "sounds": []
-        }
-      ],
       "expo-audio",
       "expo-asset",
+      "expo-apple-authentication",
       "expo-secure-store",
       "expo-localization",
       "expo-font",
-      "react-native-iap"
+      "react-native-iap",
+      "expo-web-browser",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "16.0"
+          }
+        }
+      ],
+      "./plugins/with-ios-pod-deployment-target"
     ],
     "experiments": {
       "typedRoutes": true,

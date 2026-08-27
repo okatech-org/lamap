@@ -17,14 +17,14 @@ interface TableBgProps {
 }
 
 /**
- * Card-table backdrop: blue radial gradient + concentric arena rings + optional
+ * Card-table backdrop: burgundy radial gradient + concentric arena rings + optional
  * gold-dust particles. Designed to fill an absolute-positioned area.
  */
 export function TableBg({ children, dust = true, style }: TableBgProps) {
   return (
     <View style={[styles.layer, style]}>
       <LinearGradient
-        colors={["#3F5567", "#2C3D4F", "#1F2C3B"]}
+        colors={["#5B1525", "#3A0D18", "#16070B"]}
         locations={[0, 0.6, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
@@ -34,12 +34,12 @@ export function TableBg({ children, dust = true, style }: TableBgProps) {
       <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
         <Defs>
           <RadialGradient id="tg-top" cx="50%" cy="35%" rx="70%" ry="60%">
-            <Stop offset="0%" stopColor="#5A7A96" stopOpacity={0.45} />
-            <Stop offset="60%" stopColor="#5A7A96" stopOpacity={0} />
+            <Stop offset="0%" stopColor="#7D1E32" stopOpacity={0.45} />
+            <Stop offset="60%" stopColor="#7D1E32" stopOpacity={0} />
           </RadialGradient>
           <RadialGradient id="tg-bottom" cx="50%" cy="100%" rx="70%" ry="50%">
-            <Stop offset="0%" stopColor="#2E3D4D" stopOpacity={0.8} />
-            <Stop offset="70%" stopColor="#2E3D4D" stopOpacity={0} />
+            <Stop offset="0%" stopColor="#24090F" stopOpacity={0.8} />
+            <Stop offset="70%" stopColor="#24090F" stopOpacity={0} />
           </RadialGradient>
         </Defs>
         <Rect width="100%" height="100%" fill="url(#tg-top)" />
@@ -50,7 +50,7 @@ export function TableBg({ children, dust = true, style }: TableBgProps) {
           cy="50%"
           rx="42%"
           ry="42%"
-          stroke="rgba(201, 168, 118, 0.10)"
+          stroke="rgba(201, 165, 95, 0.10)"
           strokeWidth={1}
           fill="none"
         />
@@ -59,7 +59,7 @@ export function TableBg({ children, dust = true, style }: TableBgProps) {
           cy="50%"
           rx="30%"
           ry="30%"
-          stroke="rgba(201, 168, 118, 0.08)"
+          stroke="rgba(201, 165, 95, 0.08)"
           strokeWidth={1}
           fill="none"
         />

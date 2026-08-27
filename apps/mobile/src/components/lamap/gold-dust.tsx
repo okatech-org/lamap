@@ -55,10 +55,7 @@ function Particle({
   }, [dot.delay, dot.dur, t]);
 
   const style = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: -12 * t.value },
-      { translateX: 4 * t.value },
-    ],
+    transform: [{ translateY: -12 * t.value }, { translateX: 4 * t.value }],
     opacity: 0.4 + 0.5 * t.value,
   }));
 
@@ -84,7 +81,7 @@ function Particle({
 export function GoldDust({
   count = 18,
   opacity = 0.6,
-  color = "rgba(201, 168, 118, 0.9)",
+  color = "rgba(201, 165, 95, 0.9)",
 }: GoldDustProps) {
   const dots = useMemo<Dot[]>(
     () =>

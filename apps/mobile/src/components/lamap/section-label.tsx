@@ -41,6 +41,6 @@ const styles = StyleSheet.create({
     color: COLORS.or2,
   },
   muted: {
-    color: "rgba(245, 242, 237, 0.5)",
+    color: "rgba(241, 232, 214, 0.5)",
   },
 });
