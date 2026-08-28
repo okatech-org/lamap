@@ -25,7 +25,8 @@ Lamap ne doit pas être marqué « Prêt pour la soumission » tant que chaque c
 - [x] Expo Doctor (18 contrôles sur 18) ;
 - [x] export Expo iOS ;
 - [x] build statique du site public ;
-- [x] compilation Xcode sans signature sur simulateur.
+- [x] compilation Xcode signée, installation et démarrage sur simulateur iPhone ;
+- [x] ouverture du flux Google jusqu'au consentement avec le client OAuth Convex de développement.
 
 ## Déploiement et comptes à terminer
 
@@ -37,6 +38,7 @@ Lamap ne doit pas être marqué « Prêt pour la soumission » tant que chaque c
 - [x] documenter le renouvellement de `AUTH_APPLE_SECRET` avant le 23 février 2027 ;
 - [x] renseigner l’App Store Connect ID `6756675386` et le Team ID `5Y39TTNCM7` dans `apps/mobile/eas.json` ;
 - [x] configurer les environnements EAS et les identifiants de signature iOS ;
+- [x] vérifier que l'environnement EAS de production pointe vers le déploiement Convex de production ;
 - [ ] vérifier les informations juridiques exactes de l’éditeur et rendre `support@lamap.gg` opérationnel ;
 - [x] déployer et vérifier l’accueil, le support, la confidentialité et les CGU sur `https://lamap-okatechs-projects-f0102678.vercel.app/` ;
 - [ ] ajouter le secret GitHub `EXPO_TOKEN` du compte Expo OkaTech ;
