@@ -32,7 +32,7 @@ Lamap ne doit pas être marqué « Prêt pour la soumission » tant que chaque c
 - [x] créer une base Convex propre et déployer le nouveau schéma en développement et en production ;
 - [x] exécuter le codegen contre le nouveau déploiement ;
 - [x] initialiser Convex Auth et configurer Apple ainsi que les certificats StoreKit sur les deux déploiements ;
-- [ ] configurer Google OAuth dans Google Cloud et ajouter `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` ;
+- [x] configurer Google OAuth dans Google Cloud, publier l’écran de consentement et ajouter `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` ;
 - [x] enregistrer les retours Apple des deux déploiements Convex ;
 - [x] documenter le renouvellement de `AUTH_APPLE_SECRET` avant le 23 février 2027 ;
 - [x] renseigner l’App Store Connect ID `6756675386` et le Team ID `5Y39TTNCM7` dans `apps/mobile/eas.json` ;
@@ -45,11 +45,15 @@ Lamap ne doit pas être marqué « Prêt pour la soumission » tant que chaque c
 ## App Store Connect
 
 - [x] relier l’application `6756675386`, le bundle `com.okatech.lamap` et la clé EAS Submit ;
-- [ ] créer les neuf produits non consommables avec leurs identifiants exacts ;
-- [ ] ajouter traductions, visuels de revue et disponibilité France ;
-- [ ] configurer les notifications serveur App Store vers Convex ;
-- [ ] compléter la fiche de confidentialité et les URL légales ;
-- [ ] préparer les captures iPhone et les notes App Review ;
+- [x] créer les neuf produits non consommables avec leurs identifiants exacts ;
+- [x] ajouter les traductions, les prix France et la disponibilité mondiale des neuf produits ;
+- [x] configurer les notifications serveur App Store, en production et en Sandbox, vers Convex ;
+- [x] publier la fiche de confidentialité et renseigner les URL légales ;
+- [x] configurer l’application gratuite, mondiale, iPhone uniquement, dans les catégories Jeux / Cartes / Plateau avec une classification 4+ ;
+- [x] renseigner les métadonnées anglaises et françaises de la version 1.0 ;
+- [ ] ajouter les captures iPhone et les visuels de revue des neuf achats intégrés ;
+- [ ] finaliser les coordonnées et le compte de démonstration afin d’enregistrer les notes App Review déjà préparées ;
+- [ ] activer le contrat Paid Apps après traitement du compte bancaire et saisie des formulaires fiscaux manquants ;
 - [ ] fournir un compte de test et conserver le backend actif pendant la revue.
 
 ## Validation réelle
