@@ -39,6 +39,10 @@ export default function PrivacyPage() {
                 fournie par le service choisi ;
               </li>
               <li>
+                nom et, lorsque le fournisseur de connexion le transmet, photo
+                de profil associée au compte choisi ;
+              </li>
+              <li>
                 pseudo, avatar équipé, points, position et statistiques de
                 parties ;
               </li>
