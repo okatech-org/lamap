@@ -37,10 +37,13 @@ export default function MatchScreen() {
   const [playing, setPlaying] = useState(false);
 
   const opponent = game?.players.find((player) => player.userId !== myUserId);
-  const myStack = currentPlays
+  // Keep every card already played on the table. `currentPlays` only contains
+  // the current round and becomes empty as soon as a trick is resolved.
+  const tableCards = game?.playedCards ?? [];
+  const myStack = tableCards
     .filter((played) => played.playerId === myUserId)
     .map((played) => played.card);
-  const opponentStack = currentPlays
+  const opponentStack = tableCards
     .filter((played) => played.playerId !== myUserId)
     .map((played) => played.card);
   const leadSuit = currentPlays[0]?.card.suit;
